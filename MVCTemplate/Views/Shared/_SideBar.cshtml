@@ -72,18 +72,27 @@
                     </li>
 
                     <li class="mainMenu">
-                        <a asp-area="Admin" asp-controller="Import" asp-action="UploadExcel" class="sideBarLink">
-                            Import
-                            <i class="metismenu-icon lnr-bookmark"></i>
+                        <a href="#" class="sideBarLink" aria-expanded="false">
+                            Miscellaneous
+                            <i class="metismenu-icon lnr-folder"></i>
+                            <i class="metismenu-state-icon lnr-chevron-down"></i>
                         </a>
+                        <ul class="mm-collapse">
+                            <li>
+                                <a asp-area="Admin" asp-controller="Import" asp-action="UploadExcel" class="sideBarLink">
+                                    Import
+                                    <i class="metismenu-icon lnr-bookmark"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-area="Admin" asp-controller="Package" asp-action="ShowPackagesData" class="sideBarLink">
+                                    Package Data
+                                    <i class="metismenu-icon lnr-bookmark"></i>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li class="mainMenu">
-                        <a asp-area="Admin" asp-controller="Package" asp-action="ShowPackagesData" class="sideBarLink">
-                            Package Data
-                            <i class="metismenu-icon lnr-bookmark"></i>
-                        </a>
-                    </li>
 
                 </ul>
             </div>
