@@ -20,10 +20,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
 
-        public ContractController(IUnitOfWork unitOfWork, ApplicationDbContext context)
+        private readonly IConfiguration _configuration; // for the passkey of contract
+
+        public ContractController(IUnitOfWork unitOfWork, ApplicationDbContext context, IConfiguration configuration)
         {
             _unitOfWork = unitOfWork;
             _context = context;
+            _configuration = configuration; // the passkey is in appsettings.json
         }
 
         public IActionResult Index()
@@ -261,7 +264,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [Route("Admin/Contract/Unlock/{id}")]
         public IActionResult Unlock(int id, [FromForm] string key)
         {
-            var correctKey = "LKey123";
+            var correctKey = _configuration["ContractUnlockKey"]; // otherwise it will be hardcoded here
 
             if (string.IsNullOrEmpty(key) || key != correctKey)
             {
