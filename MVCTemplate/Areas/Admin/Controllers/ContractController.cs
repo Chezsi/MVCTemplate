@@ -207,20 +207,16 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             try
             {
-                // ✅ Fetch the original contract from DB
+                // Fetch the original contract from DB
                 var existing = _unitOfWork.Contract.GetFirstOrDefault(c => c.Id == obj.Id);
                 if (existing == null)
                 {
                     return NotFound(new { message = "Contract not found." });
                 }
 
-                // ✅ Rule 1: Disallow editing if original contract is already expired
-                if (existing.Validity.HasValue && existing.Validity.Value.Date < DateTime.Now.Date)
-                {
-                    return BadRequest(new { message = "Editing is not allowed for contracts with expired validity." });
-                }
+                // **Removed Rule 1 that disallowed editing expired contracts**
 
-                // ✅ Rule 2: Prevent setting new validity in the past
+                // Rule 2: Prevent setting new validity in the past
                 if (obj.Validity.HasValue && obj.Validity.Value.Date < DateTime.Now.Date)
                 {
                     ModelState.AddModelError("Contract.Validity", "New validity date cannot be in the past.");
@@ -259,6 +255,32 @@ namespace MVCTemplate.Areas.Admin.Controllers
             {
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
+        }
+
+        [HttpPost]
+        [Route("Admin/Contract/Unlock/{id}")]
+        public IActionResult Unlock(int id, [FromForm] string key)
+        {
+            var correctKey = "LKey123";
+
+            if (string.IsNullOrEmpty(key) || key != correctKey)
+            {
+                return BadRequest(new { message = "Invalid unlock key." });
+            }
+
+            var contract = _unitOfWork.Contract.GetFirstOrDefault(c => c.Id == id);
+            if (contract == null)
+            {
+                return NotFound(new { message = "Contract not found." });
+            }
+
+            // Extend validity to X amount of days
+            contract.Validity = DateTime.Now.Date.AddDays(1);
+
+            _unitOfWork.Contract.Update(contract);
+            _unitOfWork.Save();
+
+            return Ok(new { message = "Contract unlocked successfully." });
         }
 
 
