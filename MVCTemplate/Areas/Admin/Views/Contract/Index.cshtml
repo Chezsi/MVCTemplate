@@ -33,22 +33,27 @@
     <!-- Chart Controls -->
     <div class="row mb-3">
         <div class="col-2">
-            <label><b>Chart-Type</b></label>
-            <select id="ChartType" class="form-control">
-                <option selected>--Select Chart Type--</option>
-                <option value="bar">Annual-Bar</option>
-                <option value="line">Annual-Line</option>
-                <option value="pie">Monthly-Pie</option>
-                <option value="doughnut">Monthly-Doughnut</option>
-                <option value="monthly-bar">Monthly-Bar</option>
-                <option value="monthly-line">Monthly-Line</option>
+            <label><b>Chart Category</b></label>
+            <select id="ChartCategory" class="form-control">
+                <option selected>--Select Category--</option>
+                <option value="annual">Annual</option>
+                <option value="monthly">Monthly</option>
             </select>
         </div>
+
+        <div class="col-2">
+            <label><b>Chart Type</b></label>
+            <select id="ChartType" class="form-control" disabled>
+                <option selected>--Select Type--</option>
+            </select>
+        </div>
+
         <div class="col-auto align-self-end">
             <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
             <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
         </div>
     </div>
+
 
     <!-- Chart Container (hidden by default) -->
     <div id="ChartView" style="display: none;">
@@ -230,6 +235,19 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <script>
+        const chartOptions = {
+            annual: [
+                { value: "bar", text: "Bar" },
+                { value: "line", text: "Line" }
+            ],
+            monthly: [
+                { value: "pie", text: "Pie" },
+                { value: "doughnut", text: "Doughnut" },
+                { value: "monthly-bar", text: "Bar" },
+                { value: "monthly-line", text: "Line" }
+            ]
+        };
+
         function loadBarOrLineChart(chartType) {
             $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
 
@@ -239,84 +257,56 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (data) {
-                    var labels = data[0]; // ["2023", "2024", "2025"]
-                    var values = data[1]; // [10, 15, 8]
+                    var labels = data[0];
+                    var values = data[1];
 
-                    // Distinct colors (extend this if needed)
                     const colors = [
                         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
                         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
                         "#6610f2", "#343a40"
                     ];
 
-                    // Generate separate datasets for each year
-                    let datasets;
-                    if (chartType === 'line') {
-                        datasets = [{
-                            label: 'Contracts Per Year',
-                            data: values,
-                            borderColor: "#007bff",
-                            backgroundColor: "#007bff",
-                            fill: false,
-                            tension: 0.1 // slight curve, can be 0 for straight lines
-                        }];
-                    } else {
-                        datasets = labels.map((label, index) => ({
-                            label: label,
-                            data: labels.map((_, i) => i === index ? values[index] : null),
-                            backgroundColor: colors[index % colors.length],
-                            borderColor: colors[index % colors.length],
-                            fill: true
-                        }));
-                    }
-
-
-                    let chartTitle = `Contracts from ${labels[0]} to ${labels[labels.length - 1]}`;
+                    let datasets = (chartType === 'line') ? [{
+                        label: 'Contracts Per Year',
+                        data: values,
+                        borderColor: "#007bff",
+                        backgroundColor: "#007bff",
+                        fill: false,
+                        tension: 0.1
+                    }] : labels.map((label, index) => ({
+                        label: label,
+                        data: labels.map((_, i) => i === index ? values[index] : null),
+                        backgroundColor: colors[index % colors.length],
+                        borderColor: colors[index % colors.length],
+                        fill: true
+                    }));
 
                     new Chart(document.getElementById("myChart"), {
                         type: chartType,
-                        data: {
-                            labels: labels,
-                            datasets: datasets
-                        },
+                        data: { labels, datasets },
                         options: {
                             responsive: true,
-                            interaction: {
-                                mode: 'index',
-                                intersect: false
-                            },
+                            interaction: { mode: 'index', intersect: false },
                             scales: {
                                 y: {
                                     beginAtZero: true,
                                     ticks: { precision: 0 },
                                     title: { display: true, text: 'Number of Contracts' }
                                 },
-                                x: {
-                                    title: { display: true, text: 'Year' }
-                                }
+                                x: { title: { display: true, text: 'Year' } }
                             },
                             plugins: {
-                                title: {
-                                    display: true,
-                                    text: chartTitle
-                                },
+                                title: { display: true, text: `Contracts from ${labels[0]} to ${labels[labels.length - 1]}` },
                                 legend: {
                                     display: true,
                                     onClick: function (e, legendItem, legend) {
-                                        const ci = legend.chart;
-
-                                        // Disable toggling for line chart only
-                                        if (ci.config.type === 'line') {
-                                            return; // Do nothing on click
-                                        }
-
+                                        if (legend.chart.config.type === 'line') return;
                                         const index = legendItem.datasetIndex;
-                                        const meta = ci.getDatasetMeta(index);
-                                        meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
-                                        ci.update();
+                                        const meta = legend.chart.getDatasetMeta(index);
+                                        meta.hidden = meta.hidden === null ? !legend.chart.data.datasets[index].hidden : null;
+                                        legend.chart.update();
                                     }
                                 }
-
                             }
                         }
                     });
@@ -326,8 +316,6 @@
                 }
             });
         }
-
-
 
         function loadPieOrDoughnutChart(chartType) {
             $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
@@ -340,7 +328,6 @@
                 success: function (data) {
                     var labels = data[0];
                     var values = data[1];
-
                     var pieColors = [
                         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
                         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
@@ -350,7 +337,7 @@
                     new Chart(document.getElementById("myChart"), {
                         type: chartType,
                         data: {
-                            labels: labels,
+                            labels,
                             datasets: [{
                                 backgroundColor: pieColors,
                                 data: values
@@ -380,8 +367,8 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (data) {
-                    var labels = data[0]; // Months
-                    var values = data[1]; // Values
+                    var labels = data[0];
+                    var values = data[1];
 
                     const colors = [
                         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
@@ -400,34 +387,21 @@
 
                     new Chart(document.getElementById("myChart"), {
                         type: chartType === 'monthly-bar' ? 'bar' : 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [dataset]
-                        },
+                        data: { labels, datasets: [dataset] },
                         options: {
                             responsive: true,
-                            interaction: {
-                                mode: 'index',
-                                intersect: false
-                            },
+                            interaction: { mode: 'index', intersect: false },
                             scales: {
                                 y: {
                                     beginAtZero: true,
                                     ticks: { precision: 0 },
                                     title: { display: true, text: 'Number of Contracts' }
                                 },
-                                x: {
-                                    title: { display: true, text: 'Month' }
-                                }
+                                x: { title: { display: true, text: 'Month' } }
                             },
                             plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Monthly Contracts Overview'
-                                },
-                                legend: {
-                                    display: true
-                                }
+                                title: { display: true, text: 'Monthly Contracts Overview' },
+                                legend: { display: true }
                             }
                         }
                     });
@@ -439,31 +413,50 @@
         }
 
         $(function () {
+            // Handle category change
+            $('#ChartCategory').on('change', function () {
+                const category = $(this).val();
+                const $chartType = $('#ChartType');
+                $chartType.empty().append('<option selected>--Select Type--</option>');
+
+                if (chartOptions[category]) {
+                    $chartType.prop('disabled', false);
+                    chartOptions[category].forEach(opt => {
+                        $chartType.append(new Option(opt.text, opt.value));
+                    });
+                } else {
+                    $chartType.prop('disabled', true);
+                }
+            });
+
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
-                if (chartType === "--Select Chart Type--") {
-                    alert("Please select a chart type.");
+                var category = $("#ChartCategory").val();
+
+                if (!chartType || chartType.startsWith('--')) {
+                    alert("Please select a valid chart type.");
                     return;
                 }
 
-                if (chartType === "bar" || chartType === "line") {
+                if (category === "annual") {
                     loadBarOrLineChart(chartType);
-                } else if (chartType === "pie" || chartType === "doughnut") {
-                    loadPieOrDoughnutChart(chartType);
-                } else if (chartType === "monthly-bar" || chartType === "monthly-line") {
-                    loadMonthlyBarOrLineChart(chartType);
+                } else if (category === "monthly") {
+                    if (chartType === "pie" || chartType === "doughnut") {
+                        loadPieOrDoughnutChart(chartType);
+                    } else if (chartType === "monthly-bar" || chartType === "monthly-line") {
+                        loadMonthlyBarOrLineChart(chartType);
+                    } else {
+                        alert("Unsupported monthly chart type.");
+                    }
                 } else {
-                    alert("Unsupported chart type.");
+                    alert("Please select a valid chart category.");
                 }
-
             });
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
             });
         });
-
-        
-
     </script>
+
 }
