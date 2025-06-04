@@ -238,7 +238,9 @@
         const chartOptions = {
             annual: [
                 { value: "bar", text: "Bar" },
-                { value: "line", text: "Line" }
+                { value: "line", text: "Line" },
+                { value: "annual-pie", text: "Pie" },
+                { value: "annual-doughnut", text: "Doughnut" }
             ],
             monthly: [
                 { value: "pie", text: "Pie" },
@@ -412,6 +414,52 @@
             });
         }
 
+        function loadAnnualPieOrDoughnutChart(chartType) {
+            $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
+
+            $.ajax({
+                type: "POST",
+                url: "/Admin/Contract/GetContractsPerYear",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    var labels = data[0]; // years
+                    var values = data[1]; // values
+
+                    var pieColors = [
+                        "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
+                        "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
+                        "#6610f2", "#343a40"
+                    ];
+
+                    new Chart(document.getElementById("myChart"), {
+                        type: chartType === 'annual-pie' ? 'pie' : 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                backgroundColor: pieColors,
+                                data: values
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `Annual Contracts (${chartType === 'annual-pie' ? 'Pie' : 'Doughnut'})`
+                                },
+                                legend: { display: true }
+                            }
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading annual pie/doughnut data:", error);
+                }
+            });
+        }
+
+
         $(function () {
             // Handle category change
             $('#ChartCategory').on('change', function () {
@@ -434,24 +482,31 @@
                 var category = $("#ChartCategory").val();
 
                 if (!chartType || chartType.startsWith('--')) {
-                    alert("Please select a valid chart type.");
+                    toastr.error("Please select a valid chart type.", "Invalid Selection");
                     return;
                 }
 
                 if (category === "annual") {
-                    loadBarOrLineChart(chartType);
+                    if (chartType === "bar" || chartType === "line") {
+                        loadBarOrLineChart(chartType);
+                    } else if (chartType === "annual-pie" || chartType === "annual-doughnut") {
+                        loadAnnualPieOrDoughnutChart(chartType);
+                    } else {
+                        toastr.error("Unsupported annual chart type.", "Error");;
+                    }
                 } else if (category === "monthly") {
                     if (chartType === "pie" || chartType === "doughnut") {
                         loadPieOrDoughnutChart(chartType);
                     } else if (chartType === "monthly-bar" || chartType === "monthly-line") {
                         loadMonthlyBarOrLineChart(chartType);
                     } else {
-                        alert("Unsupported monthly chart type.");
+                        toastr.error("Unsupported monthly chart type.", "Error");
                     }
                 } else {
-                    alert("Please select a valid chart category.");
+                    toastr.error("Please select a valid chart category.", "Invalid Selection");
                 }
             });
+
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
