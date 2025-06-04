@@ -188,17 +188,41 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         #region API Calls
         [HttpGet]
 
         public IActionResult GetAllPersons()
         {
-            
+
             List<Person>? personList = _unitOfWork.Person.GetAll().ToList();
             return Json(new { data = personList });
         }
 
+        [HttpGet] // for exporting data from two tables
+        public IActionResult ExportPersonsWithCurrentContracts()
+        {
+            var now = DateTime.Now;
+
+            var data = from person in _context.Persons
+                       join contract in _context.Contracts on person.Id equals contract.PersonId
+                       where contract.Validity > now
+                       select new
+                       {
+                           Person_Id = person.Id,
+                           Person_Name = person.Name,
+                           Person_Position = person.Position,
+                           Person_CategoryId = person.CategoryId,
+
+                           Contract_Id = contract.Id,
+                           Contract_Name = contract.Name,
+                           Contract_Description = contract.Description,
+                           Contract_Validity = contract.Validity
+                       };
+
+            var list = data.ToList();
+
+            return Json(list);
+        }
         #endregion
 
     }

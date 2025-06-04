@@ -22,6 +22,11 @@
                         Export
                     </button>
 
+                    <button id="button-export-current-contracts" class="btn btn-info ms-2">
+                        <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
+                        Export Current Contracts
+                    </button> @*js*@
+
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add Person
                     </button>
@@ -167,12 +172,14 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
     <script src="~/js/PersonScripts/person-data-table.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/PersonScripts/person-export.js"></script>
+    <script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>
 
     <script>
         $(function () {
