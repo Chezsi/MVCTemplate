@@ -10,6 +10,8 @@ using MVCTemplate.DataAccess.Repository.IRepository;
 using MVCTemplate.Models;
 using MVCTemplate.Util;
 using MVCTemplate.ViewModels;
+using OfficeOpenXml.Style;
+using OfficeOpenXml;
 using System.Diagnostics;
 
 namespace MVCTemplate.Areas.Admin.Controllers
@@ -188,6 +190,73 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportCurrentContractsExcel()
+        {
+            ExcelPackage.License.SetNonCommercialPersonal("My Name"); 
+
+            // Load persons (filter or all)
+            var persons = await _context.Persons.ToListAsync();
+
+            // Load current contracts separately (Validity >= today)
+            var currentContracts = await _context.Contracts
+                .Where(c => c.Validity >= DateTime.Today)
+                .ToListAsync();
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("CurrentContracts");
+
+            // Title rows
+            worksheet.Cells["A1:E1"].Merge = true;
+            worksheet.Cells["A1"].Value = "Current Contracts";
+            worksheet.Cells["A1"].Style.Font.Size = 16;
+            worksheet.Cells["A1"].Style.Font.Bold = true;
+            worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+            worksheet.Cells["A2:E2"].Merge = true;
+            worksheet.Cells["A2"].Value = $"Generated on: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
+            worksheet.Cells["A2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+            // Headers
+            worksheet.Cells[3, 1].Value = "Person ID";
+            worksheet.Cells[3, 2].Value = "Person Name";
+            worksheet.Cells[3, 3].Value = "Position";
+            worksheet.Cells[3, 4].Value = "Contract Name";
+            worksheet.Cells[3, 5].Value = "Contract Validity";
+
+            worksheet.Row(3).Style.Font.Bold = true;
+
+            int row = 4;
+
+            // Join in memory by PersonId
+            foreach (var person in persons)
+            {
+                var contractsForPerson = currentContracts.Where(c => c.PersonId == person.Id);
+                foreach (var contract in contractsForPerson)
+                {
+                    worksheet.Cells[row, 1].Value = person.Id;
+                    worksheet.Cells[row, 2].Value = person.Name;
+                    worksheet.Cells[row, 3].Value = person.Position;
+                    worksheet.Cells[row, 4].Value = contract.Name;
+                    worksheet.Cells[row, 5].Value = contract.Validity?.ToString("MMMM dd, yyyy") ?? "N/A";
+
+                    row++;
+                }
+            }
+
+            worksheet.Cells[3, 1, row - 1, 5].AutoFilter = true;
+            worksheet.Cells.AutoFitColumns();
+
+            var stream = new MemoryStream();
+            package.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CurrentContracts.xlsx");
+        }
+
+
+
+
         #region API Calls
         [HttpGet]
 
@@ -198,7 +267,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new { data = personList });
         }
 
-        [HttpGet] // for exporting data from two tables
+        [HttpGet] // for exporting data from two tables (JS)
         public IActionResult ExportPersonsWithCurrentContracts()
         {
             var now = DateTime.Now;

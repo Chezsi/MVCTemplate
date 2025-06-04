@@ -17,21 +17,40 @@
             </div>
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
-                    <button id="button-excel-person" class="btn btn-success">
-                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export
-                    </button>
+                    <!-- 1st row: Export and Add Person buttons side by side -->
+                    <div class="d-flex align-items-center mb-2">
+                        <button id="button-excel-person" class="btn btn-success me-3">
+                            <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                            Export
+                        </button>
 
-                    <button id="button-export-current-contracts" class="btn btn-info ms-2">
-                        <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
-                        Export Current Contracts
-                    </button> @*js*@
+                        <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                            + Add Person
+                        </button>
+                    </div>
 
-                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-                        + Add Person
-                    </button>
+                    <!-- 2nd row: JS export button -->
+                    <div class="mb-2">
+                        <button id="button-export-current-contracts" class="btn btn-info ms-2">
+                            <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
+                            Export Active Contracts
+                        </button> @*js*@
+                    </div>
+
+                    <!-- 3rd row: CS export button -->
+                    <div>
+                        <form method="get" action="/Admin/Person/ExportCurrentContractsExcel" style="display:inline;">
+                            <button type="submit" class="btn btn-info ms-2">
+                                <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
+                                Export Active Contracts
+                            </button>
+                        </form> @*cs*@
+                    </div>
                 </div>
             </div>
+
+            </div>
+
         </div>
     </div>
 
