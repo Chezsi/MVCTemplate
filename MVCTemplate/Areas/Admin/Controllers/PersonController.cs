@@ -193,12 +193,9 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportCurrentContractsExcel()
         {
-            ExcelPackage.License.SetNonCommercialPersonal("My Name"); 
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
-            // Load persons (filter or all)
             var persons = await _context.Persons.ToListAsync();
-
-            // Load current contracts separately (Validity >= today)
             var currentContracts = await _context.Contracts
                 .Where(c => c.Validity >= DateTime.Today)
                 .ToListAsync();
@@ -206,29 +203,46 @@ namespace MVCTemplate.Areas.Admin.Controllers
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("CurrentContracts");
 
-            // Title rows
+            // Colors
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+
+            // Row 1 - Title
             worksheet.Cells["A1:E1"].Merge = true;
             worksheet.Cells["A1"].Value = "Current Contracts";
             worksheet.Cells["A1"].Style.Font.Size = 16;
             worksheet.Cells["A1"].Style.Font.Bold = true;
             worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
+            // Row 2 - Timestamp
             worksheet.Cells["A2:E2"].Merge = true;
             worksheet.Cells["A2"].Value = $"Generated on: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
             worksheet.Cells["A2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-            // Headers
+            // Apply blue background and white font to A1:E2
+            worksheet.Cells["A1:E2"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
+
+            // Row 3 - Headers
             worksheet.Cells[3, 1].Value = "Person ID";
             worksheet.Cells[3, 2].Value = "Person Name";
             worksheet.Cells[3, 3].Value = "Position";
             worksheet.Cells[3, 4].Value = "Contract Name";
             worksheet.Cells[3, 5].Value = "Contract Validity";
-
             worksheet.Row(3).Style.Font.Bold = true;
+
+            // Apply alternating vertical green background to header row
+            for (int col = 1; col <= 5; col++)
+            {
+                worksheet.Cells[3, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                worksheet.Cells[3, col].Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+            }
 
             int row = 4;
 
-            // Join in memory by PersonId
             foreach (var person in persons)
             {
                 var contractsForPerson = currentContracts.Where(c => c.PersonId == person.Id);
@@ -239,6 +253,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     worksheet.Cells[row, 3].Value = person.Position;
                     worksheet.Cells[row, 4].Value = contract.Name;
                     worksheet.Cells[row, 5].Value = contract.Validity?.ToString("MMMM dd, yyyy") ?? "N/A";
+
+                    // Apply alternating vertical green background
+                    for (int col = 1; col <= 5; col++)
+                    {
+                        worksheet.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        worksheet.Cells[row, col].Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+                    }
 
                     row++;
                 }
@@ -253,7 +274,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CurrentContracts.xlsx");
         }
-
 
 
 

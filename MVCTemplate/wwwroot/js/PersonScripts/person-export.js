@@ -82,10 +82,6 @@ document.querySelector("#button-export-current-contracts").addEventListener("cli
             { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }   // A2:H2
         ];
 
-        // Center align title and timestamp rows
-        ws['A1'].s = { alignment: { horizontal: "center" } };
-        ws['A2'].s = { alignment: { horizontal: "center" } };
-
         // Autofilter
         ws['!autofilter'] = { ref: `A3:H${ws_data.length}` };
 
@@ -104,5 +100,4 @@ document.querySelector("#button-export-current-contracts").addEventListener("cli
         alert("Failed to export current contracts.");
     }
 });
-// centering dont work
 
