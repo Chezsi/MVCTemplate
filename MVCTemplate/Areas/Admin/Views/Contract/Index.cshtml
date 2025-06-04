@@ -36,10 +36,12 @@
             <label><b>Chart-Type</b></label>
             <select id="ChartType" class="form-control">
                 <option selected>--Select Chart Type--</option>
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
-                <option value="pie">Pie</option>
-                <option value="doughnut">Doughnut</option>
+                <option value="bar">Annual-Bar</option>
+                <option value="line">Annual-Line</option>
+                <option value="pie">Monthly-Pie</option>
+                <option value="doughnut">Monthly-Doughnut</option>
+                <option value="monthly-bar">Monthly-Bar</option>
+                <option value="monthly-line">Monthly-Line</option>
             </select>
         </div>
         <div class="col-auto align-self-end">
@@ -369,6 +371,73 @@
             });
         }
 
+        function loadMonthlyBarOrLineChart(chartType) {
+            $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
+
+            $.ajax({
+                type: "POST",
+                url: "/Admin/Contract/GetContractsPerMonth",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    var labels = data[0]; // Months
+                    var values = data[1]; // Values
+
+                    const colors = [
+                        "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
+                        "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
+                        "#6610f2", "#343a40"
+                    ];
+
+                    let dataset = {
+                        label: 'Contracts Per Month',
+                        data: values,
+                        backgroundColor: chartType === 'monthly-bar' ? colors : "#007bff",
+                        borderColor: "#007bff",
+                        fill: chartType === 'monthly-line' ? false : true,
+                        tension: chartType === 'monthly-line' ? 0.1 : undefined
+                    };
+
+                    new Chart(document.getElementById("myChart"), {
+                        type: chartType === 'monthly-bar' ? 'bar' : 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [dataset]
+                        },
+                        options: {
+                            responsive: true,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 },
+                                    title: { display: true, text: 'Number of Contracts' }
+                                },
+                                x: {
+                                    title: { display: true, text: 'Month' }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Monthly Contracts Overview'
+                                },
+                                legend: {
+                                    display: true
+                                }
+                            }
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading monthly bar/line data:", error);
+                }
+            });
+        }
+
         $(function () {
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
@@ -381,14 +450,20 @@
                     loadBarOrLineChart(chartType);
                 } else if (chartType === "pie" || chartType === "doughnut") {
                     loadPieOrDoughnutChart(chartType);
+                } else if (chartType === "monthly-bar" || chartType === "monthly-line") {
+                    loadMonthlyBarOrLineChart(chartType);
                 } else {
                     alert("Unsupported chart type.");
                 }
+
             });
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
             });
         });
+
+        
+
     </script>
 }
