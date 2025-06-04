@@ -209,36 +209,49 @@ namespace MVCTemplate.Areas.Admin.Controllers
             var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
             var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
 
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
             // Row 1 - Title
-            worksheet.Cells["A1:E1"].Merge = true;
-            worksheet.Cells["A1"].Value = "Current Contracts";
+            worksheet.Cells["A1:H1"].Merge = true;
+            worksheet.Cells["A1"].Value = "Current Contracts Export";
             worksheet.Cells["A1"].Style.Font.Size = 16;
             worksheet.Cells["A1"].Style.Font.Bold = true;
             worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
             // Row 2 - Timestamp
-            worksheet.Cells["A2:E2"].Merge = true;
-            worksheet.Cells["A2"].Value = $"Generated on: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
+            worksheet.Cells["A2:H2"].Merge = true;
+            worksheet.Cells["A2"].Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
             worksheet.Cells["A2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-            // Apply blue background and white font to A1:E2
-            worksheet.Cells["A1:E2"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
-            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
+            // Style for Title and Timestamp rows
+            worksheet.Cells["A1:H2"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            worksheet.Cells["A1:H2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:H2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:H3"].Style.Border.Top.Style = borderStyle;
+            worksheet.Cells["A1:H3"].Style.Border.Bottom.Style = borderStyle;
+            worksheet.Cells["A1:H3"].Style.Border.Left.Style = borderStyle;
+            worksheet.Cells["A1:H3"].Style.Border.Right.Style = borderStyle;
 
             // Row 3 - Headers
-            worksheet.Cells[3, 1].Value = "Person ID";
-            worksheet.Cells[3, 2].Value = "Person Name";
-            worksheet.Cells[3, 3].Value = "Position";
-            worksheet.Cells[3, 4].Value = "Contract Name";
-            worksheet.Cells[3, 5].Value = "Contract Validity";
-            worksheet.Row(3).Style.Font.Bold = true;
+            string[] headers = new[] {
+        "Person ID", "Name", "Position", "Category ID",
+        "Contract ID", "Contract Name", "Description", "Validity"
+    };
 
-            // Apply alternating vertical green background to header row
-            for (int col = 1; col <= 5; col++)
+            for (int i = 1; i <= headers.Length; i++)
             {
-                worksheet.Cells[3, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                worksheet.Cells[3, col].Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+                var cell = worksheet.Cells[3, i];
+                cell.Value = headers[i - 1];
+                cell.Style.Font.Bold = true;
+
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor((i % 2 == 0) ? lightGreen : darkGreen);
+
+                // Apply border to each header cell
+                cell.Style.Border.Top.Style = borderStyle;
+                cell.Style.Border.Bottom.Style = borderStyle;
+                cell.Style.Border.Left.Style = borderStyle;
+                cell.Style.Border.Right.Style = borderStyle;
             }
 
             int row = 4;
@@ -251,29 +264,44 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     worksheet.Cells[row, 1].Value = person.Id;
                     worksheet.Cells[row, 2].Value = person.Name;
                     worksheet.Cells[row, 3].Value = person.Position;
-                    worksheet.Cells[row, 4].Value = contract.Name;
-                    worksheet.Cells[row, 5].Value = contract.Validity?.ToString("MMMM dd, yyyy") ?? "N/A";
+                    worksheet.Cells[row, 4].Value = person.CategoryId;
+                    worksheet.Cells[row, 5].Value = contract.Id;
+                    worksheet.Cells[row, 6].Value = contract.Name;
+                    worksheet.Cells[row, 7].Value = contract.Description;
+                    worksheet.Cells[row, 8].Value = contract.Validity?.ToString("MMMM dd, yyyy") ?? "N/A";
 
-                    // Apply alternating vertical green background
-                    for (int col = 1; col <= 5; col++)
+                    for (int col = 1; col <= 8; col++)
                     {
-                        worksheet.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                        worksheet.Cells[row, col].Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+                        var cell = worksheet.Cells[row, col];
+                        cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+
+                        // Apply border to each cell
+                        cell.Style.Border.Top.Style = borderStyle;
+                        cell.Style.Border.Bottom.Style = borderStyle;
+                        cell.Style.Border.Left.Style = borderStyle;
+                        cell.Style.Border.Right.Style = borderStyle;
                     }
 
                     row++;
                 }
             }
 
-            worksheet.Cells[3, 1, row - 1, 5].AutoFilter = true;
+            // Apply autofilter to header row
+            worksheet.Cells[3, 1, row - 1, 8].AutoFilter = true;
+
+            // Auto fit columns
             worksheet.Cells.AutoFitColumns();
 
+            // Save to stream
             var stream = new MemoryStream();
             package.SaveAs(stream);
             stream.Position = 0;
 
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CurrentContracts.xlsx");
         }
+
+
 
 
 
