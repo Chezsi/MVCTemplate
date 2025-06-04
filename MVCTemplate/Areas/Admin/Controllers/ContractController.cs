@@ -225,7 +225,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     ModelState.AddModelError("Contract.Validity", "New validity date cannot be in the past.");
                 }
 
-                obj.GenerateUpdatedAt();
+                // Copy updated values into the tracked entity
+                existing.Name = obj.Name;
+                existing.Description = obj.Description;
+                existing.Validity = obj.Validity;
+                // Add other property assignments as necessary
+
+                existing.GenerateUpdatedAt();
 
                 Contract? duplicateName = _unitOfWork.Contract.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
                 if (duplicateName != null)
@@ -235,7 +241,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    _unitOfWork.Contract.Update(obj);
+                    // No need to call Update(), as 'existing' is already tracked by EF
                     _unitOfWork.Save();
                     return Ok(new { message = "Updated Successfully" });
                 }
@@ -259,6 +265,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpPost]
         [Route("Admin/Contract/Unlock/{id}")]

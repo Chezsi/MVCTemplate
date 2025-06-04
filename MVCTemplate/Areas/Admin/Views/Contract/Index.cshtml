@@ -189,6 +189,33 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Unlock Modal -->
+    <div class="modal fade" id="unlockModal" tabindex="-1" aria-labelledby="unlockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="unlockForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="unlockModalLabel">Unlock Contract</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="unlockContractId" />
+                        <div class="mb-3">
+                            <label for="unlockKey" class="form-label">Enter Unlock Key</label>
+                            <input type="password" class="form-control" id="unlockKey" required />
+                            <div id="unlockError" class="text-danger mt-2" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Unlock</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 
 @section Scripts {
