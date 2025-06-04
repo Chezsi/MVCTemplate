@@ -70,47 +70,62 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(ContractVM model)
         {
-            // Check if selected Person exists
-            if (!_unitOfWork.Person.Exists(model.Contract.PersonId))
+            try
             {
-                ModelState.AddModelError("Contract.PersonId", "Selected person does not exist.");
-            }
+                // 1. Check if selected person exists
+                if (!_unitOfWork.Person.Exists(model.Contract.PersonId))
+                {
+                    ModelState.AddModelError("Contract.PersonId", "Selected person does not exist.");
+                }
 
-            // Optional: Check if contract name is unique
-            var existingContract = _unitOfWork.Contract.CheckIfUnique(model.Contract.Name);
-            if (existingContract != null)
-            {
-                ModelState.AddModelError("Contract.Name", "Contract with this name already exists.");
-            }
+                // 2. Check if contract name is unique
+                var existingContract = _unitOfWork.Contract.CheckIfUnique(model.Contract.Name);
+                if (existingContract != null)
+                {
+                    ModelState.AddModelError("Contract.Name", "A contract with this name already exists.");
+                }
 
-            // ✅ Check if person already has a future-valid contract
-            var hasFutureContract = _unitOfWork.Contract.GetFirstOrDefault(c =>
-                c.PersonId == model.Contract.PersonId && c.Validity > DateTime.Now);
+                // 3. Check if the person already has a future-valid contract
+                var hasFutureContract = _unitOfWork.Contract.GetFirstOrDefault(c =>
+                    c.PersonId == model.Contract.PersonId && c.Validity > DateTime.Now);
 
-            if (hasFutureContract != null)
-            {
-                ModelState.AddModelError("Contract.PersonId", "This person already has a future-valid contract.");
-            }
+                if (hasFutureContract != null)
+                {
+                    ModelState.AddModelError("Contract.PersonId", "This person already has a future-valid contract.");
+                }
 
-            if (ModelState.IsValid)
-            {
+                // 4. If validation fails, return JSON with error messages
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { success = false, message = "Validation failed", errors });
+                }
+
+                // 5. If valid, save contract and return success message
                 model.Contract.CreatedAt = DateTime.Now;
                 _unitOfWork.Contract.Add(model.Contract);
                 _unitOfWork.Save();
 
-                return RedirectToAction("Index");
+                return Ok(new { success = true, message = "Contract added successfully" });
             }
-
-            // If validation fails, repopulate PersonList and return view
-            var persons = _unitOfWork.Person.GetAll();
-            model.PersonList = persons.Select(p => new SelectListItem
+            catch (DbUpdateException)
             {
-                Value = p.Id.ToString(),
-                Text = p.Name
-            });
-
-            return View(model);
+                return BadRequest(new { success = false, message = "Database error occurred while saving the contract." });
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest(new { success = false, message = "Invalid operation attempted." });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { success = false, message = "An unexpected error occurred." });
+            }
         }
+
 
         private List<Contract> GetContracts()
         {
