@@ -215,6 +215,9 @@
 
     <script>
         $(function () {
+            // Initially hide RemoveGraphBtn
+            $("#RemoveGraphBtn").hide();
+
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
                 if (chartType === "--Select Chart Type--") {
@@ -236,6 +239,8 @@
                         if (_chartLabels.length === 0) {
                             alert("No categories with employees found.");
                             $("#ChartView").hide();
+                            // Hide RemoveGraphBtn if no chart to show
+                            $("#RemoveGraphBtn").hide();
                             return;
                         }
 
@@ -284,18 +289,26 @@
                                 } : {}
                             }
                         });
+
+                        // Show RemoveGraphBtn after successful chart render
+                        $("#RemoveGraphBtn").show();
                     },
                     error: function (xhr, status, error) {
                         console.error("Error fetching chart data:", error);
                         alert("Failed to load chart data.");
+                        // Hide RemoveGraphBtn on error
+                        $("#RemoveGraphBtn").hide();
                     }
                 });
             });
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
+                // Hide RemoveGraphBtn when chart is removed
+                $("#RemoveGraphBtn").hide();
             });
         });
     </script>
+
 
 }

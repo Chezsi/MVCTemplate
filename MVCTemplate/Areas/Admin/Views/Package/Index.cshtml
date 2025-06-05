@@ -282,6 +282,9 @@
 
     <script>
         $(function () {
+            // Hide RemoveGraphBtn initially
+            $("#RemoveGraphBtn").hide();
+
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
                 if (chartType === "--Select Chart Type--") {
@@ -330,7 +333,7 @@
                                 },
                                 scales: {
                                     x: {
-                                        type: 'category', // ✅ Handle MM/dd/yyyy as plain labels
+                                        type: 'category',
                                         title: {
                                             display: true,
                                             text: 'Date'
@@ -346,6 +349,9 @@
                                 }
                             }
                         });
+
+                        // Show RemoveGraphBtn once chart is rendered
+                        $("#RemoveGraphBtn").show();
                     },
                     error: function (xhr, status, error) {
                         console.error("Error fetching chart data:", error);
@@ -356,7 +362,10 @@
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
+                // Hide RemoveGraphBtn when chart is removed
+                $("#RemoveGraphBtn").hide();
             });
         });
     </script>
+
 }

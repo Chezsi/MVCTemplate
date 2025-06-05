@@ -263,9 +263,27 @@
             ]
         };
 
+        function updateShowButtonVisibility() {
+            const category = $('#ChartCategory').val();
+            const type = $('#ChartType').val();
+            if (category && category !== "--Select Category--" &&
+                type && type !== "--Select Type--") {
+                $("#ShowGraphBtn").show();
+            } else {
+                $("#ShowGraphBtn").hide();
+            }
+        }
+
+        function showRemoveButton() {
+            $("#RemoveGraphBtn").show();
+        }
+
+        function hideRemoveButton() {
+            $("#RemoveGraphBtn").hide();
+        }
+
         function loadBarOrLineChart(chartType) {
             $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
-
             $.ajax({
                 type: "POST",
                 url: "/Admin/Contract/GetContractsPerYear",
@@ -274,13 +292,11 @@
                 success: function (data) {
                     var labels = data[0];
                     var values = data[1];
-
                     const colors = [
                         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
                         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
                         "#6610f2", "#343a40"
                     ];
-
                     let datasets = (chartType === 'line') ? [{
                         label: 'Contracts Per Year',
                         data: values,
@@ -295,7 +311,6 @@
                         borderColor: colors[index % colors.length],
                         fill: true
                     }));
-
                     new Chart(document.getElementById("myChart"), {
                         type: chartType,
                         data: { labels, datasets },
@@ -325,6 +340,7 @@
                             }
                         }
                     });
+                    showRemoveButton();
                 },
                 error: function (xhr, status, error) {
                     console.error("Error loading bar/line data:", error);
@@ -334,7 +350,6 @@
 
         function loadPieOrDoughnutChart(chartType) {
             $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
-
             $.ajax({
                 type: "POST",
                 url: "/Admin/Contract/GetContractsPerMonth",
@@ -348,7 +363,6 @@
                         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
                         "#6610f2", "#343a40"
                     ];
-
                     new Chart(document.getElementById("myChart"), {
                         type: chartType,
                         data: {
@@ -366,6 +380,7 @@
                             }
                         }
                     });
+                    showRemoveButton();
                 },
                 error: function (xhr, status, error) {
                     console.error("Error loading pie/doughnut data:", error);
@@ -375,7 +390,6 @@
 
         function loadMonthlyBarOrLineChart(chartType) {
             $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
-
             $.ajax({
                 type: "POST",
                 url: "/Admin/Contract/GetContractsPerMonth",
@@ -384,13 +398,11 @@
                 success: function (data) {
                     var labels = data[0];
                     var values = data[1];
-
                     const colors = [
                         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
                         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
                         "#6610f2", "#343a40"
                     ];
-
                     let dataset = {
                         label: 'Contracts Per Month',
                         data: values,
@@ -399,7 +411,6 @@
                         fill: chartType === 'monthly-line' ? false : true,
                         tension: chartType === 'monthly-line' ? 0.1 : undefined
                     };
-
                     new Chart(document.getElementById("myChart"), {
                         type: chartType === 'monthly-bar' ? 'bar' : 'line',
                         data: { labels, datasets: [dataset] },
@@ -420,6 +431,7 @@
                             }
                         }
                     });
+                    showRemoveButton();
                 },
                 error: function (xhr, status, error) {
                     console.error("Error loading monthly bar/line data:", error);
@@ -429,22 +441,19 @@
 
         function loadAnnualPieOrDoughnutChart(chartType) {
             $("#ChartView").show().html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
-
             $.ajax({
                 type: "POST",
                 url: "/Admin/Contract/GetContractsPerYear",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (data) {
-                    var labels = data[0]; // years
-                    var values = data[1]; // values
-
+                    var labels = data[0];
+                    var values = data[1];
                     var pieColors = [
                         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
                         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
                         "#6610f2", "#343a40"
                     ];
-
                     new Chart(document.getElementById("myChart"), {
                         type: chartType === 'annual-pie' ? 'pie' : 'doughnut',
                         data: {
@@ -465,6 +474,7 @@
                             }
                         }
                     });
+                    showRemoveButton();
                 },
                 error: function (xhr, status, error) {
                     console.error("Error loading annual pie/doughnut data:", error);
@@ -472,9 +482,10 @@
             });
         }
 
-
         $(function () {
-            // Handle category change
+            $("#ShowGraphBtn").hide(); // hide show button by default
+            hideRemoveButton(); // hide remove button by default
+
             $('#ChartCategory').on('change', function () {
                 const category = $(this).val();
                 const $chartType = $('#ChartType');
@@ -488,6 +499,12 @@
                 } else {
                     $chartType.prop('disabled', true);
                 }
+
+                updateShowButtonVisibility();
+            });
+
+            $('#ChartType').on('change', function () {
+                updateShowButtonVisibility();
             });
 
             $("#ShowGraphBtn").click(function () {
@@ -505,7 +522,7 @@
                     } else if (chartType === "annual-pie" || chartType === "annual-doughnut") {
                         loadAnnualPieOrDoughnutChart(chartType);
                     } else {
-                        toastr.error("Unsupported annual chart type.", "Error");;
+                        toastr.error("Unsupported annual chart type.", "Error");
                     }
                 } else if (category === "monthly") {
                     if (chartType === "pie" || chartType === "doughnut") {
@@ -520,11 +537,14 @@
                 }
             });
 
-
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
+                hideRemoveButton();
             });
         });
     </script>
+
+
+
 
 }

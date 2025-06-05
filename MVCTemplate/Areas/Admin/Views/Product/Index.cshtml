@@ -196,6 +196,9 @@
 
     <script>
         $(function () {
+            // Initially hide RemoveGraphBtn
+            $("#RemoveGraphBtn").hide();
+
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
                 if (chartType === "--Select Chart Type--") {
@@ -214,6 +217,13 @@
                         var _chartLabels = data[0];
                         var _chartData = data[1];
 
+                        if (!_chartLabels.length) {
+                            alert("No product data available.");
+                            $("#ChartView").hide();
+                            $("#RemoveGraphBtn").hide();
+                            return;
+                        }
+
                         var barColors = ["#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6c757d", "#fd7e14", "#20c997"];
 
                         new Chart(document.getElementById("myChart"), {
@@ -222,7 +232,7 @@
                                 labels: _chartLabels,
                                 datasets: [{
                                     label: 'Product Quantities',
-                                    backgroundColor: barColors,
+                                    backgroundColor: barColors.slice(0, _chartLabels.length),
                                     data: _chartData
                                 }]
                             },
@@ -254,16 +264,24 @@
                                 } : {}
                             }
                         });
+
+                        // Show RemoveGraphBtn after successful chart render
+                        $("#RemoveGraphBtn").show();
                     },
                     error: function (xhr, status, error) {
                         console.error("Error fetching chart data:", error);
+                        alert("Failed to load chart data.");
+                        $("#RemoveGraphBtn").hide();
                     }
                 });
             });
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
+                // Hide RemoveGraphBtn when chart is removed
+                $(this).hide();
             });
         });
     </script>
+
 }
