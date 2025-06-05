@@ -204,7 +204,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/PersonScripts/person-export.js"></script>
-    <script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>
+    @*<script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>*@
 
     <script>
         // animation
@@ -215,8 +215,19 @@
 
     <script>
         $(function () {
-            // Initially hide RemoveGraphBtn
+            // Initially hide both buttons
             $("#RemoveGraphBtn").hide();
+            $("#ShowGraphBtn").hide();
+
+            // Show/Hide ShowGraphBtn based on chart type selection
+            $("#ChartType").on("change", function () {
+                const chartType = $(this).val();
+                if (!chartType || chartType === "--Select Chart Type--") {
+                    $("#ShowGraphBtn").hide();
+                } else {
+                    $("#ShowGraphBtn").show();
+                }
+            });
 
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
@@ -239,7 +250,6 @@
                         if (_chartLabels.length === 0) {
                             alert("No categories with employees found.");
                             $("#ChartView").hide();
-                            // Hide RemoveGraphBtn if no chart to show
                             $("#RemoveGraphBtn").hide();
                             return;
                         }
@@ -290,13 +300,11 @@
                             }
                         });
 
-                        // Show RemoveGraphBtn after successful chart render
                         $("#RemoveGraphBtn").show();
                     },
                     error: function (xhr, status, error) {
                         console.error("Error fetching chart data:", error);
                         alert("Failed to load chart data.");
-                        // Hide RemoveGraphBtn on error
                         $("#RemoveGraphBtn").hide();
                     }
                 });
@@ -304,11 +312,11 @@
 
             $("#RemoveGraphBtn").click(function () {
                 $("#ChartView").hide().html('');
-                // Hide RemoveGraphBtn when chart is removed
-                $("#RemoveGraphBtn").hide();
+                $(this).hide();
             });
         });
     </script>
+
 
 
 }
