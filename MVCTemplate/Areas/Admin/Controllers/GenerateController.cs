@@ -249,6 +249,11 @@ namespace MVCTemplate.Controllers
                         var excelImage = reportsSheet.Drawings.AddPicture($"img_{reportRow}", imageStream);
                         excelImage.SetSize(finalWidth, finalHeight);
                         excelImage.SetPosition(reportRow - 1, 0, 4, 0);
+
+                        // Make image not movable/resizable:
+                        excelImage.EditAs = eEditAs.OneCell;
+                        excelImage.Locked = true;
+                        excelImage.LockAspectRatio = true;
                     }
                 }
 
@@ -257,7 +262,11 @@ namespace MVCTemplate.Controllers
 
             ApplyBorders(reportsSheet, 1, 1, reportRow - 1, 5);
             reportsSheet.Cells[reportsSheet.Dimension.Address].AutoFitColumns();
+
+            // Protect the sheet and disallow editing/moving objects:
             LockSheet(reportsSheet);
+            reportsSheet.Protection.AllowEditObject = false;  // << ADDED HERE
+
 
             // Protect entire workbook structure to prevent adding/removing sheets
             package.Workbook.Protection.LockStructure = true;
