@@ -44,9 +44,3 @@ body {
         position: relative;
         box-shadow: 0px 5px 15px rgba(0,0,0,0.3);
     }
-
-/* Fade-in effect on page load */
-.app-main__inner {
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-}
