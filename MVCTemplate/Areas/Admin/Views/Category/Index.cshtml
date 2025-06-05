@@ -161,8 +161,8 @@
         }
 
             #logoOverlay img {
-                max-width: 200px;
-                max-height: 200px;
+                max-width: 600px;
+                max-height: 336px;
             }
     </style>
 }
@@ -178,13 +178,13 @@
     <script>
         $(document).ready(function () {
             // Fade in the main content
-            $(".app-main__inner").animate({ opacity: 1 }, 1000, function () {
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
                 // Wait before fading out the logo overlay
                 setTimeout(function () {
-                    $("#logoOverlay").fadeOut(800, function () {
+                    $("#logoOverlay").fadeOut(500, function () {
                         $(this).remove(); // Remove the overlay after fade out
                     });
-                }, 1000);
+                }, 500);
             });
         });
     </script>
