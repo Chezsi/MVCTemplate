@@ -71,7 +71,7 @@ $(document).ready(function () {
                     },
                     "autowidth": true
                 },
-                { data: 'personId', "autowidth": true },
+                { data: 'personName', "autowidth": true },
                 {
                     data: 'id',
                     render: function (data, type, full, meta) {
@@ -126,6 +126,10 @@ $(document).ready(function () {
 
     $('#startDate, #endDate').on('change', function () {
         dataTable.draw();
+    });
+
+    $('#personIdSearch').on('change', function () {
+        dataTable.column(3).search(this.value).draw();
     });
 
     // Unlock button click handler (delegated)

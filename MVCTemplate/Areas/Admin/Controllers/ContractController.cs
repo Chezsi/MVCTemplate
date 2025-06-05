@@ -356,9 +356,21 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllContracts()
         {
-            var contractList = _unitOfWork.Contract.GetAll().ToList();
+            var contractList = _unitOfWork.Contract
+                .GetAll(includeProperties: "Person") // include Person navigation property
+                .Select(c => new {
+                    c.Id,
+                    c.Name,
+                    c.Description,
+                    c.Validity,
+                    c.PersonId,
+                    PersonName = c.Person != null ? c.Person.Name : "(No Person)"
+                })
+                .ToList();
+
             return Json(new { data = contractList });
         }
+
 
         #endregion
     }
