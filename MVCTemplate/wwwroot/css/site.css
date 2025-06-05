@@ -51,12 +51,30 @@ body {
 }
 
 
-/* Fade-in effect for main content 
-.app-main__inner {
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-}*/
-    /* Put this in jQuery (data-table.js)
-    $(".app-main__inner").animate({ opacity: 1 }, 100);*/
+.draw-text {
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+    animation: drawLoop 30s linear infinite;
+}
 
-/*[in this approach pages without a jQuery will not load]*/
+@keyframes drawLoop {
+    0% {
+        stroke-dashoffset: 300;
+        fill: none;
+    }
+
+    50% {
+        stroke-dashoffset: 0;
+        fill: none;
+    }
+
+    51% {
+        fill: #007bff; /* Fill after drawing */
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        stroke-dashoffset: 300;
+        fill: #007bff;
+    }
+}
