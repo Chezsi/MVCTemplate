@@ -18,6 +18,9 @@ $.fn.dataTable.ext.search.push(
 
 $(document).ready(function () {
     loadDataTable();
+
+    // Fade in animation for page content
+    $(".app-main__inner").animate({ opacity: 1 }, 1000);
 });
 
 
