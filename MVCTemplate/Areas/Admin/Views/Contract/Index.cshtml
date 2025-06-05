@@ -235,6 +235,13 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <script>
+        // animation
+        $(document).ready(function () {
+            $(".app-main__inner").animate({ opacity: 1 }, 10);
+        });
+    </script>
+
+    <script>
         const chartOptions = {
             annual: [
                 { value: "bar", text: "Bar" },

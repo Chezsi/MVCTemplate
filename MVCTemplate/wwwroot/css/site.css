@@ -44,3 +44,19 @@ body {
         position: relative;
         box-shadow: 0px 5px 15px rgba(0,0,0,0.3);
     }
+
+.app-main__inner {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+
+/* Fade-in effect for main content 
+.app-main__inner {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}*/
+    /* Put this in jQuery (data-table.js)
+    $(".app-main__inner").animate({ opacity: 1 }, 100);*/
+
+/*[in this approach pages without a jQuery will not load]*/

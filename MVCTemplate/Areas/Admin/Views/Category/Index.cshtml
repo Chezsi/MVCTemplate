@@ -143,6 +143,13 @@
     <script src="~/js/CategoryScripts/category-export.js"></script>
 
     <script>
+        // animation
+        $(document).ready(function () {
+            $(".app-main__inner").animate({ opacity: 1 }, 10);
+        });
+    </script>
+
+    <script>
         // External filters
         // the filter is here instead of data-table.js
         $('#nameSearch').on('keyup change', function () {

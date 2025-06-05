@@ -18,6 +18,7 @@ $.fn.dataTable.ext.search.push(
 
 $(document).ready(function () {
     loadDataTable();
+
 });
 
 

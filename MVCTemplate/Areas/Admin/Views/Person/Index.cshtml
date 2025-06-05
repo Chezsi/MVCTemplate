@@ -201,6 +201,13 @@
     <script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>
 
     <script>
+        // animation
+        $(document).ready(function () {
+            $(".app-main__inner").animate({ opacity: 1 }, 10);
+        });
+    </script>
+
+    <script>
         $(function () {
             $("#ShowGraphBtn").click(function () {
                 var chartType = $("#ChartType").val();
