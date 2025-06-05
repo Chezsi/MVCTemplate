@@ -24,6 +24,17 @@ let dataTable;
 $(document).ready(function () {
     loadDataTable();
 
+    // Load person filter dropdown separately
+    $.get('/Admin/Contract/GetAllPersonsForContract', function (data) {
+        const personFilter = $('#personIdSearch');
+        personFilter.empty();
+        personFilter.append($('<option>').val('').text('-- All People --'));
+
+        data.forEach(person => {
+            personFilter.append($('<option>').val(person.name).text(person.name));
+        });
+    });
+
     // Unlock form submit
     // for the unlockModal
     $('#unlockForm').on('submit', function (e) {

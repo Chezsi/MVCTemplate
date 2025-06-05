@@ -371,7 +371,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new { data = contractList });
         }
 
+        [HttpGet]
+        public IActionResult GetAllPersonsForContract()
+        {
+            var persons = _unitOfWork.Person.GetAll()
+                .Select(p => new {
+                    p.Id,
+                    p.Name
+                })
+                .ToList();
 
+            return Json(persons);
+        }
         #endregion
     }
 }
