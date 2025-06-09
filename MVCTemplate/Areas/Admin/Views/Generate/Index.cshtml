@@ -24,7 +24,14 @@
                 <div class="d-inline-block dropdown">
                     <a href="@Url.Action("ExportToExcel", "Generate", new { area = "Admin" })" class="btn btn-success" id="button-excel">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export All
+                        Export to Excel
+                    </a>
+                </div>
+
+                <div class="d-inline-block dropdown ms-2">
+                    <a href="@Url.Action("ExportToPdf", "Generate", new { area = "Admin" })" class="btn btn-danger" id="button-pdf">
+                        <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
+                        Export to PDF
                     </a>
                 </div>
 

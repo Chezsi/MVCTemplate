@@ -281,6 +281,238 @@ namespace MVCTemplate.Controllers
                         filename);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportToPdf()
+        {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+            var categories = await _context.Categorys.ToListAsync();
+            var contracts = await _context.Contracts.ToListAsync();
+            var packages = await _context.Packages.ToListAsync();
+            var persons = await _context.Persons.ToListAsync();
+            var reports = await _context.Reports.ToListAsync();
+            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/reports");
+
+            byte[] pdfBytes = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+                    page.Size(PageSizes.A4);
+
+                    // Header with page number
+                    page.Header()
+                        .AlignRight()
+                        .Text(text =>
+                        {
+                            text.Span("Page ").FontSize(10).FontColor(Colors.Grey.Medium);
+                            text.CurrentPageNumber().FontSize(10).FontColor(Colors.Grey.Medium);
+                            text.Span(" of ").FontSize(10).FontColor(Colors.Grey.Medium);
+                            text.TotalPages().FontSize(10).FontColor(Colors.Grey.Medium);
+                        });
+
+                    // Footer with report generation date
+                    page.Footer()
+                        .AlignRight()
+                        .Text($"Report generated on {DateTime.Now:MMMM-dd-yyyy}")
+                        .FontSize(10)
+                        .FontColor(Colors.Grey.Medium);
+
+                    // Main content
+                    page.Content().Column(column =>
+                    {
+                        // Categories table
+                        column.Item().Element(container =>
+                            container.PaddingBottom(10).AlignCenter().Text("Categories Data").FontSize(16).Bold().Underline());
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                            });
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Id").Bold();
+                                header.Cell().Text("Name").Bold();
+                                header.Cell().Text("Code").Bold();
+                                header.Cell().Text("CreatedAt").Bold();
+                                header.Cell().Text("UpdatedAt").Bold();
+                            });
+                            foreach (var c in categories)
+                            {
+                                table.Cell().Text(c.IdCategory.ToString());
+                                table.Cell().Text(c.NameCategory);
+                                table.Cell().Text(c.CodeCategory);
+                                table.Cell().Text(c.CreatedAt.ToString("MMMM-dd-yyyy"));
+                                table.Cell().Text(c.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                            }
+                        });
+
+                        // Contracts table
+                        column.Item().Element(container =>
+                            container.PaddingBottom(10).AlignCenter().Text("Contracts Data").FontSize(16).Bold().Underline());
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                            });
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Id").Bold();
+                                header.Cell().Text("Name").Bold();
+                                header.Cell().Text("Description").Bold();
+                                header.Cell().Text("Validity").Bold();
+                                header.Cell().Text("PersonId").Bold();
+                                header.Cell().Text("CreatedAt").Bold();
+                                header.Cell().Text("UpdatedAt").Bold();
+                            });
+                            foreach (var c in contracts)
+                            {
+                                table.Cell().Text(c.Id.ToString());
+                                table.Cell().Text(c.Name);
+                                table.Cell().Text(c.Description);
+                                table.Cell().Text(c.Validity?.ToString("MMMM-dd-yyyy") ?? "");
+                                table.Cell().Text(c.PersonId.ToString());
+                                table.Cell().Text(c.CreatedAt.ToString("MMMM-dd-yyyy"));
+                                table.Cell().Text(c.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                            }
+                        });
+
+                        // Packages table
+                        column.Item().Element(container =>
+                            container.PaddingBottom(10).AlignCenter().Text("Packages Data").FontSize(16).Bold().Underline());
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                            });
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Id").Bold();
+                                header.Cell().Text("Name").Bold();
+                                header.Cell().Text("Description").Bold();
+                                header.Cell().Text("Priority").Bold();
+                                header.Cell().Text("CreatedAt").Bold();
+                                header.Cell().Text("UpdatedAt").Bold();
+                            });
+                            foreach (var p in packages)
+                            {
+                                table.Cell().Text(p.Id.ToString());
+                                table.Cell().Text(p.Name);
+                                table.Cell().Text(p.Description);
+                                table.Cell().Text(p.Priority.ToString());
+                                table.Cell().Text(p.CreatedAt.ToString("MMMM-dd-yyyy"));
+                                table.Cell().Text(p.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                            }
+                        });
+
+                        // Persons table
+                        column.Item().Element(container =>
+                            container.PaddingBottom(10).AlignCenter().Text("Persons Data").FontSize(16).Bold().Underline());
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                            });
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Id").Bold();
+                                header.Cell().Text("Name").Bold();
+                                header.Cell().Text("Position").Bold();
+                                header.Cell().Text("CategoryId").Bold();
+                                header.Cell().Text("CreatedAt").Bold();
+                                header.Cell().Text("UpdatedAt").Bold();
+                            });
+                            foreach (var p in persons)
+                            {
+                                table.Cell().Text(p.Id.ToString());
+                                table.Cell().Text(p.Name);
+                                table.Cell().Text(p.Position);
+                                table.Cell().Text(p.CategoryId.ToString());
+                                table.Cell().Text(p.CreatedAt.ToString("MMMM-dd-yyyy"));
+                                table.Cell().Text(p.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                            }
+                        });
+
+                        // Reports table
+                        column.Item().Element(container =>
+                            container.PaddingBottom(10).AlignCenter().Text("Reports Data").FontSize(16).Bold().Underline());
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                                columns.RelativeColumn(5);
+                            });
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Title").Bold();
+                                header.Cell().Text("Description").Bold();
+                                header.Cell().Text("CreatedAt").Bold();
+                                header.Cell().Text("UpdatedAt").Bold();
+                                header.Cell().Text("Image").Bold();
+                            });
+                            foreach (var r in reports)
+                            {
+                                table.Cell().Text(r.Title);
+                                table.Cell().Text(r.Description);
+                                table.Cell().Text(r.CreatedAt.ToString("MMMM-dd-yyyy"));
+                                table.Cell().Text(r.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                                table.Cell().Element(cell =>
+                                {
+                                    if (!string.IsNullOrEmpty(r.ImageName))
+                                    {
+                                        var imagePath = Path.Combine(filePath, r.ImageName);
+                                        if (System.IO.File.Exists(imagePath))
+                                        {
+                                            cell.Image(imagePath, ImageScaling.FitWidth);
+                                        }
+                                        else
+                                        {
+                                            cell.Text("[Image not found]");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        cell.Text("[No image]");
+                                    }
+                                });
+                            }
+                        });
+                    });
+                });
+            }).GeneratePdf();
+
+            return File(pdfBytes, "application/pdf", "AllData.pdf");
+        }
+
+
 
 
 
