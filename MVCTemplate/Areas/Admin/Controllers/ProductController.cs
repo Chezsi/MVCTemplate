@@ -7,6 +7,8 @@ using MVCTemplate.Models;
 using MVCtemplate.DataAccess.Data;
 using ClosedXML.Excel;
 using System.IO;
+using OfficeOpenXml.Style;
+using OfficeOpenXml;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -26,6 +28,103 @@ namespace MVCTemplate.Areas.Admin.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel()
+        {
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
+
+            var dataToExport = _unitOfWork.Product.GetAll().ToList();
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Products");
+
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            string FormatDateTimeWordMDY(DateTime dt) =>
+                dt.ToString("MMMM dd, yyyy, hh:mm tt");
+
+            worksheet.Cells[1, 1].Value = "Product Data";
+            worksheet.Cells[1, 1, 1, 4].Merge = true;
+            worksheet.Cells[1, 1].Style.Font.Size = 14;
+            worksheet.Cells[1, 1].Style.Font.Bold = true;
+            worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+            var now = DateTime.Now;
+            worksheet.Cells[2, 1].Value = $"Generated at: {FormatDateTimeWordMDY(now)}";
+            worksheet.Cells[2, 1, 2, 4].Merge = true;
+            worksheet.Cells[2, 1].Style.Font.Italic = true;
+            worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+            worksheet.Cells["A1:D2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:D2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:D2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:D2"].Style.Border.BorderAround(borderStyle);
+
+            string[] headers = { "ID", "Name", "Description", "Quantity" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = worksheet.Cells[3, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                var fillColor = ((i + 1) % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+                cell.Style.Border.BorderAround(borderStyle);
+            }
+
+            int row = 4;
+            foreach (var item in dataToExport)
+            {
+                worksheet.Cells[row, 1].Value = item.Id;
+                worksheet.Cells[row, 2].Value = item.Name;
+                worksheet.Cells[row, 3].Value = item.Description;
+                worksheet.Cells[row, 4].Value = item.Quantity;
+
+                for (int col = 1; col <= 4; col++)
+                {
+                    var cell = worksheet.Cells[row, col];
+                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    var fillColor = (col % 2 == 0) ? lightGreen : darkGreen;
+                    cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+                    cell.Style.Border.BorderAround(borderStyle);
+                }
+                row++;
+            }
+
+            // Apply auto-filter per column on header row (row 3)
+            worksheet.Cells[3, 1, row - 1, 4].AutoFilter = true;
+
+            worksheet.Column(1).Width = 10;
+
+            int GetMaxLength(int colIndex)
+            {
+                int maxLen = headers[colIndex - 1].Length;
+                for (int r = 4; r < row; r++)
+                {
+                    var val = worksheet.Cells[r, colIndex].Text;
+                    if (!string.IsNullOrEmpty(val))
+                        maxLen = Math.Max(maxLen, val.Length);
+                }
+                return maxLen + 2;
+            }
+
+            worksheet.Column(2).Width = GetMaxLength(2);
+            worksheet.Column(3).Width = GetMaxLength(3);
+            worksheet.Column(4).Width = 10;
+
+            var stream = new MemoryStream();
+            package.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Product.xlsx");
         }
 
         [HttpPost]
@@ -71,7 +170,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return _unitOfWork.Product.ToList();
         }
 
-        public async Task<ActionResult> ExportToExcel()
+        /*public async Task<ActionResult> ExportToExcel()
         {
             var products = GetProducts();
 
@@ -106,7 +205,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return new EmptyResult();
                 }
             }
-        }
+        }*/
 
         [HttpPost]
         public IActionResult GetProductsData()

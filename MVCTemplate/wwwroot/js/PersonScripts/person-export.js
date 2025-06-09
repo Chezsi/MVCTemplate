@@ -1,7 +1,7 @@
 
 $(document).ready(function () {
-    $('#button-excel-to-excel').on('click', function () {
-        window.location.href = '/Admin/Person/ExportToExcel'; // adjust path if needed
+    $('#button-export-to-excel').on('click', function () {
+        window.location.href = '/Admin/Person/ExportToExcel';
     });
 }); // ^ uses controller
 

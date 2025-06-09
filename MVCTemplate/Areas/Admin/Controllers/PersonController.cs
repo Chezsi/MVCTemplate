@@ -190,7 +190,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet] // probably did not had to use contracts
         public async Task<IActionResult> ExportToExcel()
         {
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
@@ -199,7 +199,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             var allContracts = await _context.Contracts.ToListAsync();
 
             using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add("Contracts");
+            var worksheet = package.Workbook.Worksheets.Add("Person");
 
             // Colors
             var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
@@ -211,7 +211,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             // Row 1 - Title
             worksheet.Cells["A1:D1"].Merge = true;
-            worksheet.Cells["A1"].Value = "Contracts Data";
+            worksheet.Cells["A1"].Value = "Person Data";
             worksheet.Cells["A1"].Style.Font.Size = 16;
             worksheet.Cells["A1"].Style.Font.Bold = true;
             worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -288,7 +288,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return File(stream,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Contracts.xlsx");
+                "Person.xlsx");
         }
 
 
