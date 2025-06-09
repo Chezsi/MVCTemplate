@@ -284,7 +284,7 @@ namespace MVCTemplate.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportToPdf()
         {
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            QuestPDF.Settings.License = LicenseType.Community;
 
             var categories = await _context.Categorys.ToListAsync();
             var contracts = await _context.Contracts.ToListAsync();
@@ -295,15 +295,15 @@ namespace MVCTemplate.Controllers
 
             byte[] pdfBytes = Document.Create(container =>
             {
-                container.Page(page =>
+                void CreatePage(string title, Action<IContainer> content)
                 {
-                    page.Margin(20);
-                    page.Size(PageSizes.A4);
+                    container.Page(page =>
+                    {
+                        page.Margin(20);
+                        page.Size(PageSizes.A4);
 
-                    // Header with page number
-                    page.Header()
-                        .AlignRight()
-                        .Text(text =>
+                        // Header
+                        page.Header().AlignRight().Text(text =>
                         {
                             text.Span("Page ").FontSize(10).FontColor(Colors.Grey.Medium);
                             text.CurrentPageNumber().FontSize(10).FontColor(Colors.Grey.Medium);
@@ -311,210 +311,229 @@ namespace MVCTemplate.Controllers
                             text.TotalPages().FontSize(10).FontColor(Colors.Grey.Medium);
                         });
 
-                    // Footer with report generation date
-                    page.Footer()
-                        .AlignRight()
-                        .Text($"Report generated on {DateTime.Now:MMMM-dd-yyyy}")
-                        .FontSize(10)
-                        .FontColor(Colors.Grey.Medium);
+                        // Footer
+                        page.Footer().AlignRight()
+                            .Text($"Report generated on {DateTime.Now:MMMM-dd-yyyy}")
+                            .FontSize(10).FontColor(Colors.Grey.Medium);
 
-                    // Main content
-                    page.Content().Column(column =>
-                    {
-                        // Categories table
-                        column.Item().Element(container =>
-                            container.PaddingBottom(10).AlignCenter().Text("Categories Data").FontSize(16).Bold().Underline());
-                        column.Item().Table(table =>
+                        // Content
+                        page.Content().Column(col =>
                         {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                            });
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Id").Bold();
-                                header.Cell().Text("Name").Bold();
-                                header.Cell().Text("Code").Bold();
-                                header.Cell().Text("CreatedAt").Bold();
-                                header.Cell().Text("UpdatedAt").Bold();
-                            });
-                            foreach (var c in categories)
-                            {
-                                table.Cell().Text(c.IdCategory.ToString());
-                                table.Cell().Text(c.NameCategory);
-                                table.Cell().Text(c.CodeCategory);
-                                table.Cell().Text(c.CreatedAt.ToString("MMMM-dd-yyyy"));
-                                table.Cell().Text(c.UpdatedAt.ToString("MMMM-dd-yyyy"));
-                            }
-                        });
-
-                        // Contracts table
-                        column.Item().Element(container =>
-                            container.PaddingBottom(10).AlignCenter().Text("Contracts Data").FontSize(16).Bold().Underline());
-                        column.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                            });
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Id").Bold();
-                                header.Cell().Text("Name").Bold();
-                                header.Cell().Text("Description").Bold();
-                                header.Cell().Text("Validity").Bold();
-                                header.Cell().Text("PersonId").Bold();
-                                header.Cell().Text("CreatedAt").Bold();
-                                header.Cell().Text("UpdatedAt").Bold();
-                            });
-                            foreach (var c in contracts)
-                            {
-                                table.Cell().Text(c.Id.ToString());
-                                table.Cell().Text(c.Name);
-                                table.Cell().Text(c.Description);
-                                table.Cell().Text(c.Validity?.ToString("MMMM-dd-yyyy") ?? "");
-                                table.Cell().Text(c.PersonId.ToString());
-                                table.Cell().Text(c.CreatedAt.ToString("MMMM-dd-yyyy"));
-                                table.Cell().Text(c.UpdatedAt.ToString("MMMM-dd-yyyy"));
-                            }
-                        });
-
-                        // Packages table
-                        column.Item().Element(container =>
-                            container.PaddingBottom(10).AlignCenter().Text("Packages Data").FontSize(16).Bold().Underline());
-                        column.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                            });
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Id").Bold();
-                                header.Cell().Text("Name").Bold();
-                                header.Cell().Text("Description").Bold();
-                                header.Cell().Text("Priority").Bold();
-                                header.Cell().Text("CreatedAt").Bold();
-                                header.Cell().Text("UpdatedAt").Bold();
-                            });
-                            foreach (var p in packages)
-                            {
-                                table.Cell().Text(p.Id.ToString());
-                                table.Cell().Text(p.Name);
-                                table.Cell().Text(p.Description);
-                                table.Cell().Text(p.Priority.ToString());
-                                table.Cell().Text(p.CreatedAt.ToString("MMMM-dd-yyyy"));
-                                table.Cell().Text(p.UpdatedAt.ToString("MMMM-dd-yyyy"));
-                            }
-                        });
-
-                        // Persons table
-                        column.Item().Element(container =>
-                            container.PaddingBottom(10).AlignCenter().Text("Persons Data").FontSize(16).Bold().Underline());
-                        column.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(3);
-                            });
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Id").Bold();
-                                header.Cell().Text("Name").Bold();
-                                header.Cell().Text("Position").Bold();
-                                header.Cell().Text("CategoryId").Bold();
-                                header.Cell().Text("CreatedAt").Bold();
-                                header.Cell().Text("UpdatedAt").Bold();
-                            });
-                            foreach (var p in persons)
-                            {
-                                table.Cell().Text(p.Id.ToString());
-                                table.Cell().Text(p.Name);
-                                table.Cell().Text(p.Position);
-                                table.Cell().Text(p.CategoryId.ToString());
-                                table.Cell().Text(p.CreatedAt.ToString("MMMM-dd-yyyy"));
-                                table.Cell().Text(p.UpdatedAt.ToString("MMMM-dd-yyyy"));
-                            }
-                        });
-
-                        // Reports table
-                        column.Item().Element(container =>
-                            container.PaddingBottom(10).AlignCenter().Text("Reports Data").FontSize(16).Bold().Underline());
-                        column.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                                columns.RelativeColumn(5);
-                            });
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Title").Bold();
-                                header.Cell().Text("Description").Bold();
-                                header.Cell().Text("CreatedAt").Bold();
-                                header.Cell().Text("UpdatedAt").Bold();
-                                header.Cell().Text("Image").Bold();
-                            });
-                            foreach (var r in reports)
-                            {
-                                table.Cell().Text(r.Title);
-                                table.Cell().Text(r.Description);
-                                table.Cell().Text(r.CreatedAt.ToString("MMMM-dd-yyyy"));
-                                table.Cell().Text(r.UpdatedAt.ToString("MMMM-dd-yyyy"));
-                                table.Cell().Element(cell =>
-                                {
-                                    if (!string.IsNullOrEmpty(r.ImageName))
-                                    {
-                                        var imagePath = Path.Combine(filePath, r.ImageName);
-                                        if (System.IO.File.Exists(imagePath))
-                                        {
-                                            cell.Image(imagePath, ImageScaling.FitWidth);
-                                        }
-                                        else
-                                        {
-                                            cell.Text("[Image not found]");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        cell.Text("[No image]");
-                                    }
-                                });
-                            }
+                            col.Item().PaddingBottom(10).AlignCenter().Text(title).FontSize(16).Bold().Underline();
+                            col.Item().Element(content);
                         });
                     });
+                }
+
+                // Categories
+                CreatePage("Categories Data", content =>
+                {
+                    content.Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(3);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("Id").Bold();
+                            header.Cell().Element(CellStyle).Text("Name").Bold();
+                            header.Cell().Element(CellStyle).Text("Code").Bold();
+                            header.Cell().Element(CellStyle).Text("CreatedAt").Bold();
+                            header.Cell().Element(CellStyle).Text("UpdatedAt").Bold();
+                        });
+
+                        foreach (var c in categories)
+                        {
+                            table.Cell().Element(CellStyle).Text(c.IdCategory.ToString());
+                            table.Cell().Element(CellStyle).Text(c.NameCategory);
+                            table.Cell().Element(CellStyle).Text(c.CodeCategory);
+                            table.Cell().Element(CellStyle).Text(c.CreatedAt.ToString("MMMM-dd-yyyy"));
+                            table.Cell().Element(CellStyle).Text(c.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                        }
+                    });
                 });
+
+                // Contracts
+                CreatePage("Contracts Data", content =>
+                {
+                    content.Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("Id").Bold();
+                            header.Cell().Element(CellStyle).Text("Name").Bold();
+                            header.Cell().Element(CellStyle).Text("Description").Bold();
+                            header.Cell().Element(CellStyle).Text("Validity").Bold();
+                            header.Cell().Element(CellStyle).Text("PersonId").Bold();
+                            header.Cell().Element(CellStyle).Text("CreatedAt").Bold();
+                            header.Cell().Element(CellStyle).Text("UpdatedAt").Bold();
+                        });
+
+                        foreach (var c in contracts)
+                        {
+                            table.Cell().Element(CellStyle).Text(c.Id.ToString());
+                            table.Cell().Element(CellStyle).Text(c.Name);
+                            table.Cell().Element(CellStyle).Text(c.Description);
+                            table.Cell().Element(CellStyle).Text(c.Validity?.ToString("MMMM-dd-yyyy") ?? "");
+                            table.Cell().Element(CellStyle).Text(c.PersonId.ToString());
+                            table.Cell().Element(CellStyle).Text(c.CreatedAt.ToString("MMMM-dd-yyyy"));
+                            table.Cell().Element(CellStyle).Text(c.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                        }
+                    });
+                });
+
+                // Packages
+                CreatePage("Packages Data", content =>
+                {
+                    content.Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("Id").Bold();
+                            header.Cell().Element(CellStyle).Text("Name").Bold();
+                            header.Cell().Element(CellStyle).Text("Description").Bold();
+                            header.Cell().Element(CellStyle).Text("Priority").Bold();
+                            header.Cell().Element(CellStyle).Text("CreatedAt").Bold();
+                            header.Cell().Element(CellStyle).Text("UpdatedAt").Bold();
+                        });
+
+                        foreach (var p in packages)
+                        {
+                            table.Cell().Element(CellStyle).Text(p.Id.ToString());
+                            table.Cell().Element(CellStyle).Text(p.Name);
+                            table.Cell().Element(CellStyle).Text(p.Description);
+                            table.Cell().Element(CellStyle).Text(p.Priority.ToString());
+                            table.Cell().Element(CellStyle).Text(p.CreatedAt.ToString("MMMM-dd-yyyy"));
+                            table.Cell().Element(CellStyle).Text(p.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                        }
+                    });
+                });
+
+                // Persons
+                CreatePage("Persons Data", content =>
+                {
+                    content.Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("Id").Bold();
+                            header.Cell().Element(CellStyle).Text("Name").Bold();
+                            header.Cell().Element(CellStyle).Text("Position").Bold();
+                            header.Cell().Element(CellStyle).Text("CategoryId").Bold();
+                            header.Cell().Element(CellStyle).Text("CreatedAt").Bold();
+                            header.Cell().Element(CellStyle).Text("UpdatedAt").Bold();
+                        });
+
+                        foreach (var p in persons)
+                        {
+                            table.Cell().Element(CellStyle).Text(p.Id.ToString());
+                            table.Cell().Element(CellStyle).Text(p.Name);
+                            table.Cell().Element(CellStyle).Text(p.Position);
+                            table.Cell().Element(CellStyle).Text(p.CategoryId.ToString());
+                            table.Cell().Element(CellStyle).Text(p.CreatedAt.ToString("MMMM-dd-yyyy"));
+                            table.Cell().Element(CellStyle).Text(p.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                        }
+                    });
+                });
+
+                // Reports
+                CreatePage("Reports Data", content =>
+                {
+                    content.Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(3);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("Title").Bold();
+                            header.Cell().Element(CellStyle).Text("Description").Bold();
+                            header.Cell().Element(CellStyle).Text("CreatedAt").Bold();
+                            header.Cell().Element(CellStyle).Text("UpdatedAt").Bold();
+                            header.Cell().Element(CellStyle).Text("Image").Bold();
+                        });
+
+                        foreach (var r in reports)
+                        {
+                            table.Cell().Element(CellStyle).Text(r.Title);
+                            table.Cell().Element(CellStyle).Text(r.Description);
+                            table.Cell().Element(CellStyle).Text(r.CreatedAt.ToString("MMMM-dd-yyyy"));
+                            table.Cell().Element(CellStyle).Text(r.UpdatedAt.ToString("MMMM-dd-yyyy"));
+                            table.Cell().Element(cell =>
+                            {
+                                if (!string.IsNullOrEmpty(r.ImageName))
+                                {
+                                    var imagePath = Path.Combine(filePath, r.ImageName);
+                                    if (System.IO.File.Exists(imagePath))
+                                        cell.MinimalBox().Image(imagePath, ImageScaling.FitWidth);
+                                    else
+                                        cell.Text("[Image not found]");
+                                }
+                                else
+                                {
+                                    cell.Text("[No image]");
+                                }
+                            });
+                        }
+                    });
+                });
+
             }).GeneratePdf();
 
             return File(pdfBytes, "application/pdf", "AllData.pdf");
+
+            // Reusable cell styling
+            IContainer CellStyle(IContainer container) =>
+                container
+                    .Border(1)
+                    .BorderColor(Colors.Grey.Medium)
+                    .Padding(4)
+                    .AlignMiddle()
+                    .AlignLeft();
         }
-
-
-
-
 
     }
 }
