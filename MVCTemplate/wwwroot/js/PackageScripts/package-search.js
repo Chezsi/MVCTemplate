@@ -30,7 +30,9 @@ function toggleExportFilteredButton() {
     const startDate = $('#startDate').val();
     const endDate = $('#endDate').val();
 
-    if (name || description || priority || startDate || endDate) {
+    const filteredRowsCount = dataTable.rows({ search: 'applied' }).data().length;
+
+    if ((name || description || priority || startDate || endDate) && filteredRowsCount > 0) {
         $('#button-excelFiltered').show();
     } else {
         $('#button-excelFiltered').hide();

@@ -14,7 +14,7 @@
             $('.report-thumbnail.enlarged').removeClass('enlarged');
         }
     });
-
+});
 function loadDataTableReport() {
     dataTable = $('#reportTable').DataTable({
         "ajax": {

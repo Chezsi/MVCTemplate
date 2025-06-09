@@ -6,7 +6,10 @@
         const titleVal = $('#titleSearch').val().trim();
         const descVal = $('#descriptionSearch').val().trim();
 
-        if (titleVal.length > 0 || descVal.length > 0) {
+        var table = $('#reportTable').DataTable();
+        var filteredRowsCount = table.rows({ filter: 'applied' }).data().length;
+
+        if ((titleVal.length > 0 || descVal.length > 0) && filteredRowsCount > 0) {
             $('#exportFilteredPdfBtn, #exportFilteredExcelBtn').show();
         } else {
             $('#exportFilteredPdfBtn, #exportFilteredExcelBtn').hide();
@@ -44,7 +47,7 @@
             url += '?' + queryParams.join('&');
         }
 
-        window.open(url, '_blank');
+        /*window.open(url, '_blank'); opens a new window */
     });
 
     // Export filtered Excel button event handler
@@ -67,6 +70,6 @@
             url += '?' + queryParams.join('&');
         }
 
-        window.open(url, '_blank');
+        /*window.open(url, '_blank'); opens a new window */
     });
 });
