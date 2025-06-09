@@ -227,6 +227,7 @@
     <script src="~/js/formSubmissionAjax.js"></script>
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/ReportScripts/report-data-table.js"></script>
+    <script src="~/js/ReportScripts/report-search.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -238,39 +239,6 @@
                         $(this).remove(); // Remove the overlay after fade out
                     });
                 }, 500);
-            });
-        });
-    </script>
-
-    <script>
-        $(document).ready(function () {
-            // External inputs filter DataTables columns
-            $('#titleSearch').on('keyup change', function () {
-                $('#reportTable').DataTable().column(0).search(this.value).draw();
-            });
-
-            $('#descriptionSearch').on('keyup change', function () {
-                $('#reportTable').DataTable().column(2).search(this.value).draw();
-            });
-
-            // Export Filtered PDF button
-            $('#exportFilteredPdfBtn').on('click', function () {
-                const table = $('#reportTable').DataTable();
-                const titleFilter = table.column(0).search() || '';
-                const descriptionFilter = table.column(2).search() || '';
-
-                const url = `/Admin/Report/ExportFilteredToPdf?titleFilter=${encodeURIComponent(titleFilter)}&descriptionFilter=${encodeURIComponent(descriptionFilter)}`;
-                window.open(url, '_blank');
-            });
-
-            // Export Filtered Excel button
-            $('#exportFilteredExcelBtn').on('click', function () {
-                const table = $('#reportTable').DataTable();
-                const titleFilter = table.column(0).search() || '';
-                const descriptionFilter = table.column(2).search() || '';
-
-                const url = `/Admin/Report/ExportFilteredToExcel?titleFilter=${encodeURIComponent(titleFilter)}&descriptionFilter=${encodeURIComponent(descriptionFilter)}`;
-                window.open(url, '_blank');
             });
         });
     </script>
