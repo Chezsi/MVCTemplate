@@ -1,3 +1,10 @@
+
+$(document).ready(function () {
+    $('#button-excel-to-excel').on('click', function () {
+        window.location.href = '/Admin/Person/ExportToExcel'; // adjust path if needed
+    });
+}); // ^ uses controller
+
 document.querySelector("#button-excel-person").addEventListener("click", async function () {
     var table = $('#Persons').DataTable();
     var searchValue = table.search();
@@ -78,7 +85,7 @@ document.querySelector("#button-excel-person").addEventListener("click", async f
 
     XLSX.utils.book_append_sheet(wb, ws, "Persons");
     XLSX.writeFile(wb, "Persons.xlsx");
-});
+}); // ^ purely JS
 
 
 document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
@@ -151,5 +158,6 @@ document.querySelector("#button-export-current-contracts").addEventListener("cli
         console.error("Export error:", err);
         alert("Failed to export current contracts.");
     }
-});
+}); // ^ purely JS
+
 

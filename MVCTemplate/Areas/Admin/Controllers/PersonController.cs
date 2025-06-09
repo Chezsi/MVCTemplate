@@ -57,7 +57,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                    Value = u.IdCategory.ToString()
                });
 
-            ViewBag.CategoryList = CategoryList;
+            //ViewBag.CategoryList = CategoryList;
             //not working
             return View();
         }
@@ -189,6 +189,109 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel()
+        {
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
+
+            var persons = await _context.Persons.ToListAsync();
+            var allContracts = await _context.Contracts.ToListAsync();
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Contracts");
+
+            // Colors
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            // Row 1 - Title
+            worksheet.Cells["A1:D1"].Merge = true;
+            worksheet.Cells["A1"].Value = "Contracts Data";
+            worksheet.Cells["A1"].Style.Font.Size = 16;
+            worksheet.Cells["A1"].Style.Font.Bold = true;
+            worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+            // Row 2 - Timestamp
+            worksheet.Cells["A2:D2"].Merge = true;
+            worksheet.Cells["A2"].Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
+            worksheet.Cells["A2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+            // Style for Title and Timestamp rows
+            worksheet.Cells["A1:D2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:D2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:D2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:D3"].Style.Border.Top.Style = borderStyle;
+            worksheet.Cells["A1:D3"].Style.Border.Bottom.Style = borderStyle;
+            worksheet.Cells["A1:D3"].Style.Border.Left.Style = borderStyle;
+            worksheet.Cells["A1:D3"].Style.Border.Right.Style = borderStyle;
+
+            // Row 3 - Headers
+            string[] headers = new[] { "Person ID", "Name", "Position", "Category ID" };
+
+            for (int i = 1; i <= headers.Length; i++)
+            {
+                var cell = worksheet.Cells[3, i];
+                cell.Value = headers[i - 1];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor((i % 2 == 0) ? lightGreen : darkGreen);
+                cell.Style.Border.Top.Style = borderStyle;
+                cell.Style.Border.Bottom.Style = borderStyle;
+                cell.Style.Border.Left.Style = borderStyle;
+                cell.Style.Border.Right.Style = borderStyle;
+            }
+
+            int row = 4;
+
+            foreach (var person in persons)
+            {
+                var contractsForPerson = allContracts.Where(c => c.PersonId == person.Id);
+
+                // Export one row per contract/person combo but only person data (up to Category ID)
+                foreach (var contract in contractsForPerson)
+                {
+                    worksheet.Cells[row, 1].Value = person.Id;
+                    worksheet.Cells[row, 2].Value = person.Name;
+                    worksheet.Cells[row, 3].Value = person.Position;
+                    worksheet.Cells[row, 4].Value = person.CategoryId;
+
+                    // Style each cell in this row (only 4 columns)
+                    for (int col = 1; col <= 4; col++)
+                    {
+                        var cell = worksheet.Cells[row, col];
+                        cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+                        cell.Style.Border.Top.Style = borderStyle;
+                        cell.Style.Border.Bottom.Style = borderStyle;
+                        cell.Style.Border.Left.Style = borderStyle;
+                        cell.Style.Border.Right.Style = borderStyle;
+                    }
+                    row++;
+                }
+            }
+
+            // Apply autofilter to the header row (only 4 columns)
+            worksheet.Cells[3, 1, row - 1, 4].AutoFilter = true;
+
+            // Auto-fit columns
+            worksheet.Cells.AutoFitColumns();
+
+            // Return Excel file
+            var stream = new MemoryStream();
+            package.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Contracts.xlsx");
+        }
+
+
 
         [HttpGet]
         public async Task<IActionResult> ExportCurrentContractsExcel()
