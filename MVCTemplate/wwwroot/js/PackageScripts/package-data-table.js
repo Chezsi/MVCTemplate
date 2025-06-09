@@ -80,6 +80,28 @@ function loadDataTable() {
         }
     });
 
+function toggleExportFilteredButton() {
+    const name = $('#nameSearch').val().trim();
+    const description = $('#descriptionSearch').val().trim();
+    const priority = $('#prioritySearch').val().trim();
+    const startDate = $('#startDate').val();
+    const endDate = $('#endDate').val();
+
+    if (name || description || priority || startDate || endDate) {
+        $('#button-excelFiltered').show();
+    } else {
+        $('#button-excelFiltered').hide();
+    }
+}
+
+$(document).ready(function () {
+    $('#button-excelFiltered').hide();
+
+    $('#nameSearch, #descriptionSearch, #prioritySearch, #startDate, #endDate')
+        .on('keyup change', toggleExportFilteredButton);
+});
+
+
 // Date range filter using DataTables custom filter extension
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     let min = $('#startDate').val();
