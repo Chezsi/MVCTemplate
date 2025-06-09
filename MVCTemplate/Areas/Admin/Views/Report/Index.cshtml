@@ -29,6 +29,10 @@
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
 
+                    @*<button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fa fa-file-import"></i> Import Excel
+                    </button>*@
+
                     <a asp-action="ExportToExcel" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export to Excel
@@ -41,10 +45,6 @@
                     <a asp-action="ExportToPdf" class="btn btn-danger ms-2">Export to PDF</a>
 
                     <button id="exportFilteredPdfBtn" class="btn btn-danger ms-2">Export Filtered to PDF</button>
-
-                    @*<button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <i class="fa fa-file-import"></i> Import Excel
-                    </button>*@
 
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add Report

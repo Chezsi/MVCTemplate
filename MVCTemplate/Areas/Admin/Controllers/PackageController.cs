@@ -87,33 +87,50 @@ namespace MVCTemplate.Areas.Admin.Controllers
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Filtered Packages");
 
-            // Add header row
-            worksheet.Cells[1, 1].Value = "Name";
-            worksheet.Cells[1, 2].Value = "Description";
-            worksheet.Cells[1, 3].Value = "Priority";
-            worksheet.Cells[1, 4].Value = "Created At";
-            worksheet.Cells[1, 5].Value = "Updated At";
+            // Row 1: Title
+            worksheet.Cells[1, 1].Value = "FIltered Package Data";
+            worksheet.Cells[1, 1, 1, 5].Merge = true;
+            worksheet.Cells[1, 1].Style.Font.Size = 16;
+            worksheet.Cells[1, 1].Style.Font.Bold = true;
+            worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[1, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
-            // Fill data rows
+            // Row 2: Generated At
+            var now = DateTime.Now;
+            string generatedAt = $"Generated at: {now:MMMM-dd-yyyy}"; // e.g., "June-09-2025"
+            worksheet.Cells[2, 1].Value = generatedAt;
+            worksheet.Cells[2, 1, 2, 5].Merge = true;
+            worksheet.Cells[2, 1].Style.Font.Italic = true;
+            worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[2, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            // Row 3: Header
+            worksheet.Cells[3, 1].Value = "Name";
+            worksheet.Cells[3, 2].Value = "Description";
+            worksheet.Cells[3, 3].Value = "Priority";
+            worksheet.Cells[3, 4].Value = "Created At";
+            worksheet.Cells[3, 5].Value = "Updated At";
+
+            // Row 4+: Data
             for (int i = 0; i < filteredPackages.Count; i++)
             {
                 var p = filteredPackages[i];
-                int row = i + 2;
+                int row = i + 4;
 
                 worksheet.Cells[row, 1].Value = p.Name;
                 worksheet.Cells[row, 2].Value = p.Description;
                 worksheet.Cells[row, 3].Value = p.Priority;
-                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy"); // Updated format
+                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy"); // Updated format
             }
 
             // Apply AutoFilter to header row
-            worksheet.Cells[1, 1, 1, 5].AutoFilter = true;
+            worksheet.Cells[3, 1, 3, 5].AutoFilter = true;
 
-            // Optional: Auto-fit columns
+            // Auto-fit columns
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
 
-            // Return the Excel file
+            // Return Excel file
             var stream = new MemoryStream();
             package.SaveAs(stream);
             stream.Position = 0;
@@ -122,7 +139,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "FilteredPackages.xlsx");
         }
-        // export excel that is filtered
+
 
 
         public IActionResult PDF() 
@@ -350,36 +367,65 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult ExportToExcel()
         {
-            ExcelPackage.License.SetNonCommercialPersonal("My Name"); //for the epplus
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
             var packages = _unitOfWork.Package.GetAll().ToList();
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Packages");
 
-            // Add headers
-            worksheet.Cells[1, 1].Value = "Name";
-            worksheet.Cells[1, 2].Value = "Description";
-            worksheet.Cells[1, 3].Value = "Priority";
+            // Row 1: Title
+            worksheet.Cells[1, 1].Value = "Package Data";
+            worksheet.Cells[1, 1, 1, 5].Merge = true;
+            worksheet.Cells[1, 1].Style.Font.Size = 16;
+            worksheet.Cells[1, 1].Style.Font.Bold = true;
+            worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[1, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
-            // Fill data
+            // Row 2: Generated At
+            var now = DateTime.Now;
+            worksheet.Cells[2, 1].Value = $"Generated at: {now:MMMM-dd-yyyy}";
+            worksheet.Cells[2, 1, 2, 5].Merge = true;
+            worksheet.Cells[2, 1].Style.Font.Italic = true;
+            worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[2, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            // Row 3: Headers
+            worksheet.Cells[3, 1].Value = "Name";
+            worksheet.Cells[3, 2].Value = "Description";
+            worksheet.Cells[3, 3].Value = "Priority";
+            worksheet.Cells[3, 4].Value = "Created At";
+            worksheet.Cells[3, 5].Value = "Updated At";
+
+            // Rows 4+: Data
             for (int i = 0; i < packages.Count; i++)
             {
-                var row = i + 2; // Data starts from row 2
-                worksheet.Cells[row, 1].Value = packages[i].Name;
-                worksheet.Cells[row, 2].Value = packages[i].Description;
-                worksheet.Cells[row, 3].Value = packages[i].Priority;
+                var row = i + 4;
+                var p = packages[i];
+
+                worksheet.Cells[row, 1].Value = p.Name;
+                worksheet.Cells[row, 2].Value = p.Description;
+                worksheet.Cells[row, 3].Value = p.Priority;
+                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy");
+                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy");
             }
 
-            // Add filter to the header row
-            worksheet.Cells[1, 1, 1, 3].AutoFilter = true;
+            // Apply AutoFilter to header row (Row 3)
+            worksheet.Cells[3, 1, 3, 5].AutoFilter = true;
 
-            // Auto fit columns
+            // Auto-fit columns
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
 
-            var stream = new MemoryStream(package.GetAsByteArray());
-            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Packages.xlsx");
+            // Return Excel file
+            var stream = new MemoryStream();
+            package.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Packages.xlsx");
         }
+
 
 
         #region API Calls

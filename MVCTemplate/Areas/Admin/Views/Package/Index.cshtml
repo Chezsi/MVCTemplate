@@ -33,21 +33,19 @@
                         <button type="submit">Download PDF</button>
                     </form> //uses aspose*@
 
-                    @*<div class="mb-3">
-                        <a href="/Admin/Package/ExportToExcel" class="btn btn-success">
-                            <i class="bi bi-file-earmark-excel-fill"></i> Export to Excel
-                        </a>
-                    </div> // uses controller*@
-
                     <button id="button-excelFiltered" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export Filtered to Excel
-                    </button>
+                    </button> @*uses controller*@
 
-                    <button id="button-excel" class="btn btn-success">
+                    <a href="/Admin/Package/ExportToExcel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> Export to Excel
+                    </a> @*uses controller*@
+
+                    @*<button id="button-excel" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export to Excel
-                    </button>
+                    </button> uses js *@
 
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>

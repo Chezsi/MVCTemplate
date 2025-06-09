@@ -1,6 +1,3 @@
-
-//<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script> this has to be put in _layout
-
 document.querySelector("#button-excel").addEventListener("click", async function () {
     var table = $('#Packages').DataTable();
     var searchValue = table.search();
@@ -16,70 +13,65 @@ document.querySelector("#button-excel").addEventListener("click", async function
 
     dataToExport.sort((a, b) => a.name.localeCompare(b.name));
 
+    // Format date with full datetime
+    function formatDateTimeWordMDY(dateValue) {
+        if (!dateValue) return "";
+        const d = new Date(dateValue);
+        if (isNaN(d)) return dateValue;
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ", " +
+            d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    const now = new Date();
+    const datetimeString = formatDateTimeWordMDY(now);
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Packages');
 
-    // Add columns
-    worksheet.columns = [
-        { header: 'ID', key: 'id'},
-        { header: 'Name', key: 'name'},
-        { header: 'Description', key: 'description'},
-        { header: 'Priority', key: 'priority'}
-    ];
+    // Add title row
+    worksheet.addRow(['Package Data']);
+    worksheet.mergeCells('A1:D1');
 
-    // Add rows
+    // Add generated-at row
+    worksheet.addRow([`Generated at: ${datetimeString}`]);
+    worksheet.mergeCells('A2:D2');
+
+    // Add header row
+    worksheet.addRow(['ID', 'Name', 'Description', 'Priority']);
+
+    // Add data rows
     dataToExport.forEach(row => {
-        worksheet.addRow(row);
+        worksheet.addRow([
+            row.id,
+            row.name,
+            row.description,
+            row.priority
+        ]);
     });
 
-    // Add autofilter on header row (first row)
+    // Add autofilter to the actual data header row (which is the 3rd row now)
     worksheet.autoFilter = {
-        from: 'A1',
-        to: 'D1',
+        from: 'A3',
+        to: 'D3'
     };
 
-    // Generate buffer and trigger download
-    const buffer = await workbook.xlsx.writeBuffer();
+    // Optionally adjust column widths dynamically
+    worksheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Name', key: 'name', width: Math.max(...dataToExport.map(r => r.name?.length || 0), 4) + 4 },
+        { header: 'Description', key: 'description', width: Math.max(...dataToExport.map(r => r.description?.length || 0), 11) + 4 },
+        { header: 'Priority', key: 'priority', width: 12 }
+    ];
 
-    // Create blob and trigger download
+    // Generate file buffer and download
+    const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement('a');
     a.href = url;
     a.download = 'Package.xlsx';
     a.click();
+
     URL.revokeObjectURL(url);
 });
-
-
-/*
-document.querySelector("#button-excel").addEventListener("click", async function () {
-    var table = $('#Packages').DataTable(); // ??change to account for the name in ApplicationDbContext
-    var searchValue = table.search();
-    var dataToExport;
-
-    if (searchValue) {
-        dataToExport = table.rows({ search: 'applied' }).data().toArray();
-    } else {
-        let response = await fetch('/Admin/Package/GetAllPackages'); //change to account for url naming
-        let result = await response.json();
-        dataToExport = result.data;
-    }
-
-    dataToExport.sort((a, b) => a.name.localeCompare(b.name)); // ^ change to account for name of data (Model)
-
-    let tempTable = document.createElement('table');
-    let thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>ID</th> <th>Name</th> <th>Description</th> <th>Priority</th> </tr>';
-    tempTable.appendChild(thead);
-
-    let tbody = document.createElement('tbody');
-    dataToExport.forEach(row => {
-        let tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.id}</td> <td>${row.name}</td> <td>${row.description}</td> <td>${row.priority}</td>`;
-        tbody.appendChild(tr); // ^ change to account for name of data (Model) and number of column 
-    });
-    tempTable.appendChild(tbody);
-
-    TableToExcel.convert(tempTable, { name: "Package.xlsx" });
-});*/
