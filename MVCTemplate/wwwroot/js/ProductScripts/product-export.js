@@ -82,6 +82,25 @@ document.querySelector("#button-excel").addEventListener("click", async function
         { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }   // A2:D2
     ];
 
+    ws['A1'].s = {
+        alignment: {
+            horizontal: "center"
+        },
+        font: {
+            bold: true,
+            sz: 14
+        }
+    };
+
+    ws['A2'].s = {
+        alignment: {
+            horizontal: "center"
+        },
+        font: {
+            italic: true
+        }
+    };
+
     // Dynamically calculate column widths
     const padding = 2;
     const getMaxLength = (index) => {

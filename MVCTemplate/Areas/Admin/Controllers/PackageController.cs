@@ -15,6 +15,7 @@ using Aspose.Pdf.Text;
 using System.Data;
 using System.IO;
 using ClosedXML.Excel;
+using OfficeOpenXml.Style;
 //using System.IO.Packaging;
 
 namespace MVCTemplate.Areas.Admin.Controllers
@@ -87,8 +88,16 @@ namespace MVCTemplate.Areas.Admin.Controllers
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Filtered Packages");
 
+            // Colors
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
             // Row 1: Title
-            worksheet.Cells[1, 1].Value = "FIltered Package Data";
+            worksheet.Cells[1, 1].Value = "Filtered Package Data";
             worksheet.Cells[1, 1, 1, 5].Merge = true;
             worksheet.Cells[1, 1].Style.Font.Size = 16;
             worksheet.Cells[1, 1].Style.Font.Bold = true;
@@ -104,12 +113,35 @@ namespace MVCTemplate.Areas.Admin.Controllers
             worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
             worksheet.Cells[2, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
+            // Style for Title and Timestamp rows
+            worksheet.Cells["A1:E2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:E3"].Style.Border.Top.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Bottom.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Left.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Right.Style = borderStyle;
+
             // Row 3: Header
-            worksheet.Cells[3, 1].Value = "Name";
-            worksheet.Cells[3, 2].Value = "Description";
-            worksheet.Cells[3, 3].Value = "Priority";
-            worksheet.Cells[3, 4].Value = "Created At";
-            worksheet.Cells[3, 5].Value = "Updated At";
+            string[] headers = new[] { "Name", "Description", "Priority", "Created At", "Updated At" };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var colIndex = i + 1;
+                var cell = worksheet.Cells[3, colIndex];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+
+                // Match the header color to the column data color
+                var fillColor = (colIndex % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+
+                cell.Style.Border.Top.Style = borderStyle;
+                cell.Style.Border.Bottom.Style = borderStyle;
+                cell.Style.Border.Left.Style = borderStyle;
+                cell.Style.Border.Right.Style = borderStyle;
+            }
 
             // Row 4+: Data
             for (int i = 0; i < filteredPackages.Count; i++)
@@ -120,8 +152,20 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 worksheet.Cells[row, 1].Value = p.Name;
                 worksheet.Cells[row, 2].Value = p.Description;
                 worksheet.Cells[row, 3].Value = p.Priority;
-                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy"); // Updated format
-                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy"); // Updated format
+                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy");
+                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy");
+
+                for (int col = 1; col <= 5; col++)
+                {
+                    var cell = worksheet.Cells[row, col];
+                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+
+                    cell.Style.Border.Top.Style = borderStyle;
+                    cell.Style.Border.Bottom.Style = borderStyle;
+                    cell.Style.Border.Left.Style = borderStyle;
+                    cell.Style.Border.Right.Style = borderStyle;
+                }
             }
 
             // Apply AutoFilter to header row
@@ -139,8 +183,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "FilteredPackages.xlsx");
         }
-
-
 
         public IActionResult PDF() 
         {
@@ -374,6 +416,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Packages");
 
+            // Colors
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
             // Row 1: Title
             worksheet.Cells[1, 1].Value = "Package Data";
             worksheet.Cells[1, 1, 1, 5].Merge = true;
@@ -390,12 +440,33 @@ namespace MVCTemplate.Areas.Admin.Controllers
             worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
             worksheet.Cells[2, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
+            // Style for Title and Timestamp rows
+            worksheet.Cells["A1:E2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:E3"].Style.Border.Top.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Bottom.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Left.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Right.Style = borderStyle;
+
             // Row 3: Headers
-            worksheet.Cells[3, 1].Value = "Name";
-            worksheet.Cells[3, 2].Value = "Description";
-            worksheet.Cells[3, 3].Value = "Priority";
-            worksheet.Cells[3, 4].Value = "Created At";
-            worksheet.Cells[3, 5].Value = "Updated At";
+            string[] headers = new[] { "Name", "Description", "Priority", "Created At", "Updated At" };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var colIndex = i + 1;
+                var cell = worksheet.Cells[3, colIndex];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                var fillColor = (colIndex % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+
+                cell.Style.Border.Top.Style = borderStyle;
+                cell.Style.Border.Bottom.Style = borderStyle;
+                cell.Style.Border.Left.Style = borderStyle;
+                cell.Style.Border.Right.Style = borderStyle;
+            }
 
             // Rows 4+: Data
             for (int i = 0; i < packages.Count; i++)
@@ -408,6 +479,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 worksheet.Cells[row, 3].Value = p.Priority;
                 worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy");
                 worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy");
+
+                for (int col = 1; col <= 5; col++)
+                {
+                    var cell = worksheet.Cells[row, col];
+                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+
+                    cell.Style.Border.Top.Style = borderStyle;
+                    cell.Style.Border.Bottom.Style = borderStyle;
+                    cell.Style.Border.Left.Style = borderStyle;
+                    cell.Style.Border.Right.Style = borderStyle;
+                }
             }
 
             // Apply AutoFilter to header row (Row 3)
@@ -425,8 +508,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Packages.xlsx");
         }
-
-
 
         #region API Calls
         [HttpGet]
