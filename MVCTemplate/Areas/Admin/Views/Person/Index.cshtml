@@ -32,7 +32,7 @@
                     <div class="d-flex align-items-center mb-2">
                         <button id="button-excel-person" class="btn btn-success me-3">
                             <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                            Export
+                            Export to Excel
                         </button>
 
                         <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -232,6 +232,7 @@
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/PersonScripts/person-export.js"></script>
     @*<script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>*@
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
 
     <script>
         $(document).ready(function () {

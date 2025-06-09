@@ -29,29 +29,29 @@
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
 
-                    <form method="get" action="/Admin/Package/PDF">
+                    @*<form method="get" action="/Admin/Package/PDF">
                         <button type="submit">Download PDF</button>
-                    </form>
+                    </form> //uses aspose*@
 
-                    <div class="mb-3">
+                    @*<div class="mb-3">
                         <a href="/Admin/Package/ExportToExcel" class="btn btn-success">
                             <i class="bi bi-file-earmark-excel-fill"></i> Export to Excel
                         </a>
-                    </div>
+                    </div> // uses controller*@
 
                     <button id="button-excelFiltered" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export Filtered
+                        Export Filtered to Excel
+                    </button>
+
+                    <button id="button-excel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
                     </button>
 
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Import
-                    </button>
-
-                    <button id="button-excel" class="btn btn-success">
-                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export
                     </button>
 
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -296,7 +296,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/PackageScripts/package-export.js"></script>
-
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 

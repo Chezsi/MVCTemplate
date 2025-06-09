@@ -1,33 +1,85 @@
-document.querySelector("#button-excel-person").addEventListener("click", async function () { //prior to renaming it instead gets the category one
-    var table = $('#Persons').DataTable(); // ??change to account for the name in ApplicationDbContext
+document.querySelector("#button-excel-person").addEventListener("click", async function () {
+    var table = $('#Persons').DataTable();
     var searchValue = table.search();
     var dataToExport;
 
     if (searchValue) {
         dataToExport = table.rows({ search: 'applied' }).data().toArray();
     } else {
-        let response = await fetch('/Admin/Person/GetAllPersons'); //change to account for url naming
+        let response = await fetch('/Admin/Person/GetAllPersons');
         let result = await response.json();
         dataToExport = result.data;
     }
 
-    dataToExport.sort((a, b) => a.name.localeCompare(b.name)); // change to account for name of data (Model)
+    dataToExport.sort((a, b) => a.name.localeCompare(b.name)); // Update if model uses a different property
 
-    let tempTable = document.createElement('table');
-    let thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>ID</th> <th>Name</th> <th>Position</th> <th>CategoryId</th></tr>';
-    tempTable.appendChild(thead);
+    // Format date as Month Day, Year (e.g., June 3, 2025)
+    function formatDateWordMDY(dateValue) {
+        if (!dateValue) return "";
+        const d = new Date(dateValue);
+        if (isNaN(d)) return dateValue;
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
 
-    let tbody = document.createElement('tbody');
-    dataToExport.forEach(row => {
-        let tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.id}</td> <td>${row.name}</td> <td>${row.position}</td> <td>${row.categoryId}</td>`;
-        tbody.appendChild(tr); // ^ change to account for name of data (Model) and number of column 
-    });
-    tempTable.appendChild(tbody);
+    // Format full datetime for "Generated at"
+    function formatDateTimeWordMDY(dateValue) {
+        if (!dateValue) return "";
+        const d = new Date(dateValue);
+        if (isNaN(d)) return dateValue;
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ", " +
+            d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
 
-    TableToExcel.convert(tempTable, { name: "Person.xlsx" });
+    const now = new Date();
+    const datetimeString = formatDateTimeWordMDY(now);
+
+    // Construct the worksheet data
+    const ws_data = [
+        ["Person Data"],
+        [`Generated at: ${datetimeString}`],
+        ["ID", "Name", "Position", "Category ID"],
+        ...dataToExport.map(row => [
+            row.id,
+            row.name,
+            row.position,
+            row.categoryId
+        ])
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+    const lastRow = ws_data.length;
+    ws['!autofilter'] = { ref: `A3:D${lastRow}` };
+
+    // Merge title and datetime rows (A1:D1 and A2:D2)
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },  // A1:D1
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }   // A2:D2
+    ];
+
+    // Calculate max width dynamically for "Position" column
+    const positionColumnIndex = 2;
+    const padding = 2;
+    let maxPositionLength = ws_data.reduce((max, row, index) => {
+        if (index < 3) return max; // Skip headers and metadata rows
+        const val = row[positionColumnIndex];
+        if (!val) return max;
+        return Math.max(max, val.toString().length);
+    }, 0);
+
+    // Set column widths
+    ws['!cols'] = [
+        { wch: 10 },                         // ID
+        { wch: 20 },                         // Name
+        { wch: maxPositionLength + padding }, // Position
+        { wch: 15 }                          // Category ID
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "Persons");
+    XLSX.writeFile(wb, "Persons.xlsx");
 });
+
 
 document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
     try {

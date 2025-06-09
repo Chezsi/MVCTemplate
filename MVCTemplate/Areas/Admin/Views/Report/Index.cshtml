@@ -28,26 +28,26 @@
             </div>
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
-                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-                        + Add Report
-                    </button>
 
                     <a asp-action="ExportToExcel" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export
+                        Export to Excel
                     </a>
+
+                    <button id="exportFilteredExcelBtn" class="btn btn-success ms-2">
+                        Export Filtered to Excel
+                    </button>
 
                     <a asp-action="ExportToPdf" class="btn btn-danger ms-2">Export to PDF</a>
 
-                    <button id="exportFilteredPdfBtn" class="btn btn-danger ms-2">Export Filtered PDF</button>
+                    <button id="exportFilteredPdfBtn" class="btn btn-danger ms-2">Export Filtered to PDF</button>
 
-                    <button id="exportFilteredExcelBtn" class="btn btn-success ms-2">
-                        Export Filtered Excel
-                    </button>
-
-                    <!-- New Import Excel Button -->
-                    <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                    @*<button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="fa fa-file-import"></i> Import Excel
+                    </button>*@
+
+                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                        + Add Report
                     </button>
                 </div>
             </div>
