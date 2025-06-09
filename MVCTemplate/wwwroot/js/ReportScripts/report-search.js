@@ -47,7 +47,7 @@
             url += '?' + queryParams.join('&');
         }
 
-        /*window.open(url, '_blank'); opens a new window */
+        window.location.href = url; /* window.open(url, '_blank'); < opens a new tab*/
     });
 
     // Export filtered Excel button event handler
@@ -70,6 +70,6 @@
             url += '?' + queryParams.join('&');
         }
 
-        /*window.open(url, '_blank'); opens a new window */
+        window.location.href = url;  /*window.open(url, '_blank'); opens a new tab*/
     });
 });

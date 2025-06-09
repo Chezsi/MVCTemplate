@@ -97,7 +97,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             // Row 2: Generated At
             var now = DateTime.Now;
-            string generatedAt = $"Generated at: {now:MMMM-dd-yyyy}"; // e.g., "June-09-2025"
+            string generatedAt = $"Generated at: {now:MMMM-dd-yyyy hh:mm tt}";
             worksheet.Cells[2, 1].Value = generatedAt;
             worksheet.Cells[2, 1, 2, 5].Merge = true;
             worksheet.Cells[2, 1].Style.Font.Italic = true;
@@ -384,7 +384,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             // Row 2: Generated At
             var now = DateTime.Now;
-            worksheet.Cells[2, 1].Value = $"Generated at: {now:MMMM-dd-yyyy}";
+            worksheet.Cells[2, 1].Value = $"Generated at: {now:MMMM-dd-yyyy hh:mm tt}";
             worksheet.Cells[2, 1, 2, 5].Merge = true;
             worksheet.Cells[2, 1].Style.Font.Italic = true;
             worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
