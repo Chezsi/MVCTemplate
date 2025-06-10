@@ -69,10 +69,28 @@ $(function () {
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Product Quantities by Name'
+                                text: `Product Quantities by Name (Total: ${_chartData.length})`,
+                                font: {
+                                    size: 18
+                                },
+                                padding: {
+                                    top: 10,
+                                    bottom: 10
+                                }
                             },
                             legend: {
                                 display: chartType === 'pie' || chartType === 'doughnut'
+                            },
+                            datalabels: {
+                                color: '#000',
+                                anchor: chartType === 'bar' || chartType === 'line' ? 'end' : 'center',
+                                align: chartType === 'bar' || chartType === 'line' ? 'top' : 'center',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: function (value) {
+                                    return value;
+                                }
                             }
                         },
                         scales: (chartType === 'bar' || chartType === 'line') ? {
@@ -90,8 +108,11 @@ $(function () {
                                 }
                             }
                         } : {}
-                    }
+                    },
+                    plugins: [ChartDataLabels] // <-- Register the datalabels plugin here
                 });
+
+
 
                 $("#RemoveGraphBtn").show();
                 $("#ExportChartBtn").show();
