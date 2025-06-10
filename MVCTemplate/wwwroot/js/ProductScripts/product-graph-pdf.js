@@ -4,7 +4,6 @@ $(document).ready(() => {
         const { jsPDF } = window.jspdf;
 
         try {
-            // Fetch data
             const response = await $.ajax({
                 type: "POST",
                 url: "/Admin/Product/GetProductsData",
@@ -31,22 +30,16 @@ $(document).ready(() => {
                 "#20c997",
             ];
 
-            // Create PDF with pixel units and A4 size scaled to pixels (approx)
-            const pdfWidthPx = 595; // A4 width in points (1pt=1.33px approx)
-            const pdfHeightPx = 842; // A4 height in points
-
             const pdf = new jsPDF({
-                unit: "pt", // 'pt' is default, 1pt = 1/72 inch
+                unit: "pt",
                 format: "a4",
             });
 
-            // Helper: fit image within max box keeping aspect ratio
             function fitImage(imgW, imgH, maxW, maxH) {
                 const ratio = Math.min(maxW / imgW, maxH / imgH);
                 return { w: imgW * ratio, h: imgH * ratio };
             }
 
-            // Helper: create chart, wait for animation complete, return image data
             function createChart(type) {
                 return new Promise((resolve) => {
                     const canvas = document.createElement("canvas");
@@ -62,15 +55,7 @@ $(document).ready(() => {
                     const options = {
                         responsive: false,
                         maintainAspectRatio: false,
-                        animation: {
-                            onComplete: () => {
-                                // Ensure update done and then resolve
-                                setTimeout(() => {
-                                    const imgData = canvas.toDataURL("image/png");
-                                    resolve({ imgData, canvas, width: canvas.width, height: canvas.height });
-                                }, 100);
-                            },
-                        },
+                        animation: false, // disable animation for instant rendering
                         plugins: {
                             title: {
                                 display: true,
@@ -116,6 +101,10 @@ $(document).ready(() => {
                         options,
                         plugins: [ChartDataLabels],
                     });
+
+                    // Immediately capture image after chart creation (no animation)
+                    const imgData = canvas.toDataURL("image/png");
+                    resolve({ imgData, canvas, width: canvas.width, height: canvas.height });
                 });
             }
 
@@ -125,9 +114,8 @@ $(document).ready(() => {
 
                 if (i > 0) pdf.addPage();
 
-                // Fit chart image to a box on the page
-                const maxWidth = pdf.internal.pageSize.getWidth() - 40; // margin 20 left/right
-                const maxHeight = pdf.internal.pageSize.getHeight() - 80; // margin 40 top/bottom
+                const maxWidth = pdf.internal.pageSize.getWidth() - 40;
+                const maxHeight = pdf.internal.pageSize.getHeight() - 80;
                 const fitted = fitImage(width, height, maxWidth, maxHeight);
 
                 const x = (pdf.internal.pageSize.getWidth() - fitted.w) / 2;
@@ -135,7 +123,6 @@ $(document).ready(() => {
 
                 pdf.addImage(imgData, "PNG", x, y, fitted.w, fitted.h);
 
-                // Cleanup chart instance
                 Chart.getChart(canvas)?.destroy();
                 canvas.remove();
             }
