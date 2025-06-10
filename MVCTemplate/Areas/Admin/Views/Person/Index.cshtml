@@ -29,6 +29,12 @@
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
                     <div class="d-flex align-items-center mb-2">
+
+                        <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                            <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                            Export All Charts
+                        </button> @*graph-pdf*@
+
                         @*<button id="button-excel-person" class="btn btn-success me-3">
                             <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                             Export to Excel
@@ -230,7 +236,10 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> <!-- for export graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> <!-- for export graph as image-->
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> <!-- XLSX for export -->
 
@@ -241,6 +250,7 @@
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/PersonScripts/person-export.js"></script>
     <script src="~/js/PersonScripts/person-graph.js"></script>
+    <script src="~/js/PersonScripts/person-graph-pdf.js"></script>
 
 
     @*<script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>*@

@@ -29,6 +29,11 @@
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
 
+                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button>  @*graph-pdf*@
+
                     @*<form method="get" action="/Admin/Package/PDF">
                         <button type="submit">Download PDF</button>
                     </form> //uses aspose*@
@@ -297,10 +302,15 @@
     <script src="~/js/PackageScripts/package-export.js"></script>
     <script src="~/js/PackageScripts/package-graph.js"></script>
     <script src="~/js/PackageScripts/package-search.js"></script>
+    <script src="~/js/PackageScripts/package-graph-pdf.js"></script>
+
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> <!-- for export graph -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
 
     <script>
         $(document).ready(function () {
