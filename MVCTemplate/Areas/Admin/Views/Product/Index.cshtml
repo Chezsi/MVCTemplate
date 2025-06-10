@@ -33,6 +33,11 @@
                         Export to Excel
                     </button>*@
 
+                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button>
+
                     <button id="button-to-excel" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export to Excel
@@ -41,6 +46,7 @@
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add product
                     </button>
+
                 </div>
             </div>
         </div>
@@ -215,7 +221,10 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> @*for the export graph*@
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> @*for the export graph as image*@
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
 
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
@@ -223,6 +232,7 @@
     <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/ProductScripts/product-export.js"></script>
     <script src="~/js/ProductScripts/product-graph.js"></script>
+    <script src="~/js/ProductScripts/product-graph-pdf.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
     
     <script>
