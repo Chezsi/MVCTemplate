@@ -68,7 +68,7 @@ $(function () {
                         plugins: {
                             title: {
                                 display: true,
-                                text: `Employees per Category (Total: ${_chartData.reduce((a, b) => a + b, 0)})`,
+                                text: `Employees per Category`,
                                 font: { size: 18 },
                                 padding: { top: 10, bottom: 10 }
                             },

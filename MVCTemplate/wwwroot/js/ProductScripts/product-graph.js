@@ -69,7 +69,7 @@ $(function () {
                         plugins: {
                             title: {
                                 display: true,
-                                text: `Product Quantities by Name (Total: ${_chartData.length})`,
+                                text: `Product Quantities by Name`,
                                 font: {
                                     size: 18
                                 },

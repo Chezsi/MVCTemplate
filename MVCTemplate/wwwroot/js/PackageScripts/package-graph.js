@@ -1,9 +1,12 @@
 $(function () {
-    // Initially hide both buttons
+    // Initially hide buttons
     $("#ShowGraphBtn").hide();
     $("#RemoveGraphBtn").hide();
+    $("#ExportChartBtn").hide();
 
-    // Show "ShowGraphBtn" only when a valid chart type is selected
+    let chartInstance = null;
+
+    // Toggle ShowGraphBtn visibility based on chart type selection
     $("#ChartType").on("change", function () {
         const selectedType = $(this).val();
         if (!selectedType || selectedType === "--Select Chart Type--") {
@@ -14,7 +17,7 @@ $(function () {
     });
 
     $("#ShowGraphBtn").click(function () {
-        var chartType = $("#ChartType").val();
+        const chartType = $("#ChartType").val();
         if (chartType === "--Select Chart Type--") {
             alert("Please select a chart type.");
             return;
@@ -35,6 +38,7 @@ $(function () {
                     alert("No package data available.");
                     $("#ChartView").hide();
                     $("#RemoveGraphBtn").hide();
+                    $("#ExportChartBtn").hide();
                     return;
                 }
 
@@ -43,13 +47,21 @@ $(function () {
                     "#17a2b8", "#6c757d", "#fd7e14", "#20c997"
                 ];
 
-                new Chart(document.getElementById("myChart"), {
+                const ctx = document.getElementById("myChart").getContext("2d");
+
+                // Destroy existing chart
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                // Create new chart
+                chartInstance = new Chart(ctx, {
                     type: chartType,
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Packages Created Per Day',
-                            backgroundColor: chartType === 'bar' ? barColors : "#007bff",
+                            label: 'Packages Created',
+                            backgroundColor: chartType === 'bar' ? barColors.slice(0, labels.length) : "#007bff",
                             borderColor: "#0056b3",
                             fill: chartType === 'line' ? false : true,
                             data: counts
@@ -60,43 +72,68 @@ $(function () {
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Packages Created Per Day'
+                                text: 'Packages Created Per Day',
+                                font: { size: 18 },
+                                padding: { top: 10, bottom: 10 }
                             },
                             legend: {
-                                display: false
+                                display: chartType === 'pie' || chartType === 'doughnut'
+                            },
+                            datalabels: {
+                                color: '#000',
+                                anchor: chartType === 'bar' || chartType === 'line' ? 'end' : 'center',
+                                align: chartType === 'bar' || chartType === 'line' ? 'top' : 'center',
+                                font: { weight: 'bold' },
+                                formatter: function (value) {
+                                    return value;
+                                }
                             }
                         },
-                        scales: {
+                        scales: (chartType === 'bar' || chartType === 'line') ? {
                             x: {
                                 type: 'category',
-                                title: {
-                                    display: true,
-                                    text: 'Date'
-                                }
+                                title: { display: true, text: 'Date' }
                             },
                             y: {
                                 beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Number of Packages'
-                                }
+                                title: { display: true, text: 'Number of Packages' }
                             }
-                        }
-                    }
+                        } : {}
+                    },
+                    plugins: [ChartDataLabels]
                 });
 
                 $("#RemoveGraphBtn").show();
+                $("#ExportChartBtn").show();
             },
             error: function (xhr, status, error) {
                 console.error("Error fetching chart data:", error);
                 alert("An error occurred while loading chart data.");
                 $("#RemoveGraphBtn").hide();
+                $("#ExportChartBtn").hide();
             }
         });
     });
 
     $("#RemoveGraphBtn").click(function () {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
         $("#ChartView").hide().html('');
-        $(this).hide();
+        $("#RemoveGraphBtn").hide();
+        $("#ExportChartBtn").hide();
+    });
+
+    // Export chart as PNG image
+    $("#ExportChartBtn").click(function () {
+        const canvas = document.getElementById("myChart");
+        if (canvas) {
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = 'packages-created-chart.png';
+            link.click();
+        }
     });
 });
