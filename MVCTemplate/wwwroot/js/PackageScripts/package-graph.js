@@ -128,12 +128,14 @@ $(function () {
     // Export chart as PNG image
     $("#ExportChartBtn").click(function () {
         const canvas = document.getElementById("myChart");
-        if (canvas) {
+        const chartType = $("#ChartType").val(); // Get selected chart type
+        if (canvas && chartType) {
             const image = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             link.href = image;
-            link.download = 'packages-created-chart.png';
+            link.download = `packages-created-chart-${chartType}.png`; // Append chart type
             link.click();
         }
     });
+
 });

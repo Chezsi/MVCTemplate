@@ -1,15 +1,15 @@
 const chartOptions = {
     annual: [
-        { value: "bar", text: "Bar" },
-        { value: "line", text: "Line" },
+        { value: "annual-bar", text: "Bar" },
+        { value: "annual-line", text: "Line" },
         { value: "annual-pie", text: "Pie" },
         { value: "annual-doughnut", text: "Doughnut" }
     ],
     monthly: [
-        { value: "pie", text: "Pie" },
-        { value: "doughnut", text: "Doughnut" },
         { value: "monthly-bar", text: "Bar" },
-        { value: "monthly-line", text: "Line" }
+        { value: "monthly-line", text: "Line" },
+        { value: "monthly-pie", text: "Pie" },
+        { value: "monthly-doughnut", text: "Doughnut" }
     ]
 };
 
@@ -38,14 +38,16 @@ function renderChart(chartType, labels, values, options = {}) {
     const ctx = canvas.getContext("2d");
 
     const isBarOrLine = chartType.includes('bar') || chartType.includes('line');
+    const actualType = chartType.replace(/^.*?-/, ''); // removes 'annual-' or 'monthly-'
+
     const chartColors = [
         "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8",
         "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
         "#6610f2", "#343a40"
     ];
 
-    const config = {
-        type: chartType.includes('monthly') ? chartType.replace('monthly-', '') : chartType.replace('annual-', ''),
+    chartInstance = new Chart(ctx, {
+        type: actualType,
         data: {
             labels,
             datasets: [{
@@ -53,8 +55,8 @@ function renderChart(chartType, labels, values, options = {}) {
                 data: values,
                 backgroundColor: options.bgColor || chartColors.slice(0, labels.length),
                 borderColor: "#0056b3",
-                fill: chartType.includes('line') ? false : true,
-                tension: chartType.includes('line') ? 0.1 : undefined
+                fill: actualType === 'line' ? false : true,
+                tension: actualType === 'line' ? 0.1 : undefined
             }]
         },
         options: {
@@ -66,7 +68,7 @@ function renderChart(chartType, labels, values, options = {}) {
                     font: { size: 18 }
                 },
                 legend: {
-                    display: chartType.includes('pie') || chartType.includes('doughnut')
+                    display: actualType === 'pie' || actualType === 'doughnut'
                 },
                 datalabels: {
                     color: '#000',
@@ -86,9 +88,8 @@ function renderChart(chartType, labels, values, options = {}) {
             } : {}
         },
         plugins: [ChartDataLabels]
-    };
+    });
 
-    chartInstance = new Chart(ctx, config);
     showButtons();
 }
 
@@ -158,7 +159,7 @@ $(function () {
         }
 
         if (category === "annual") {
-            if (chartType === "bar" || chartType === "line") {
+            if (chartType === "annual-bar" || chartType === "annual-line") {
                 loadChart("/Admin/Contract/GetContractsPerYear", chartType, 'Contracts', 'Contracts Per Year', 'Year', 'Contracts');
             } else if (chartType === "annual-pie" || chartType === "annual-doughnut") {
                 loadChart("/Admin/Contract/GetContractsPerYear", chartType, '', 'Annual Contracts Distribution');
@@ -166,7 +167,7 @@ $(function () {
         } else if (category === "monthly") {
             if (chartType === "monthly-bar" || chartType === "monthly-line") {
                 loadChart("/Admin/Contract/GetContractsPerMonth", chartType, 'Contracts', 'Monthly Contracts', 'Month', 'Contracts');
-            } else if (chartType === "pie" || chartType === "doughnut") {
+            } else if (chartType === "monthly-pie" || chartType === "monthly-doughnut") {
                 loadChart("/Admin/Contract/GetContractsPerMonth", chartType, '', 'Contracts Per Month');
             }
         }
@@ -183,11 +184,12 @@ $(function () {
 
     $("#ExportChartBtn").click(function () {
         const canvas = document.getElementById("myChart");
-        if (canvas) {
+        const chartType = $("#ChartType").val();
+        if (canvas && chartType) {
             const image = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             link.href = image;
-            link.download = 'contracts-chart.png';
+            link.download = `contracts-chart-${chartType}.png`; // Append chart type to filename
             link.click();
         }
     });

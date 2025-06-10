@@ -138,15 +138,17 @@ $(function () {
         }
     });
 
-    // Export chart as image
+    // Export chart as image with chart type in filename
     $("#ExportChartBtn").click(function () {
         const canvas = document.getElementById("myChart");
-        if (canvas) {
+        const chartType = $("#ChartType").val();
+        if (canvas && chartType) {
             const image = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             link.href = image;
-            link.download = 'product-chart.png';
+            link.download = `product-chart-${chartType}.png`; // Appended chart type
             link.click();
         }
     });
+
 });

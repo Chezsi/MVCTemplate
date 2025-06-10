@@ -124,11 +124,12 @@ $(function () {
 
     $("#ExportChartBtn").click(function () {
         const canvas = document.getElementById("myChart");
-        if (canvas) {
+        const chartType = $("#ChartType").val(); // Get selected chart type
+        if (canvas && chartType) {
             const image = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             link.href = image;
-            link.download = 'employees-per-category-chart.png';
+            link.download = `employees-per-category-chart-${chartType}.png`; // Append chart type
             link.click();
         }
     });
