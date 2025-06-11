@@ -21,7 +21,15 @@
                 </div>
             </div>
             <div class="page-title-actions">
+
                 <div class="d-inline-block dropdown">
+                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button>
+                </div>
+
+                <div class="d-inline-block dropdown ms-2">
                     <a href="@Url.Action("ExportToExcel", "Generate", new { area = "Admin" })" class="btn btn-success" id="button-excel">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export to Excel
@@ -40,6 +48,15 @@
     </div>
 </div>
 
+@section Scripts {
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    
+    <script src="~/js/GenerateScripts/generate-graph-pdf.js"></script>
 
 <script>
     // animation
@@ -48,3 +65,4 @@
     });
 </script>
 
+}
