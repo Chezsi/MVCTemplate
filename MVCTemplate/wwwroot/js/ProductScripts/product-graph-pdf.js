@@ -135,7 +135,7 @@
                 canvas.remove();
             }
 
-            pdf.save("product-charts-all-types.pdf");
+            pdf.save("product-graphs.pdf");
         } catch (error) {
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");

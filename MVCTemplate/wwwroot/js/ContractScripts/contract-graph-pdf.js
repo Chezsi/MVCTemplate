@@ -148,7 +148,7 @@
         }
     }
 
-    pdf.save("contracts-all-charts.pdf");
+    pdf.save("contracts-graphs.pdf");
 }
 
 $(function () {

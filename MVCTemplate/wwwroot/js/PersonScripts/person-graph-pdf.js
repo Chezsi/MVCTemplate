@@ -147,7 +147,7 @@
                 canvas.remove();
             }
 
-            pdf.save("employees-per-category-charts.pdf");
+            pdf.save("employees-graphs.pdf");
         } catch (error) {
             console.error("Error exporting charts:", error);
             alert("An error occurred while exporting charts.");

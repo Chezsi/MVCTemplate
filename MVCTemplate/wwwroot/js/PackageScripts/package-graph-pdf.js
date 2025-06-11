@@ -136,7 +136,7 @@
                 canvas.remove();
             }
 
-            pdf.save("packages-charts-bar-line.pdf");
+            pdf.save("packages-graphs.pdf");
         } catch (error) {
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");
