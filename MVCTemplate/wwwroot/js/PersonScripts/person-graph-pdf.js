@@ -1,4 +1,4 @@
-$(function () {
+﻿$(function () {
     $("#ExportAllChartsBtn").click(async function () {
         const chartTypes = ["bar", "line", "pie", "doughnut"];
         const { jsPDF } = window.jspdf;
@@ -25,6 +25,27 @@ $(function () {
             ];
 
             const pdf = new jsPDF({ unit: "pt", format: "a4" });
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 20;
+
+            function getFormattedTimestamp() {
+                const now = new Date();
+                const months = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ];
+                const month = months[now.getMonth()];
+                const day = String(now.getDate()).padStart(2, "0");
+                const year = now.getFullYear();
+
+                let hour = now.getHours();
+                const minute = String(now.getMinutes()).padStart(2, "0");
+                const ampm = hour >= 12 ? "PM" : "AM";
+                hour = hour % 12 || 12;
+
+                return `${month}-${day}-${year} ${hour}:${minute} ${ampm}`;
+            }
 
             function fitImage(imgW, imgH, maxW, maxH) {
                 const ratio = Math.min(maxW / imgW, maxH / imgH);
@@ -109,13 +130,18 @@ $(function () {
 
                 if (i > 0) pdf.addPage();
 
-                const maxWidth = pdf.internal.pageSize.getWidth() - 40;
-                const maxHeight = pdf.internal.pageSize.getHeight() - 80;
+                const maxWidth = pageWidth - 40;
+                const maxHeight = pageHeight - 80;
                 const fitted = fitImage(width, height, maxWidth, maxHeight);
-                const x = (pdf.internal.pageSize.getWidth() - fitted.w) / 2;
+                const x = (pageWidth - fitted.w) / 2;
                 const y = 40;
 
                 pdf.addImage(imgData, "PNG", x, y, fitted.w, fitted.h);
+
+                // Add timestamp to bottom-right of page
+                const timestamp = getFormattedTimestamp();
+                pdf.setFontSize(10);
+                pdf.text(timestamp, pageWidth - margin, pageHeight - 10, { align: "right" });
 
                 Chart.getChart(canvas)?.destroy();
                 canvas.remove();

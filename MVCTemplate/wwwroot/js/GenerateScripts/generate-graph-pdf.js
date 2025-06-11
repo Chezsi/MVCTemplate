@@ -1,4 +1,4 @@
-$(function () {
+﻿$(function () {
     $("#ExportAllChartsBtn").click(async function () {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: "pt", format: "a4" });
@@ -13,6 +13,24 @@ $(function () {
             "#6c757d", "#fd7e14", "#20c997", "#6f42c1", "#e83e8c",
             "#6610f2", "#343a40"
         ];
+
+        function getFormattedTimestamp() {
+            const now = new Date();
+            const months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            const month = months[now.getMonth()];
+            const day = String(now.getDate()).padStart(2, "0");
+            const year = now.getFullYear();
+
+            let hour = now.getHours();
+            const minute = String(now.getMinutes()).padStart(2, "0");
+            const ampm = hour >= 12 ? "PM" : "AM";
+            hour = hour % 12 || 12;
+
+            return `${month}-${day}-${year} ${hour}:${minute} ${ampm}`;
+        }
 
         function fitImage(imgW, imgH, maxW, maxH) {
             const ratio = Math.min(maxW / imgW, maxH / imgH);
@@ -88,8 +106,13 @@ $(function () {
             });
         }
 
-        async function addCategoryPage(chartsInfo, pageIndex) {
+        async function addCategoryPage(chartsInfo, pageIndex, title) {
             if (pageIndex > 0) pdf.addPage();
+
+            // Add title to top center
+            pdf.setFontSize(16);
+            pdf.setFont("helvetica", "bold");
+            pdf.text(title, pageWidth / 2, 40, { align: "center" });
 
             const charts = [];
             for (const info of chartsInfo) {
@@ -106,7 +129,8 @@ $(function () {
             const cols = 2;
             const rows = Math.ceil(charts.length / cols);
             const cellWidth = contentWidth / cols;
-            const cellHeight = contentHeight / rows;
+            const chartAreaHeight = contentHeight - 40; // reserve space for title
+            const cellHeight = chartAreaHeight / rows;
 
             for (let i = 0; i < charts.length; i++) {
                 const chart = charts[i];
@@ -115,18 +139,24 @@ $(function () {
 
                 const fitted = fitImage(chart.width, chart.height, cellWidth, cellHeight);
                 const x = margin + col * cellWidth + (cellWidth - fitted.w) / 2;
-                const y = margin + row * cellHeight + (cellHeight - fitted.h) / 2;
+                const y = margin + 50 + row * cellHeight + (cellHeight - fitted.h) / 2;
 
                 pdf.addImage(chart.imgData, "PNG", x, y, fitted.w, fitted.h);
                 Chart.getChart(chart.canvas)?.destroy();
                 chart.canvas.remove();
             }
+
+            // Add timestamp at bottom right
+            const timestamp = getFormattedTimestamp();
+            pdf.setFontSize(10);
+            pdf.setFont("helvetica", "normal");
+            pdf.text(timestamp, pageWidth - margin, pageHeight - 10, { align: "right" });
         }
 
         // Category configurations
         const categories = [
             {
-                name: "Products",
+                title: "Product Data",
                 charts: [
                     { type: "bar", url: "/Admin/Product/GetProductsData", title: "Product Quantities", xTitle: "Product", yTitle: "Quantity" },
                     { type: "line", url: "/Admin/Product/GetProductsData", title: "Product Quantities", xTitle: "Product", yTitle: "Quantity" },
@@ -135,7 +165,7 @@ $(function () {
                 ]
             },
             {
-                name: "Persons",
+                title: "Person Data",
                 charts: [
                     { type: "bar", url: "/Admin/Person/GetPersonsData", title: "Employees per Category", xTitle: "Category", yTitle: "Employees" },
                     { type: "line", url: "/Admin/Person/GetPersonsData", title: "Employees per Category", xTitle: "Category", yTitle: "Employees" },
@@ -144,14 +174,14 @@ $(function () {
                 ]
             },
             {
-                name: "Packages",
+                title: "Package Data",
                 charts: [
                     { type: "bar", url: "/Admin/Package/GetPackagesCreatedPerDay", title: "Packages Created Per Day", xTitle: "Date", yTitle: "Packages" },
                     { type: "line", url: "/Admin/Package/GetPackagesCreatedPerDay", title: "Packages Created Per Day", xTitle: "Date", yTitle: "Packages" }
                 ]
             },
             {
-                name: "Annual Contracts",
+                title: "Contract Data",
                 charts: [
                     { type: "bar", url: "/Admin/Contract/GetContractsPerYear", title: "Contracts Per Year", xTitle: "Year", yTitle: "Contracts" },
                     { type: "line", url: "/Admin/Contract/GetContractsPerYear", title: "Contracts Per Year", xTitle: "Year", yTitle: "Contracts" },
@@ -160,7 +190,7 @@ $(function () {
                 ]
             },
             {
-                name: "Monthly Contracts",
+                title: "Contract Data",
                 charts: [
                     { type: "bar", url: "/Admin/Contract/GetContractsPerMonth", title: "Monthly Contracts", xTitle: "Month", yTitle: "Contracts" },
                     { type: "line", url: "/Admin/Contract/GetContractsPerMonth", title: "Monthly Contracts", xTitle: "Month", yTitle: "Contracts" },
@@ -172,9 +202,9 @@ $(function () {
 
         // Generate all pages
         for (let i = 0; i < categories.length; i++) {
-            await addCategoryPage(categories[i].charts, i);
+            await addCategoryPage(categories[i].charts, i, categories[i].title);
         }
 
-        pdf.save("all-entity-charts.pdf");
+        pdf.save("Graphs.pdf");
     });
 });
