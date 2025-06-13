@@ -1,0 +1,245 @@
+﻿@model MVCTemplate.ViewModels.ReportVM
+
+@{
+    ViewData["Title"] = "Report";
+}
+
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                 Reports
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions">
+                <div class="d-inline-block dropdown">
+
+                    @*<button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fa fa-file-import"></i> Import Excel
+                    </button>*@
+
+                    <a asp-action="ExportToExcel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
+                    </a>
+
+                    <button id="exportFilteredExcelBtn" class="btn btn-success ms-2">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> 
+                        Export Filtered to Excel
+                    </button>
+
+                    <a asp-action="ExportToPdf" class="btn btn-danger ms-2">
+                        <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
+                        Export to PDF
+                    </a>
+
+                    <button id="exportFilteredPdfBtn" class="btn btn-danger ms-2">
+                        <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
+                        Export Filtered to PDF
+                    </button>
+
+                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                        + Add Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="mb-3 row">
+        <div class="col-md-4">
+            <label for="titleSearch" class="form-label">Search by Title:</label>
+            <input type="text" id="titleSearch" class="form-control" placeholder="Report title..." />
+        </div>
+        <div class="col-md-4">
+            <label for="descriptionSearch" class="form-label">Search by Description:</label>
+            <input type="text" id="descriptionSearch" class="form-control" placeholder="Report description..." />
+        </div>
+    </div>
+
+    <!-- Report Table -->
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="reportTable" class="table table-hover table-striped table-bordered nowrap" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Image</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @* Filled via DataTable Ajax *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Modal {
+    <!-- Create Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="createForm" method="post" asp-action="Create" asp-controller="Report" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createModalLabel">Add Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Title<span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" name="ImageFile" class="form-control" />
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form asp-action="Update" asp-controller="Report" method="post" id="updateForm" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Update Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" asp-for="Id" id="updateReportId" />
+
+                        <div class="form-group">
+                            <label asp-for="Title" class="control-label">Title<span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" id="updateTitle" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">Upload New Image</label>
+                            <input type="file" name="ImageFile" class="form-control" />
+                            <small class="form-text text-muted">Leave empty to keep current image.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" id="updateDescription"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="createEditFormSubmitBtn" class="ladda-button me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                            <span class="ladda-label">Save Changes</span>
+                            <span class="ladda-spinner"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Excel Modal (uses cs not js)-->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="ImportExcel" asp-controller="Report" method="post" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="importModalLabel">Import Reports from Excel</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="ExcelFile" class="form-label">Select Excel File (.xlsx)</label>
+                            <input type="file" class="form-control" name="ExcelFile" id="ExcelFile" accept=".xlsx" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info">Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
+@section Scripts {
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/ReportScripts/report-data-table.js"></script>
+    <script src="~/js/ReportScripts/report-search.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
+}

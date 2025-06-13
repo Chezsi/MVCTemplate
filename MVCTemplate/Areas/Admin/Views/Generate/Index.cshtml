@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Generate";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                Generate
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions">
+
+                <div class="d-inline-block dropdown">
+                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button>
+                </div>
+
+                <div class="d-inline-block dropdown ms-2">
+                    <a href="@Url.Action("ExportToExcel", "Generate", new { area = "Admin" })" class="btn btn-success" id="button-excel">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
+                    </a>
+                </div>
+
+                <div class="d-inline-block dropdown ms-2">
+                    <a href="@Url.Action("ExportToPdf", "Generate", new { area = "Admin" })" class="btn btn-danger" id="button-pdf">
+                        <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
+                        Export to PDF
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
+@section Scripts {
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    
+    <script src="~/js/GenerateScripts/generate-graph-pdf.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
+
+}

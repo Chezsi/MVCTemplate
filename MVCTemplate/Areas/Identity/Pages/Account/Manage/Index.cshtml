@@ -21,9 +21,11 @@
                 <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
             </div>
             <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+            <a asp-page="Index" class="w-100 btn btn-lg btn-secondary mt-2">Back</a>
         </form>
     </div>
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

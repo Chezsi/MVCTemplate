@@ -18,13 +18,21 @@
     <link rel="stylesheet" href="~/asset/vendors/datatables.net-bs4/css/dataTables.bootstrap4.min.css" />
     <link rel="stylesheet" href="~/asset/vendors/datatables.net-fixedcolumns-bs4/css/fixedColumns.bootstrap4.min.css" />
     <link href="~/asset/styles/css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/asset/vendors/toastr/build/toastr.min.css" />
     @* Favicon here  *@
     @* <link rel="icon" type="image/x-icon" href="~/asset/images/Flyingv.png"> *@
+
+    @* Render page-specific styles here *@
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <header>
         <partial name="_Header" />
         <partial name="_SideBar" />
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script> @*for the package-export filtered column to work*@
         @RenderBody()
         <partial name="_Footer" />
     </header>
@@ -33,7 +41,7 @@
     @await RenderSectionAsync("Modal", required: false)
     <!-- Notification-->
     <partial name="_Notification"></partial>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @*<script src="~/lib/jquery/dist/jquery.min.js"></script>*@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/activeState.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

@@ -1,0 +1,111 @@
+﻿@* https://www.youtube.com/watch?v=2Zag_ejvL4c *@
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row mb-3">
+    <div class="col-1">
+        <label><b>Chart-Type</b></label>
+    </div>
+    <div class="col-2">
+        <select id="ChartType" class="form-control" style="width:150px;">
+            <option selected>--Select Chart Type--</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="pie">Pie</option>
+            <option value="doughnut">Doughnut</option>
+        </select>
+    </div>
+    <div class="col-4">
+        <input id="ShowGraphBtn" value="Show Graph" type="button" class="btn btn-primary" />
+    </div>
+</div>
+
+<div id="ChartView">
+    <canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script type="text/javascript">
+    $(function () {
+        $("#ShowGraphBtn").click(function () {
+            var chartType = $("#ChartType").val();
+            if (chartType === "--Select Chart Type--") {
+                alert("Please select a chart type.");
+                return;
+            }
+
+            // Clear and recreate canvas
+            $("#ChartView").html('<canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>');
+
+            $.ajax({
+                type: "POST",
+                url: "/Admin/Package/GetPackagesData",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: OnSuccessResult,
+                error: OnError
+            });
+
+            function OnSuccessResult(data) {
+                var _chartLabels = data[0]; // Priorities
+                var _chartData = data[1];   // Counts
+
+                var barColors = ["red", "green", "blue", "orange", "purple", "cyan", "magenta", "brown"];
+
+                new Chart(document.getElementById("myChart"), {
+                    type: chartType,
+                    data: {
+                        labels: _chartLabels,
+                        datasets: [{
+                            label: 'Number of Packages',
+                            backgroundColor: barColors,
+                            data: _chartData
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Packages Grouped by Priority'
+                            },
+                            legend: {
+                                display: chartType === 'pie' || chartType === 'doughnut'
+                            }
+                        },
+                        scales: (chartType === 'bar' || chartType === 'line') ? {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Priority'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Count of Packages'
+                                }
+                            }
+                        } : {}
+                    }
+                });
+            }
+
+            function OnError(xhr, status, error) {
+                console.error("Error fetching chart data:", error);
+            }
+        });
+    });
+</script>
+
+<script>
+    // animation
+    $(document).ready(function () {
+        $(".app-main__inner").animate({ opacity: 1 }, 10);
+    });
+</script>

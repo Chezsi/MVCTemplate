@@ -20,3 +20,61 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.report-thumbnail {
+    width: 100px; /* Fixed width */
+    height: 60px; /* Fixed height */
+    object-fit: cover; /* Crop or scale image to fill the box */
+    transition: transform 0.3s ease, z-index 0.3s;
+    cursor: pointer;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+/*.report-thumbnail:hover {
+        transform: scale(2.2);
+        z-index: 10;
+        position: relative;
+        box-shadow: 0px 5px 15px rgba(0,0,0,0.3);
+    }report-data-table.js*/
+
+    .report-thumbnail.enlarged {
+        transform: scale(2.2);
+        z-index: 10;
+        position: relative;
+        box-shadow: 0px 5px 15px rgba(0,0,0,0.3);
+    }
+
+.app-main__inner {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+
+.draw-text {
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+    animation: drawLoop 30s linear infinite;
+}
+
+@keyframes drawLoop {
+    0% {
+        stroke-dashoffset: 300;
+        fill: none;
+    }
+
+    50% {
+        stroke-dashoffset: 0;
+        fill: none;
+    }
+
+    51% {
+        fill: #007bff; /* Fill after drawing */
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        stroke-dashoffset: 300;
+        fill: #007bff;
+    }
+}

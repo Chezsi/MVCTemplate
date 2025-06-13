@@ -1,0 +1,308 @@
+﻿@model ContractVM
+@{
+    ViewData["Title"] = "Contract";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                Contracts
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions">
+                <div class="d-inline-block dropdown">
+
+                    <button id="ExportAllContractChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button> @*graph-pdf*@
+
+                    <button id="button-excel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
+                    </button>
+
+                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                        + Add product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Controls -->
+    <div class="row mb-3">
+        <div class="col-2">
+            <label><b>Chart Category</b></label>
+            <select id="ChartCategory" class="form-control">
+                <option selected>--Select Category--</option>
+                <option value="annual">Annual</option>
+                <option value="monthly">Monthly</option>
+            </select>
+        </div>
+
+        <div class="col-2">
+            <label><b>Chart Type</b></label>
+            <select id="ChartType" class="form-control" disabled>
+                <option selected>--Select Type--</option>
+            </select>
+        </div>
+
+        <div class="col-auto align-self-end">
+            <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
+            <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
+            <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
+        </div>
+    </div>
+
+
+    <!-- Chart Container (hidden by default) -->
+    <div id="ChartView" style="display: none;">
+        <canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>
+    </div>
+
+    <!-- Contract Table and Filter-->
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+
+            <div class="mb-3 row">
+                <div class="col-md-4">
+                    <label for="nameSearch" class="form-label">Search by Name:</label>
+                    <input type="text" id="nameSearch" class="form-control" placeholder="Contract name..." />
+                </div>
+                <div class="col-md-4">
+                    <label for="descriptionSearch" class="form-label">Search by Description:</label>
+                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Contract description..." />
+                </div>
+
+                <div class="col-md-4">
+                    <label for="personIdSearch" class="form-label">Filter by Person:</label>
+                    <select id="personIdSearch" class="form-control">
+                        <option value="">-- Select Person --</option>
+                        @foreach (var person in Model.PersonList)
+                        {
+                            <option value="@person.Text">@person.Text</option> <!-- Text = name -->
+                        }
+                    </select>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label">Validity No Less Than:</label>
+                    <input type="date" id="startDate" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label">Validity No Greater Than:</label>
+                    <input type="date" id="endDate" class="form-control" />
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table style="width: 100%;" id="contractTable" class="table table-hover table-striped table-bordered display nowrap">
+                    <thead>
+                        <tr>
+                            <th>Contract Name</th>
+                            <th>Contract Description</th>
+                            <th>Contract Validity</th>
+                            <th>Person Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Modal {
+    <!-- Create Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Contract</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-action="Create" asp-controller="Contract" method="post" id="createForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label asp-for="Contract.Name">Contract Name<span class="text-danger">*</span></label>
+                            <input asp-for="Contract.Name" class="form-control" />
+                            <span asp-validation-for="Contract.Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Contract.Description">Contract Description</label>
+                            <input asp-for="Contract.Description" class="form-control" />
+                            <span asp-validation-for="Contract.Description" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Contract.Validity">Contract Validity (MM/dd/yyyy)<span class="text-danger">*</span></label>
+                            <input asp-for="Contract.Validity" type="date" class="form-control" />
+                            <span asp-validation-for="Contract.Validity" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Contract.PersonId">Select Person<span class="text-danger">*</span></label>
+                            <select asp-for="Contract.PersonId" class="form-control" asp-items="Model.PersonList">
+                                <option value="">-- Select Person --</option>
+                            </select>
+                            <span asp-validation-for="Contract.PersonId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="createAddFormSubmitBtn" type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Update Contract</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-action="Update" asp-controller="Contract" method="post" id="updateForm">
+                    <div class="modal-body">
+                        <input type="hidden" asp-for="Contract.Id" />
+
+                        <div class="form-group">
+                            <label asp-for="Contract.Name" class="control-label">Contract Name<span class="text-danger">*</span></label>
+                            <input asp-for="Contract.Name" class="form-control" />
+                            <span asp-validation-for="Contract.Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Contract.Description" class="control-label">Contract Description</label>
+                            <input asp-for="Contract.Description" class="form-control" />
+                            <span asp-validation-for="Contract.Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Contract.Validity">Contract Validity (MM/dd/yyyy)<span class="text-danger">*</span></label>
+                            <input asp-for="Contract.Validity" type="date" class="form-control" />
+                            <span asp-validation-for="Contract.Validity" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Contract.PersonId" class="control-label">Select Person<span class="text-danger">*</span></label>
+                            <select asp-for="Contract.PersonId" class="form-control" asp-items="Model.PersonList">
+                                <option value="">-- Select Person --</option>
+                            </select>
+                            <span asp-validation-for="Contract.PersonId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" id="createEditFormSubmitBtn" class="btn btn-primary">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Unlock Modal -->
+    <div class="modal fade" id="unlockModal" tabindex="-1" role="dialog" aria-labelledby="unlockModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="unlockForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="unlockModalLabel">Unlock Contract</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="unlockContractId" />
+                        <div class="mb-3">
+                            <label for="unlockKey" class="form-label">Enter Unlock Key</label>
+                            <input type="password" class="form-control" id="unlockKey" required />
+                            <div id="unlockError" class="text-danger mt-2" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Unlock</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> @*for the export graph*@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/ContractScripts/contract-data-table.js"></script>
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/ContractScripts/contract-export.js"></script>
+    <script src="~/js/ContractScripts/contract-graph.js"></script>
+    <script src="~/js/ContractScripts/contract-graph-pdf.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
+
+}

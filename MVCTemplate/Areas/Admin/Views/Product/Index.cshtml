@@ -1,8 +1,15 @@
 ﻿@model Product
 @{
     ViewData["Title"] = "Product";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="app-main__inner">
+
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
     <div class="app-page-title">
         <div class="page-title-wrapper">
             <div class="page-title-heading">
@@ -10,25 +17,90 @@
                     <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
                 </div>
                 <div>
-                    <span class="text-primary"><b>Products</b></span>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                Products
+                            </text>
+                        </svg>
+                    </span>
                 </div>
             </div>
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
-                    <button id="button-excel" class="btn btn-success">
+                    @*<button id="button-excel" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export
+                        Export to Excel
+                    </button>*@
+
+                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button>  @*graph-pdf*@
+
+                    <button id="button-to-excel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
                     </button>
 
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add product
                     </button>
+
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Chart Controls -->
+    <div class="row mb-3">
+        <div class="col-2">
+            <label><b>Chart-Type</b></label>
+            <select id="ChartType" class="form-control">
+                <option selected>--Select Chart Type--</option>
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+            </select>
+        </div>
+        <div class="col-auto align-self-end">
+            <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
+            <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
+            <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
+        </div>
+    </div>
+
+    <!-- Chart Container (hidden by default) -->
+    <div id="ChartView" style="display: none;">
+        <canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>
+    </div>
+
+    <!-- Product Table -->
     <div class="main-card mb-3 card">
         <div class="card-body">
+
+            <div class="mb-3 row">
+                <div class="col-md-4">
+                    <label for="nameSearch" class="form-label">Search by Name:</label>
+                    <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                </div>
+                <div class="col-md-4">
+                    <label for="descriptionSearch" class="form-label">Search by Description:</label>
+                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <div class="col-md-4">
+                    <label for="minQuantity" class="form-label">Min Quantity:</label>
+                    <input type="number" id="minQuantity" class="form-control" placeholder="Min quantity..." />
+                </div>
+                <div class="col-md-4">
+                    <label for="maxQuantity" class="form-label">Max Quantity:</label>
+                    <input type="number" id="maxQuantity" class="form-control" placeholder="Max quantity..." />
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table style="width: 100%;" id="productTable" class="table table-hover table-striped table-bordered display nowrap">
                     <thead>
@@ -39,74 +111,43 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
-@*
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Product)
-        {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.Quantity</td>
-                <td>
-                    <button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-id="@item.Id">Delete</button>
-                </td>
-            </tr>
-        }                                                          
-    </tbody>
-</table>
-*@
-@section Modal
-{
 
-    @* Create Modal*@
-    <div class="modal fade" id="createModal" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalLabel" aria-hidden="true">
+@section Modal {
+    <!-- Create Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Add Product</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
+                    <h5 class="modal-title">Add Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form asp-action="Create" asp-controller="Product" method="post" id="createForm">
                     <div class="modal-body">
                         <div class="form-group">
-                            <label asp-for="Name" class="control-label">Product Name<span class="text-danger">*</span></label>
-                            <input asp-for="Name" class="form-control"/>
+                            <label asp-for="Name">Product Name<span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" />
                             <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Description" class="control-label">Product Description</label>
-                            <input asp-for="Description" class="form-control"/>
+                            <label asp-for="Description">Product Description</label>
+                            <input asp-for="Description" class="form-control" />
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Quantity" class="control-label">Product Quantity<span class="text-danger">*</span></label>
+                            <label asp-for="Quantity">Product Quantity<span class="text-danger">*</span></label>
                             <input asp-for="Quantity" type="number" class="form-control" />
                             <span asp-validation-for="Quantity" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button id="createAddFormSubmitBtn" class="ladda-button  me-2 btn-shadow btn btn-primary" data-style="expand-left">
-                            <span class="ladda-label">Save Changes</span>
-                            <span class="ladda-spinner"></span>
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="createAddFormSubmitBtn" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -118,27 +159,27 @@
          aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header"> 
+                <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Update Product</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
                 <form asp-action="Update" asp-controller="Product" method="put" id="updateForm">
                     <div class="modal-body">
-                        <input type="hidden" asp-for="Id" id="productId" /> @*id must be same with data-table and asp-for must be same for Model*@
+                        <input type="hidden" asp-for="Id" id="productId" />
                         <div class="form-group">
-                            <label asp-for="Name" class="control-label">Product Name:<span class="text-danger">*</span></label>
-                            <input asp-for="Name" class="form-control" id="name" /> @*same here*@
+                            <label asp-for="Name" class="control-label">Product Name<span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" id="name" />
                             <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
                         <div class="form-group">
                             <label asp-for="Description" class="control-label">Product Description</label>
-                            <input asp-for="Description" class="form-control" id="description" /> @*same here*@
-                            <span asp-validation-for="Description" class="text-danger"></span> 
+                            <input asp-for="Description" class="form-control" id="description" />
+                            <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
                         <div class="form-group">
                             <label asp-for="Quantity" class="control-label">Product Quantity<span class="text-danger">*</span></label>
-                            <input asp-for="Quantity" type="number" class="form-control" id="quantity" /> @*same here*@
+                            <input asp-for="Quantity" type="number" class="form-control" id="quantity" />
                             <span asp-validation-for="Quantity" class="text-danger"></span>
                         </div>
                     </div>
@@ -154,48 +195,57 @@
         </div>
     </div>
 
-    @*Delete Modal
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete this item?
-                </div>
-                <div class="modal-footer">
-                    <form id="deleteForm" method="post" action="@Url.Action("DeleteConfirmed", "Item")">
-                        <input type="hidden" id="itemId" name="id" />
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // When the delete button is clicked
-        $('#deleteModal').on('show.bs.modal', function (e) {
-            var button = $(e.relatedTarget); // Button that triggered the modal
-            var itemId = button.data('id'); // Extract the item ID from data-id attribute
-
-            // Set the item ID in the hidden input field
-            $('#itemId').val(itemId);
-        });
-    </script>
-   *@
-
 }
+
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> @*for the export graph as image*@
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
+
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
     <script src="~/js/ProductScripts/product-data-table.js"></script>
-    <partial name="_ValidationScriptsPartial" />
     <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/ProductScripts/product-export.js"></script>
+    <script src="~/js/ProductScripts/product-graph.js"></script>
+    <script src="~/js/ProductScripts/product-graph-pdf.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
     
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
 }
