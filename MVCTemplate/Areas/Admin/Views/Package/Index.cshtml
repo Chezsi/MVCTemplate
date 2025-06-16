@@ -26,7 +26,7 @@
                     </span>
                 </div>
             </div>
-            <div class="page-title-actions">
+            <div class="page-title-actions staggered">
                 <div class="d-inline-block dropdown">
 
                     <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Chart Controls -->
-    <div class="row mb-3">
+    <div class="row mb-3 staggered">
         <div class="col-md-2">
             <label for="ChartType"><b>Chart Type</b></label>
             <select id="ChartType" class="form-control">
@@ -92,7 +92,7 @@
         <div class="card-body">
 
             <!-- Search Filters -->
-            <div class="mb-3 row">
+            <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="nameSearch" class="form-label">Search by Name:</label>
                     <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
@@ -114,6 +114,7 @@
                     <small id="prioritySearchError" class="text-danger" style="display: none;"></small>
                 </div>
 
+                <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="startDate" class="form-label">Start Date (Created):</label>
                     <input type="date" id="startDate" class="form-control" />
@@ -122,9 +123,10 @@
                     <label for="endDate" class="form-label">End Date (Created):</label>
                     <input type="date" id="endDate" class="form-control" />
                 </div>
+                </div>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-responsive staggered">
                 <table style="width: 100%;" id="packageTable" class="table table-hover table-striped table-bordered display nowrap">
                     <thead>
                         <tr>

@@ -26,7 +26,7 @@
                     </span>
                 </div>
             </div>
-            <div class="page-title-actions">
+            <div class="page-title-actions staggered">
                 <div class="d-inline-block dropdown">
 
                     @*<button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Search Filters -->
-    <div class="mb-3 row">
+    <div class="mb-3 row staggered">
         <div class="col-md-4">
             <label for="titleSearch" class="form-label">Search by Title:</label>
             <input type="text" id="titleSearch" class="form-control" placeholder="Report title..." />
@@ -74,7 +74,7 @@
     </div>
 
     <!-- Report Table -->
-    <div class="main-card mb-3 card">
+    <div class="main-card mb-3 card staggered">
         <div class="card-body">
             <div class="table-responsive">
                 <table id="reportTable" class="table table-hover table-striped table-bordered nowrap" style="width: 100%;">
@@ -201,25 +201,7 @@
 }
 
 @section Styles {
-    <style>
-        #logoOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-            #logoOverlay img {
-                max-width: 600px;
-                max-height: 336px;
-            }
-    </style>
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
 }
 
 @section Scripts {
@@ -229,17 +211,5 @@
     <script src="~/js/ReportScripts/report-data-table.js"></script>
     <script src="~/js/ReportScripts/report-search.js"></script>
 
-    <script>
-        $(document).ready(function () {
-            // Fade in the main content
-            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
-                // Wait before fading out the logo overlay
-                setTimeout(function () {
-                    $("#logoOverlay").fadeOut(500, function () {
-                        $(this).remove(); // Remove the overlay after fade out
-                    });
-                }, 500);
-            });
-        });
-    </script>
+    <script src="~/js/fadeEffect.js"></script>
 }

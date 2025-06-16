@@ -1,3 +1,8 @@
+.app-main__inner {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
 #logoOverlay {
     position: fixed;
     top: 0;
@@ -26,3 +31,15 @@
         transform: translateX(50px);
     }
 }
+
+/* For staggered load effect */
+.staggered {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1.5s ease, transform 1.5s ease;
+}
+
+    .staggered.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
