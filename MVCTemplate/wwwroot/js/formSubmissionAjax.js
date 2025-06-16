@@ -66,5 +66,36 @@ $(document).ready(function () {
         }
     });
 
-    
+    const importFileFormBtn = $("#importFileSubmitBtn").get(0);
+    const importFileFormLadda = Ladda.create(importFileFormBtn);
+    $('#importForm').submit(async function (event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        clearErrors(event.currentTarget);
+        try {
+            const response = await $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'),
+                data: formData,
+                contentType: false,
+                processData: false,
+            })
+            //Show Alert
+            toastr.success(response.message);
+            //Refresh Data Table
+            dataTable.ajax.reload();
+            //Reset Form
+            $('#importForm')[0].reset();
+            //Hide Modal
+            $('#importModal').modal('hide');
+        } catch (error) {
+            const formErrors = error?.responseJSON?.errors ?? {}
+            showErrors(formErrors, event.currentTarget)
+            toastr.error(error?.responseJSON?.message);
+        } finally {
+            importFileFormLadda.stop()
+        }
+    });
+
+
 });

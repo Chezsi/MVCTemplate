@@ -29,10 +29,20 @@ namespace MVCTemplate.DataAccess.Repository
             return _db.Products.FirstOrDefault(i => i.Name == name && i.Id != countryId);
         }
 
+        //public IEnumerable<Product> GetAll()
+        //{
+        //    return _db.Products.ToList(); //redundant code
+        //}
+
         public Product GetFirstOrDefault(Expression<Func<Product, bool>> predicate)
         {
             return _db.Products.FirstOrDefault(predicate);
         } //since it cant be in interface repository
+
+        public List<Product> ToList()
+        {
+            return _db.Products.ToList();
+        }
 
         public void Update(Product product)
         {

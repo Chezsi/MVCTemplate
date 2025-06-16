@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MVCtemplate.DataAccess.Data;
 using MVCTemplate.DataAccess.Repository.IRepository;
+using MVCTemplate.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 

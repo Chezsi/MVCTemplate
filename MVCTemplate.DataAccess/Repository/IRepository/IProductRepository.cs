@@ -19,5 +19,6 @@ namespace MVCTemplate.DataAccess.Repository.IRepository
 
         Product GetFirstOrDefault(Expression<Func<Product, bool>> predicate); // rest of getfirstordefault is in productrepository
 
+        List<Product> ToList();
     }
 }

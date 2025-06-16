@@ -55,7 +55,63 @@
                             Category
                             <i class="metismenu-icon lnr-bookmark"></i>
                         </a>
+                    </li>
 
+                    <li class="mainMenu">
+                        <a asp-area="Admin" asp-controller="Person" asp-action="Index" class="sideBarLink">
+                            Person
+                            <i class="metismenu-icon lnr-bookmark"></i>
+                        </a>
+                    </li>
+
+                    <li class="mainMenu">
+                        <a asp-area="Admin" asp-controller="Contract" asp-action="Index" class="sideBarLink">
+                            Contract
+                            <i class="metismenu-icon lnr-bookmark"></i>
+                        </a>
+                    </li>
+
+                    <li class="mainMenu">
+                        <a asp-area="Admin" asp-controller="Package" asp-action="Index" class="sideBarLink">
+                            Package
+                            <i class="metismenu-icon lnr-bookmark"></i>
+                        </a>
+                    </li>
+
+                    <li class="mainMenu">
+                        <a asp-area="Admin" asp-controller="Report" asp-action="Index" class="sideBarLink">
+                            Report
+                            <i class="metismenu-icon lnr-bookmark"></i>
+                        </a>
+                    </li>
+
+                    <li class="mainMenu">
+                        <a href="#" class="sideBarLink" aria-expanded="false">
+                            Miscellaneous
+                            <i class="metismenu-icon lnr-folder"></i>
+                            <i class="metismenu-state-icon lnr-chevron-down"></i>
+                        </a>
+                        <ul class="mm-collapse">
+                            @*<li>
+                                <a asp-area="Admin" asp-controller="Import" asp-action="UploadExcel" class="sideBarLink">
+                                    Import
+                                    <i class="metismenu-icon lnr-bookmark"></i>
+                                </a>
+                            </li>*@
+
+                            <li>
+                                <a asp-area="Admin" asp-controller="Generate" asp-action="Index" class="sideBarLink">
+                                    Generate
+                                    <i class="metismenu-icon lnr-bookmark"></i>
+                                </a>
+                            </li>
+                            @*<li>
+                                <a asp-area="Admin" asp-controller="Package" asp-action="ShowPackagesData" class="sideBarLink">
+                                    Package Data
+                                    <i class="metismenu-icon lnr-bookmark"></i>
+                                </a>
+                            </li>*@
+                        </ul>
                     </li>
                 </ul>
             </div>

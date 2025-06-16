@@ -1,0 +1,271 @@
+﻿@model PersonVM
+
+@{
+    ViewData["Title"] = "Person";
+}
+
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                Person
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions">
+                <div class="d-inline-block dropdown">
+                    <div class="d-flex align-items-center mb-2">
+
+                        <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                            <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                            Export All Charts
+                        </button> @*graph-pdf*@
+
+                        @*<button id="button-excel-person" class="btn btn-success me-3">
+                            <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                            Export to Excel
+                        </button> (JS)*@
+
+                        <button id="button-export-to-excel" class="btn btn-success me-3">
+                            <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                            Export to Excel
+                        </button>
+
+
+                        <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                            + Add Person
+                        </button>
+                    </div>
+
+                    <!-- 2nd row: JS export button -->
+                    @*<div class="mb-2">
+                        <button id="button-export-current-contracts" class="btn btn-info ms-2">
+                            <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
+                            With Active Contracts
+                        </button>
+                    </div> *@
+
+                    <!-- 3rd row: CS export button -->
+                    <div>
+                        <form method="get" action="/Admin/Person/ExportCurrentContractsExcel" style="display:inline;">
+                            <button type="submit" class="btn btn-info ms-2">
+                                <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
+                                With Active Contracts
+                            </button>
+                        </form> @*cs*@
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Chart Controls -->
+    <div class="row mb-3">
+        <div class="col-2">
+            <label><b>Chart-Type</b></label>
+            <select id="ChartType" class="form-control">
+                <option selected>--Select Chart Type--</option>
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+            </select>
+        </div>
+        <div class="col-auto align-self-end">
+            <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
+            <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
+            <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
+        </div>
+    </div>
+
+    <!-- Chart Container (hidden by default) -->
+    <div id="ChartView" style="display: none;">
+        <canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>
+    </div>
+
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table style="width: 100%;" id="personTable" class="table table-hover table-striped table-bordered display nowrap">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Category ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Modal
+{
+    @* Create Modal *@
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Person</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <form asp-action="Create" asp-controller="Person" method="post" id="createForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Person Name<span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Position" class="control-label">Person Position<span class="text-danger">*</span></label>
+                            <input asp-for="Position" class="form-control" />
+                            <span asp-validation-for="Position" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating py-2 col-12">
+                            <select asp-for="CategoryId" asp-items="@Model.CategoryList" class="form-select border-0 shadow">
+                                <option disabled selected>--Select Category--</option>
+                            </select>
+                            <label asp-for="CategoryId" class="ms-2"></label>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button id="createAddFormSubmitBtn" class="ladda-button  me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                                <span class="ladda-label">Save Information</span>
+                                <span class="ladda-spinner"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* Update Modal *@
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Update Person</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <form asp-action="Update" asp-controller="Person" method="put" id="updateForm">
+                    <div class="modal-body">
+                        <input type="hidden" asp-for="Id" id="id" />
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Person Name:<span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" id="name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Position" class="control-label">Person Position<span class="text-danger">*</span></label>
+                            <input asp-for="Position" class="form-control" id="position" />
+                            <span asp-validation-for="Position" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating py-2 col-12">
+                            <select asp-for="CategoryId" asp-items="@Model.CategoryList" class="form-select border-0 shadow">
+                                <option disabled selected>--Select Category--</option>
+                            </select>
+                            <label asp-for="CategoryId" class="ms-2"></label>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="createEditFormSubmitBtn" class="ladda-button  me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                            <span class="ladda-label">Save Changes</span>
+                            <span class="ladda-spinner"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> <!-- for export graph as image-->
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
+
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> <!-- XLSX for export -->
+
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/PersonScripts/person-data-table.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/PersonScripts/person-export.js"></script>
+    <script src="~/js/PersonScripts/person-graph.js"></script>
+    <script src="~/js/PersonScripts/person-graph-pdf.js"></script>
+
+
+    @*<script src="https://unpkg.com/table-to-excel@1.1.0/dist/tableToExcel.min.js"></script>*@
+
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
+}

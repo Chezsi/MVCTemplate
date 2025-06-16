@@ -1,0 +1,42 @@
+﻿@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["Warning"]
+    </div>
+}
+
+
+<form method="post" enctype="multipart/form-data">
+    <div class="row">
+        <label>Select Excel File</label>
+        <input type="file" name="file" />
+    </div>    
+    <br/>
+    <div class="row">
+        <input type="submit" asp-controller="Import" asp-action="UploadExcel" class="btn btn-dark" value="Upload Package Excel File" />
+    </div>
+</form>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="row">
+        <label>Select Excel File</label>
+        <input type="file" name="file" />
+    </div>
+    <br />
+    <div class="row">
+        <input type="submit" asp-controller="Import" asp-action="UploadExcelProduct" class="btn btn-dark" value="Upload Product Excel File" />
+    </div>
+</form>
+
+<script>
+    // animation
+    $(document).ready(function () {
+        $(".app-main__inner").animate({ opacity: 1 }, 10);
+    });
+</script>

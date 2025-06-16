@@ -3,14 +3,12 @@
 @{
     ViewData["Title"] = "Category";
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
 </div>
 
-
-<div class="app-main__inner">
+<div class="app-main__inner" style="opacity: 0;">
     <div class="app-page-title">
         <div class="page-title-wrapper">
             <div class="page-title-heading">
@@ -18,11 +16,27 @@
                     <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
                 </div>
                 <div>
-                    <span class="text-primary"><b>Category</b></span>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                Category
+                            </text>
+                        </svg>
+                    </span>
                 </div>
             </div>
             <div class="page-title-actions">
                 <div class="d-inline-block dropdown">
+                    @*<button id="button-excel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
+                    </button>*@
+
+
+                    <button id="button-to-excel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
+                    </button>
 
                     <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add Category
@@ -31,6 +45,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Search Filters -->
+    <div class="mb-3 row">
+        <div class="col-md-4">
+            <label for="nameSearch" class="form-label">Search by Name:</label>
+            <input type="text" id="nameSearch" class="form-control" placeholder="Category name..." />
+        </div>
+        <div class="col-md-4">
+            <label for="codeSearch" class="form-label">Search by Code:</label>
+            <input type="text" id="codeSearch" class="form-control" placeholder="Category code..." />
+        </div>
+    </div>
+
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="table-responsive">
@@ -49,10 +76,10 @@
         </div>
     </div>
 </div>
+
 @section Modal
 {
-
-    @* Create Modal*@
+    @* Create Modal *@
     <div class="modal fade" id="createModal" tabindex="-1" role="dialog"
          aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -124,11 +151,59 @@
     </div>
 }
 
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
 @section Scripts {
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
     <script src="~/js/CategoryScripts/category-data-table.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/CategoryScripts/category-export.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
 
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
+
+    <script>
+        // External filters
+        $('#nameSearch').on('keyup change', function () {
+            dataTable.column(0).search(this.value).draw(); // Name column
+        });
+
+        $('#codeSearch').on('keyup change', function () {
+            dataTable.column(1).search(this.value).draw(); // Code column
+        });
+    </script>
 }

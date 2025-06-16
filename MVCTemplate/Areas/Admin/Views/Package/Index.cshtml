@@ -1,0 +1,328 @@
+﻿@model Package
+
+@{
+    ViewData["Title"] = "Package";
+}
+
+<!-- Logo overlay div added BEFORE .app-main__inner -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-bookmark icon-gradient bg-premium-dark"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                Packages
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions">
+                <div class="d-inline-block dropdown">
+
+                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                        <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
+                        Export All Charts
+                    </button>  @*graph-pdf*@
+
+                    @*<form method="get" action="/Admin/Package/PDF">
+                        <button type="submit">Download PDF</button>
+                    </form> //uses aspose*@
+
+                    <button id="button-excelFiltered" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export Filtered to Excel
+                    </button> @*uses controller*@
+
+                    <a href="/Admin/Package/ExportToExcel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> Export to Excel
+                    </a> @*uses controller*@
+
+                    @*<button id="button-excel" class="btn btn-success">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Export to Excel
+                    </button> uses js *@
+
+                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                        Import
+                    </button>
+
+                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                        + Add Package
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Controls -->
+    <div class="row mb-3">
+        <div class="col-md-2">
+            <label for="ChartType"><b>Chart Type</b></label>
+            <select id="ChartType" class="form-control">
+                <option selected>--Select Chart Type--</option>
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+            </select>
+        </div>
+        <div class="col-md-auto align-self-end">
+            <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
+            <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
+            <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div id="ChartView" style="display: none;">
+        <canvas id="myChart" style="max-width:750px; max-height:400px;"></canvas>
+    </div>
+
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+
+            <!-- Search Filters -->
+            <div class="mb-3 row">
+                <div class="col-md-4">
+                    <label for="nameSearch" class="form-label">Search by Name:</label>
+                    <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                </div>
+                <div class="col-md-4">
+                    <label for="descriptionSearch" class="form-label">Search by Description:</label>
+                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                </div>
+                <div class="col-md-4">
+                    <label for="prioritySearch" class="form-label">Search by Priority (1-5):</label>
+                    <select id="prioritySearch" class="form-control">
+                        <option value="">-- Select Priority --</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                    <small id="prioritySearchError" class="text-danger" style="display: none;"></small>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label">Start Date (Created):</label>
+                    <input type="date" id="startDate" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label">End Date (Created):</label>
+                    <input type="date" id="endDate" class="form-control" />
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table style="width: 100%;" id="packageTable" class="table table-hover table-striped table-bordered display nowrap">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Priority</th>
+                            <th>Date Created</th>
+                            <th>Date Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Table body will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Modal
+{
+    <!-- Create Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Package</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <form asp-action="Create" asp-controller="Package" method="post" id="createForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Package Name<span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">Description<span class="text-danger">*</span></label>
+                            <input asp-for="Description" class="form-control" />
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Priority" class="control-label">Priority<span class="text-danger">*</span></label>
+                            <select asp-for="Priority" class="form-control">
+                                <option value="">-- Select Priority --</option>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Priority" class="text-danger"></span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button id="createAddFormSubmitBtn" class="ladda-button me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                                <span class="ladda-label">Save Information</span>
+                                <span class="ladda-spinner"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Import Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <form asp-action="Import" asp-controller="Package" method="post" enctype="multipart/form-data" id="importForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="file" class="control-label">File <span class="text-danger">*</span></label>
+                            <input type="file" name="file" class="form-control" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button id="importFileSubmitBtn" class="ladda-button me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                                <span class="ladda-label">Import</span>
+                                <span class="ladda-spinner"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Update Package</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <form asp-action="Update" asp-controller="Package" method="put" id="updateForm">
+                    <div class="modal-body">
+                        <input type="hidden" asp-for="Id" id="id" />
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Package Name:<span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" id="name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">Description<span class="text-danger">*</span></label>
+                            <input asp-for="Description" class="form-control" id="description" />
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Priority" class="control-label">Priority<span class="text-danger">*</span></label>
+                            <select asp-for="Priority" class="form-control" id="priority">
+                                <option value="">-- Select Priority --</option>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Priority" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="createEditFormSubmitBtn" class="ladda-button me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                            <span class="ladda-label">Save Changes</span>
+                            <span class="ladda-spinner"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        #logoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+            #logoOverlay img {
+                max-width: 600px;
+                max-height: 336px;
+            }
+    </style>
+}
+
+@section Scripts {
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/PackageScripts/package-data-table.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/PackageScripts/package-export.js"></script>
+    <script src="~/js/PackageScripts/package-graph.js"></script>
+    <script src="~/js/PackageScripts/package-search.js"></script>
+    <script src="~/js/PackageScripts/package-graph-pdf.js"></script>
+
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> <!-- for export graph -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
+
+    <script>
+        $(document).ready(function () {
+            // Fade in the main content
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                // Wait before fading out the logo overlay
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove(); // Remove the overlay after fade out
+                    });
+                }, 500);
+            });
+        });
+    </script>
+}
