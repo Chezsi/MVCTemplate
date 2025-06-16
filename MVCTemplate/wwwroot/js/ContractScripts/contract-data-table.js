@@ -1,24 +1,3 @@
-// Date range filter using DataTables custom filter extension
-$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-    let min = $('#startDate').val();
-    let max = $('#endDate').val();
-    let dateStr = data[2]; // "validity" is column index 2
-
-    if (!dateStr) return false;
-
-    let createdDate = new Date(dateStr);
-    createdDate.setHours(0, 0, 0, 0);
-
-    let minDate = min ? new Date(min) : null;
-    let maxDate = max ? new Date(max) : null;
-
-    if (minDate) minDate.setHours(0, 0, 0, 0);
-    if (maxDate) maxDate.setHours(23, 59, 59, 999);
-
-    return (!minDate || createdDate >= minDate) &&
-        (!maxDate || createdDate <= maxDate);
-});
-
 let dataTable;
 
 $(document).ready(function () {
@@ -35,8 +14,7 @@ $(document).ready(function () {
         });
     });
 
-    // Unlock form submit
-    // for the unlockModal
+    // Unlock form submit handler
     $('#unlockForm').on('submit', function (e) {
         e.preventDefault();
 
@@ -64,7 +42,7 @@ $(document).ready(function () {
         });
     });
 
-    // Define the DataTable and rendering logic
+    // Initialize the DataTable
     function loadDataTable() {
         dataTable = $('#contractTable').DataTable({
             "ajax": { url: '/Admin/Contract/GetAllContracts' },
@@ -85,7 +63,7 @@ $(document).ready(function () {
                 { data: 'personName', "autowidth": true },
                 {
                     data: 'id',
-                    render: function (data, type, full, meta) {
+                    render: function (data, type, full) {
                         const validityDate = new Date(full.validity);
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
@@ -126,25 +104,7 @@ $(document).ready(function () {
         });
     }
 
-    // Filter handlers
-    $('#nameSearch').on('keyup change', function () {
-        dataTable.column(0).search(this.value).draw();
-    });
-
-    $('#descriptionSearch').on('keyup change', function () {
-        dataTable.column(1).search(this.value).draw();
-    });
-
-    $('#startDate, #endDate').on('change', function () {
-        dataTable.draw();
-    });
-
-    $('#personIdSearch').on('change', function () {
-        dataTable.column(3).search(this.value).draw();
-    });
-
     // Unlock button click handler (delegated)
-    // for the unlockModal
     $('#contractTable tbody').on('click', '.unlock-btn', function () {
         const contractId = $(this).data('id');
         $('#unlockContractId').val(contractId);

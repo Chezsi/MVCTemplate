@@ -54,26 +54,7 @@
 </div>
 
 @section Styles {
-    <style>
-        #logoOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9); /* semi-transparent white background */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-            #logoOverlay img {
-                max-width: 600px;
-                max-height: 336px;
-            }
-        /*should habe been css along with other index then put in _layout*/
-    </style>
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
 }
 
 @section Scripts {
@@ -85,20 +66,6 @@
 
     
     <script src="~/js/GenerateScripts/generate-graph-pdf.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            // Fade in the main content
-            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
-                // Wait before fading out the logo overlay
-                setTimeout(function () {
-                    $("#logoOverlay").fadeOut(500, function () {
-                        $(this).remove(); // Remove the overlay after fade out
-                    });
-                }, 500);
-            });
-        });
-        /*should habe been js along with other index then put in _layout*/
-    </script>
+    <script src="~/js/fadeEffect.js"></script>
 
 }
