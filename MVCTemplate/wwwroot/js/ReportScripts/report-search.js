@@ -1,6 +1,6 @@
 ﻿$(document).ready(function () {
     // Initially hide export filtered buttons
-    $('#exportFilteredPdfBtn, #exportFilteredExcelBtn').hide();
+    $('#button-pdfFiltered-report, #button-excelFiltered-report').hide();
 
     function toggleExportButtons() {
         const titleVal = $('#titleSearch').val().trim();
@@ -10,9 +10,9 @@
         var filteredRowsCount = table.rows({ filter: 'applied' }).data().length;
 
         if ((titleVal.length > 0 || descVal.length > 0) && filteredRowsCount > 0) {
-            $('#exportFilteredPdfBtn, #exportFilteredExcelBtn').show();
+            $('#button-pdfFiltered-report, #button-excelFiltered-report').show();
         } else {
-            $('#exportFilteredPdfBtn, #exportFilteredExcelBtn').hide();
+            $('#button-pdfFiltered-report, #button-excelFiltered-report').hide();
         }
     }
 
@@ -28,7 +28,7 @@
     });
 
     // Export filtered PDF button event handler
-    $('#exportFilteredPdfBtn').on('click', function () {
+    $('#button-pdfFiltered-report').on('click', function () {
         var table = $('#reportTable').DataTable();
         var titleFilter = table.column(0).search() || '';
         var descriptionFilter = table.column(2).search() || '';
@@ -51,7 +51,7 @@
     });
 
     // Export filtered Excel button event handler
-    $('#exportFilteredExcelBtn').on('click', function () {
+    $('#button-excelFiltered-report').on('click', function () {
         var table = $('#reportTable').DataTable();
         var titleFilter = table.column(0).search() || '';
         var descriptionFilter = table.column(2).search() || '';

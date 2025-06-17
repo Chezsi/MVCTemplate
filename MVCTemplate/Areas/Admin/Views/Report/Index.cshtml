@@ -33,22 +33,23 @@
                     <i class="fa fa-file-import"></i> Import Excel
                     </button>*@
 
-                    <a asp-action="ExportToExcel" class="btn btn-success">
+                    <a id="button-to-excel-report" asp-action="ExportToExcel" class="btn btn-success">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export to Excel
                     </a>
 
-                    <button id="exportFilteredExcelBtn" class="btn btn-success ms-2">
+
+                    <button id="button-excelFiltered-report" class="btn btn-success ms-2">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> 
                         Export Filtered to Excel
                     </button>
 
-                    <a asp-action="ExportToPdf" class="btn btn-danger ms-2">
+                    <a id="button-to-pdf-report" asp-action="ExportToPdf" class="btn btn-danger ms-2">
                         <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
                         Export to PDF
                     </a>
 
-                    <button id="exportFilteredPdfBtn" class="btn btn-danger ms-2">
+                    <button id="button-pdfFiltered-report" class="btn btn-danger ms-2">
                         <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
                         Export Filtered to PDF
                     </button>

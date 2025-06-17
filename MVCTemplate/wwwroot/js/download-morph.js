@@ -18,7 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
         'exportContractsBtn',
         'ExportAllChartsBtn-package',
         'button-excelFiltered-package',
-        'button-to-excel-package'
+        'button-to-excel-package',
+        'button-to-excel-report',
+        'button-excelFiltered-report',
+        'button-to-pdf-report',
+        'button-pdfFiltered-report'
     ];
 
     buttonIds.forEach(id => {
