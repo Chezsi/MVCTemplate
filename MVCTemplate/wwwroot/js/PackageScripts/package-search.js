@@ -33,14 +33,14 @@ function toggleExportFilteredButton() {
     const filteredRowsCount = dataTable.rows({ search: 'applied' }).data().length;
 
     if ((name || description || priority || startDate || endDate) && filteredRowsCount > 0) {
-        $('#button-excelFiltered').show();
+        $('#button-excelFiltered-package').show();
     } else {
-        $('#button-excelFiltered').hide();
+        $('#button-excelFiltered-package').hide();
     }
 }
 
 $(document).ready(function () {
-    $('#button-excelFiltered').hide();
+    $('#button-excelFiltered-package').hide();
 
     $('#nameSearch, #descriptionSearch, #prioritySearch, #startDate, #endDate')
         .on('keyup change', toggleExportFilteredButton);
@@ -81,7 +81,7 @@ $('#startDate, #endDate').on('change', function () {
 });
 
 $(document).ready(function () {
-    $('#button-excelFiltered').on('click', function () {
+    $('#button-excelFiltered-package').on('click', function () {
         let filteredData = dataTable.rows({ search: 'applied' }).data().toArray();
 
         if (filteredData.length === 0) {
