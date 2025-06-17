@@ -6,28 +6,24 @@ function addTemporaryClass(button) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('ExportAllChartsBtn-product')?.addEventListener('click', function () {
-        addTemporaryClass(this);
-    });
+    // List all button IDs to attach the animation
+    const buttonIds = [
+        'ExportAllChartsBtn-product',
+        'button-to-excel-product',
+        'button-to-excel-category',
+        'button-to-excel-person',
+        'ExportAllChartsBtn-person',
+        'ExportAllChartsBtn-contract',
+        'button-to-excel-contract',
+        'exportContractsBtn'
+    ];
 
-    document.getElementById('button-to-excel-product')?.addEventListener('click', function () {
-        addTemporaryClass(this);
-    });
-
-    document.getElementById('button-to-excel-category')?.addEventListener('click', function () {
-        addTemporaryClass(this);
-    });
-    document.getElementById('button-to-excel-person')?.addEventListener('click', function () {
-        addTemporaryClass(this);
-    });
-    document.getElementById('ExportAllChartsBtn-person')?.addEventListener('click', function () {
-        addTemporaryClass(this);
-    });
-    document.getElementById('ExportAllChartsBtn-contract')?.addEventListener('click', function () {
-        addTemporaryClass(this);
-    });
-
-    document.getElementById('button-to-excel-contract')?.addEventListener('click', function () {
-        addTemporaryClass(this);
+    buttonIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', function () {
+                addTemporaryClass(this);
+            });
+        }
     });
 });
