@@ -1,9 +1,9 @@
 .btn {
-    transition: all 0.5s ease;
+    transition: all 1s ease;
     position: relative;
 }
 
 .expand-left {
-    transform: translateX(-50px);
+    transform: translateX(-30px);
     padding-left: 30px;
 }
