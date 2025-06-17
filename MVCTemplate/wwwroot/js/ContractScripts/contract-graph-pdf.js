@@ -152,5 +152,5 @@
 }
 
 $(function () {
-    $("#ExportAllContractChartsBtn").click(exportAllContractChartsToPDF);
+    $("#ExportAllChartsBtn-contract").click(exportAllContractChartsToPDF);
 });

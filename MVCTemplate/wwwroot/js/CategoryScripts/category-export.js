@@ -1,11 +1,11 @@
 
 $(document).ready(function () {
-    $('#button-to-excel').on('click', function () {
+    $('#button-to-excel-category').on('click', function () {
         window.location.href = '/Admin/Category/ExportToExcel';
     });
 }); // ^ uses controller
 
-document.querySelector("#button-excel").addEventListener("click", async function () {
+document.querySelector("#button-to-excel-category").addEventListener("click", async function () {
     var table = $('#Categorys').DataTable();
     var searchValue = table.search();
     var dataToExport;
