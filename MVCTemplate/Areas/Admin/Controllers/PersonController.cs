@@ -413,6 +413,10 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         public IActionResult GetAllPersons()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
 
             List<Person>? personList = _unitOfWork.Person.GetAll().ToList();
             return Json(new { data = personList });
@@ -421,6 +425,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet] // for exporting data from two tables (JS)
         public IActionResult ExportPersonsWithCurrentContracts()
         {
+
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             var now = DateTime.Now;
 
             var data = from person in _context.Persons

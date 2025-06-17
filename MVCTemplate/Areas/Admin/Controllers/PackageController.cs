@@ -514,6 +514,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         public IActionResult GetAllPackages()
         {
+
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             List<Package>? packageList = _unitOfWork.Package.GetAll().ToList();
             return Json(new { data = packageList });
         }

@@ -821,21 +821,6 @@ namespace MVCTemplate.Controllers
             return View();
         }
 
-        // GET: /Report/GetAllReports (for DataTable ajax)
-        [HttpGet]
-        public async Task<IActionResult> GetAllReports()
-        {
-            var reports = await _context.Reports
-                .Select(r => new {
-                    r.Id,
-                    r.Title,
-                    r.ImageName,
-                    r.Description
-                }).ToListAsync();
-
-            return Json(new { data = reports });
-        }
-
         // POST: /Report/Create
         [HttpPost]
         public async Task<IActionResult> Create(ReportVM model)
@@ -969,5 +954,27 @@ namespace MVCTemplate.Controllers
 
             return Json(new { success = true, message = "Report deleted successfully." });
         }
+
+        #region API CALLS
+        // GET: /Report/GetAllReports (for DataTable ajax)
+        [HttpGet]
+        public async Task<IActionResult> GetAllReports()
+        {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
+            var reports = await _context.Reports
+                .Select(r => new {
+                    r.Id,
+                    r.Title,
+                    r.ImageName,
+                    r.Description
+                }).ToListAsync();
+
+            return Json(new { data = reports });
+        }
+        #endregion
     }
 }
