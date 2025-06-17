@@ -77,9 +77,10 @@
     </div>
 
     <!-- Chart Controls -->
-    <div class="row mb-3 staggered">
-        <div class="col-2">
-            <label><b>Chart-Type</b></label>
+<div class="row mb-3 staggered">
+    <div class="col-2">
+        <label><b>Chart-Type</b></label>
+        <div class="search-container">
             <select id="ChartType" class="form-control">
                 <option selected>--Select Chart Type--</option>
                 <option value="bar">Bar</option>
@@ -88,12 +89,14 @@
                 <option value="doughnut">Doughnut</option>
             </select>
         </div>
-        <div class="col-auto align-self-end">
-            <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
-            <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
-            <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
-        </div>
     </div>
+    <div class="col-auto align-self-end">
+        <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
+        <button id="RemoveGraphBtn" class="btn btn-danger">Remove Graph</button>
+        <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
+    </div>
+</div>
+
 
     <!-- Chart Container (hidden by default) -->
     <div id="ChartView" style="display: none;">
@@ -214,6 +217,9 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 @section Scripts {

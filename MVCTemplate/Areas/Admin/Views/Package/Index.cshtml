@@ -70,11 +70,13 @@
     <div class="row mb-3 staggered">
         <div class="col-md-2">
             <label for="ChartType"><b>Chart Type</b></label>
-            <select id="ChartType" class="form-control">
-                <option selected>--Select Chart Type--</option>
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
-            </select>
+            <div class="search-container">
+                <select id="ChartType" class="form-control">
+                    <option selected>--Select Chart Type--</option>
+                    <option value="bar">Bar</option>
+                    <option value="line">Line</option>
+                </select>
+            </div>
         </div>
         <div class="col-md-auto align-self-end">
             <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
@@ -82,6 +84,7 @@
             <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
         </div>
     </div>
+
 
     <!-- Chart Container -->
     <div id="ChartView" style="display: none;">
