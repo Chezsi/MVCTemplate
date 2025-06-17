@@ -4,12 +4,26 @@ document.querySelector("#button-to-excel-contract").addEventListener("click", as
     var dataToExport;
 
     if (searchValue) {
+        // Get filtered rows if a search value exists
         dataToExport = table.rows({ search: 'applied' }).data().toArray();
     } else {
-        let response = await fetch('/Admin/Contract/GetAllContracts');
+        // Fetch all contracts from the server with the required header
+        let response = await fetch('/Admin/Contract/GetAllContracts', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            // Handle unauthorized or other errors gracefully
+            alert('Failed to fetch contract data: ' + response.statusText);
+            return;
+        }
+
         let result = await response.json();
         dataToExport = result.data;
     }
+
 
     dataToExport.sort((a, b) => a.name.localeCompare(b.name));
 
