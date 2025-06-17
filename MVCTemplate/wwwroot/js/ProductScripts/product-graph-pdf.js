@@ -1,5 +1,5 @@
 ﻿$(document).ready(() => {
-    $("#ExportAllChartsBtn").click(async function () {
+    $("#ExportAllChartsBtn-product").click(async function () {
         const chartTypes = ["bar", "line", "pie", "doughnut"];
         const { jsPDF } = window.jspdf;
 

@@ -291,6 +291,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllProducts()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             var productList = _unitOfWork.Product.GetAll().ToList();
             return Json(new { data = productList });
         }

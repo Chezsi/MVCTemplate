@@ -261,6 +261,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         public IActionResult GetAllCategory()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             List<Category>? categoryList = _unitOfWork.Category.GetAll().ToList();
             return Json(new { data = categoryList });
         }

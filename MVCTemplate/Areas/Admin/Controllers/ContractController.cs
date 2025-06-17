@@ -356,6 +356,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllContracts()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             var contractList = _unitOfWork.Contract
                 .GetAll(includeProperties: "Person") // include Person navigation property
                 .Select(c => new {
@@ -374,6 +379,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllPersonsForContract()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             var persons = _unitOfWork.Person.GetAll()
                 .Select(p => new {
                     p.Id,

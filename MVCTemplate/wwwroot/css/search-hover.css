@@ -1,0 +1,15 @@
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+    /* Hover styles for input and select inside .search-container */
+    .search-container:hover input.form-control,
+    .search-container input.form-control:hover,
+    .search-container:hover select.form-control,
+    .search-container select.form-control:hover {
+    border-color: #007bff !important; /* Bootstrap primary blue */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.7);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}

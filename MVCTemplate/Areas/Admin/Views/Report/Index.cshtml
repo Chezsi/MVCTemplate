@@ -33,27 +33,28 @@
                     <i class="fa fa-file-import"></i> Import Excel
                     </button>*@
 
-                    <a asp-action="ExportToExcel" class="btn btn-success">
+                    <a id="button-to-excel-report" asp-action="ExportToExcel" class="btn btn-success mx-2">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export to Excel
                     </a>
 
-                    <button id="exportFilteredExcelBtn" class="btn btn-success ms-2">
+
+                    <button id="button-excelFiltered-report" class="btn btn-success mx-2">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> 
                         Export Filtered to Excel
                     </button>
 
-                    <a asp-action="ExportToPdf" class="btn btn-danger ms-2">
+                    <a id="button-to-pdf-report" asp-action="ExportToPdf" class="btn btn-danger mx-2">
                         <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
                         Export to PDF
                     </a>
 
-                    <button id="exportFilteredPdfBtn" class="btn btn-danger ms-2">
+                    <button id="button-pdfFiltered-report" class="btn btn-danger mx-2">
                         <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
                         Export Filtered to PDF
                     </button>
 
-                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                    <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add Report
                     </button>
                 </div>
@@ -65,13 +66,18 @@
     <div class="mb-3 row staggered">
         <div class="col-md-4">
             <label for="titleSearch" class="form-label">Search by Title:</label>
-            <input type="text" id="titleSearch" class="form-control" placeholder="Report title..." />
+            <div class="search-container">
+                <input type="text" id="titleSearch" class="form-control" placeholder="Report title..." />
+            </div>
         </div>
         <div class="col-md-4">
             <label for="descriptionSearch" class="form-label">Search by Description:</label>
-            <input type="text" id="descriptionSearch" class="form-control" placeholder="Report description..." />
+            <div class="search-container">
+                <input type="text" id="descriptionSearch" class="form-control" placeholder="Report description..." />
+            </div>
         </div>
     </div>
+
 
     <!-- Report Table -->
     <div class="main-card mb-3 card staggered">
@@ -202,6 +208,9 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 @section Scripts {
@@ -212,4 +221,5 @@
     <script src="~/js/ReportScripts/report-search.js"></script>
 
     <script src="~/js/fadeEffect.js"></script>
+    <script src="~/js/download-morph.js"></script>
 }

@@ -1,4 +1,4 @@
-document.querySelector("#button-excel").addEventListener("click", async function () {
+document.querySelector("#button-excel-package").addEventListener("click", async function () {
     var table = $('#Packages').DataTable();
     var searchValue = table.search();
     var dataToExport;
