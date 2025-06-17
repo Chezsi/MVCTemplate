@@ -85,35 +85,46 @@
             <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="nameSearch" class="form-label">Search by Name:</label>
-                    <input type="text" id="nameSearch" class="form-control" placeholder="Contract name..." />
+                    <div class="search-container">
+                        <input type="text" id="nameSearch" class="form-control" placeholder="Contract name..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="descriptionSearch" class="form-label">Search by Description:</label>
-                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Contract description..." />
+                    <div class="search-container">
+                        <input type="text" id="descriptionSearch" class="form-control" placeholder="Contract description..." />
+                    </div>
                 </div>
-
+               
                 <div class="col-md-4">
                     <label for="personIdSearch" class="form-label">Filter by Person:</label>
-                    <select id="personIdSearch" class="form-control">
-                        <option value="">-- Select Person --</option>
-                        @foreach (var person in Model.PersonList)
-                        {
-                            <option value="@person.Text">@person.Text</option> <!-- Text = name -->
-                        }
-                    </select>
+                    <div class="search-container">
+                        <select id="personIdSearch" class="form-control">
+                            <option value="">-- Select Person --</option>
+                            @foreach (var person in Model.PersonList)
+                            {
+                                <option value="@person.Text">@person.Text</option> <!-- Text = name -->
+                            }
+                        </select>
+                    </div>
                 </div>
-
             </div>
+
             <div class="row staggered">
                 <div class="col-md-4">
                     <label for="startDate" class="form-label">Validity No Less Than:</label>
-                    <input type="date" id="startDate" class="form-control" />
+                    <div class="search-container">
+                        <input type="date" id="startDate" class="form-control" />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="endDate" class="form-label">Validity No Greater Than:</label>
-                    <input type="date" id="endDate" class="form-control" />
+                    <div class="search-container">
+                        <input type="date" id="endDate" class="form-control" />
+                    </div>
                 </div>
             </div>
+
 
             <div class="table-responsive staggered">
                 <table style="width: 100%;" id="contractTable" class="table table-hover table-striped table-bordered display nowrap">
@@ -257,6 +268,9 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 @section Scripts {

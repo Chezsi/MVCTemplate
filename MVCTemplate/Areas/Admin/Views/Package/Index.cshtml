@@ -95,36 +95,47 @@
             <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="nameSearch" class="form-label">Search by Name:</label>
-                    <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                    <div class="search-container">
+                        <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="descriptionSearch" class="form-label">Search by Description:</label>
-                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                    <div class="search-container">
+                        <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="prioritySearch" class="form-label">Search by Priority (1-5):</label>
-                    <select id="prioritySearch" class="form-control">
-                        <option value="">-- Select Priority --</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
+                    <div class="search-container">
+                        <select id="prioritySearch" class="form-control">
+                            <option value="">-- Select Priority --</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
                     <small id="prioritySearchError" class="text-danger" style="display: none;"></small>
                 </div>
 
                 <div class="mb-3 row staggered">
-                <div class="col-md-4">
-                    <label for="startDate" class="form-label">Start Date (Created):</label>
-                    <input type="date" id="startDate" class="form-control" />
-                </div>
-                <div class="col-md-4">
-                    <label for="endDate" class="form-label">End Date (Created):</label>
-                    <input type="date" id="endDate" class="form-control" />
-                </div>
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">Start Date (Created):</label>
+                        <div class="search-container">
+                            <input type="date" id="startDate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">End Date (Created):</label>
+                        <div class="search-container">
+                            <input type="date" id="endDate" class="form-control" />
+                        </div>
+                    </div>
                 </div>
             </div>
+
 
             <div class="table-responsive staggered">
                 <table style="width: 100%;" id="packageTable" class="table table-hover table-striped table-bordered display nowrap">
@@ -275,6 +286,9 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 

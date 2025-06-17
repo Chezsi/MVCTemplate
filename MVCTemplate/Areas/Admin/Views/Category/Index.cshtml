@@ -50,13 +50,18 @@
     <div class="mb-3 row staggered">
         <div class="col-md-4">
             <label for="nameSearch" class="form-label">Search by Name:</label>
-            <input type="text" id="nameSearch" class="form-control" placeholder="Category name..." />
+            <div class="search-container">
+                <input type="text" id="nameSearch" class="form-control" placeholder="Category name..." />
+            </div>
         </div>
         <div class="col-md-4">
             <label for="codeSearch" class="form-label">Search by Code:</label>
-            <input type="text" id="codeSearch" class="form-control" placeholder="Category code..." />
+            <div class="search-container">
+                <input type="text" id="codeSearch" class="form-control" placeholder="Category code..." />
+            </div>
         </div>
     </div>
+
 
     <div class="main-card mb-3 card staggered">
         <div class="card-body">
@@ -153,6 +158,9 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 @section Scripts {

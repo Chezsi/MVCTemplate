@@ -83,23 +83,33 @@
             <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="nameSearch" class="form-label">Search by Name:</label>
-                    <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                    <div class="search-container">
+                        <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="descriptionSearch" class="form-label">Search by Description:</label>
-                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                    <div class="search-container">
+                        <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                    </div>
                 </div>
             </div>
+
             <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="minQuantity" class="form-label">Min Quantity:</label>
-                    <input type="number" id="minQuantity" class="form-control" placeholder="Min quantity..." />
+                    <div class="search-container">
+                        <input type="number" id="minQuantity" class="form-control" placeholder="Min quantity..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="maxQuantity" class="form-label">Max Quantity:</label>
-                    <input type="number" id="maxQuantity" class="form-control" placeholder="Max quantity..." />
+                    <div class="search-container">
+                        <input type="number" id="maxQuantity" class="form-control" placeholder="Max quantity..." />
+                    </div>
                 </div>
             </div>
+
 
             <div class="table-responsive staggered">
                 <table style="width: 100%;" id="productTable" class="table table-hover table-striped table-bordered display nowrap">
@@ -198,7 +208,10 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/logoOverlay.css"/>
+    <link rel="stylesheet" href="~/css/search-hover.css"/>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 @section Scripts {
@@ -218,4 +231,5 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script> @*for the export js*@
 
     <script src="~/js/fadeEffect.js"></script>
+
 }
