@@ -871,9 +871,24 @@ namespace MVCTemplate.Controllers
             if (ModelState.ContainsKey(nameof(model.ImageFile)))
             {
                 ModelState[nameof(model.ImageFile)].Errors.Clear();
-
-                // Also mark the field as valid in ModelState dictionary
                 ModelState[nameof(model.ImageFile)].ValidationState = Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Valid;
+            }
+
+            // Check for Title uniqueness excluding current report
+            var duplicateTitle = await _context.Reports
+                .Where(r => r.Id != model.Id && r.Title == model.Title)
+                .FirstOrDefaultAsync();
+
+            if (duplicateTitle != null)
+            {
+                ModelState.AddModelError("Title", "A report with this title already exists.");
+
+                var titleErrors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => e.ErrorMessage).ToList() })
+                    .ToList();
+
+                return BadRequest(new { success = false, message = "A report with this title already exists.", errors = titleErrors });
             }
 
             if (ModelState.IsValid)
@@ -928,7 +943,6 @@ namespace MVCTemplate.Controllers
 
             return BadRequest(new { success = false, message = "Validation failed", errors });
         }
-
 
 
         // DELETE: /Report/Delete/{id}
