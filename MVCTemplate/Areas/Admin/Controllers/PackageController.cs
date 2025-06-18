@@ -365,31 +365,38 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpPut]
         public IActionResult Update(Package obj)
         {
             try
             {
                 obj.GenerateUpdatedAt();
-                Package? package = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
 
+                // Check for name uniqueness
+                Package? package = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
                 if (package != null)
                 {
                     ModelState.AddModelError("Name", "Package Name Already exists");
+
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
+
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Package.Update(obj);
                     _unitOfWork.Save();
                     return Ok(new { message = "Updated Successfully" });
                 }
+
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? Array.Empty<string>());
 
                 return BadRequest(new { errors, message = "Something went wrong!" });
-
             }
             catch (DbUpdateException)
             {
@@ -404,6 +411,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
+
 
         [HttpDelete]
 

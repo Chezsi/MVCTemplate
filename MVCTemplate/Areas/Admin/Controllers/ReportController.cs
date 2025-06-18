@@ -883,12 +883,11 @@ namespace MVCTemplate.Controllers
             {
                 ModelState.AddModelError("Title", "A report with this title already exists.");
 
-                var titleErrors = ModelState
-                    .Where(kvp => kvp.Value.Errors.Count > 0)
-                    .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => e.ErrorMessage).ToList() })
-                    .ToList();
+                var validationErrors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                return BadRequest(new { success = false, message = "A report with this title already exists.", errors = titleErrors });
+                return BadRequest(new { success = false, message = "Invalid Update.", errors = validationErrors });
             }
 
             if (ModelState.IsValid)
@@ -935,11 +934,10 @@ namespace MVCTemplate.Controllers
                 return Json(new { success = true, message = "Report updated successfully." });
             }
 
-            // If invalid, return all validation errors for debugging
-            var errors = ModelState
-                .Where(kvp => kvp.Value.Errors.Count > 0)
-                .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => e.ErrorMessage).ToList() })
-                .ToList();
+            // Return other validation errors
+            var errors = ModelState.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
             return BadRequest(new { success = false, message = "Validation failed", errors });
         }
