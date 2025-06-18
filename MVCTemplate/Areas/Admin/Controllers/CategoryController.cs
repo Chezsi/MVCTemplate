@@ -148,44 +148,53 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "Category.xlsx");
         }
 
-
         public IActionResult Create(Category category)
         {
             try
             {
-                // Check if CodeCategory is empty/null
+                bool hasRequiredFieldErrors = false;
+
                 if (string.IsNullOrWhiteSpace(category.CodeCategory))
                 {
-                    return BadRequest(new { field = "CodeCategory", message = "Category code is required." });
+                    ModelState.AddModelError("CodeCategory", "Category code is required.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // Check if NameCategory is empty/null
                 if (string.IsNullOrWhiteSpace(category.NameCategory))
                 {
-                    return BadRequest(new { field = "NameCategory", message = "Category name is required." });
+                    ModelState.AddModelError("NameCategory", "Category name is required.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // Check for uniqueness of NameCategory
                 Models.Category? categoryCheck = _unitOfWork.Category.CheckIfUnique(category.NameCategory);
                 if (categoryCheck != null)
                 {
-                    return BadRequest(new { field = "NameCategory", message = "Category already exists." });
+                    ModelState.AddModelError("NameCategory", "Category already exists.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // Proceed if model state is valid
-                if (ModelState.IsValid)
+                if (hasRequiredFieldErrors)
                 {
-                    _unitOfWork.Category.Add(category);
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Added Successfully" });
+                    var errors = ModelState.ToDictionary(
+                         kvp => kvp.Key,
+                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { message = "Please Fill Required Fields", errors });
                 }
 
-                // Handle other validation errors
-                var errors = ModelState.ToDictionary(
-                     kvp => kvp.Key,
-                     kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
-                );
-                return BadRequest(new { errors, message = "Something went wrong" });
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                         kvp => kvp.Key,
+                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { errors, message = "Something went wrong" });
+                }
+
+                _unitOfWork.Category.Add(category);
+                _unitOfWork.Save();
+
+                return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -200,6 +209,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpPut]
         public IActionResult Update(Category obj)
