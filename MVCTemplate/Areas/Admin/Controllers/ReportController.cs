@@ -825,43 +825,80 @@ namespace MVCTemplate.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ReportVM model)
         {
-            if (ModelState.IsValid)
+            bool hasRequiredFieldErrors = false;
+
+            // 1. Title required
+            if (string.IsNullOrWhiteSpace(model.Title))
             {
-                string fileName = null;
-
-                if (model.ImageFile != null && model.ImageFile.Length > 0)
-                {
-                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/reports");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await model.ImageFile.CopyToAsync(fileStream);
-                    }
-                }
-
-                var report = new Report
-                {
-                    Title = model.Title,
-                    ImageName = fileName,
-                    Description = model.Description,
-                    CreatedAt = DateTime.Now
-                };
-
-                _context.Reports.Add(report);
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, message = "Report created successfully." });
+                ModelState.AddModelError("Title", "Title is required.");
+                hasRequiredFieldErrors = true;
             }
 
-            // Collect errors to send back
-            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-            return BadRequest(new { success = false, message = "Validation failed", errors });
+            // 2. ImageFile required
+            if (model.ImageFile == null || model.ImageFile.Length == 0)
+            {
+                ModelState.AddModelError("ImageFile", "Image is required.");
+                hasRequiredFieldErrors = true;
+            }
+
+            // 3. Title uniqueness
+            var duplicateTitle = await _context.Reports.FirstOrDefaultAsync(r => r.Title == model.Title);
+            if (duplicateTitle != null)
+            {
+                ModelState.AddModelError("Title", "A report with this title already exists.");
+                hasRequiredFieldErrors = true;
+            }
+
+            if (hasRequiredFieldErrors)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                );
+                return BadRequest(new { success = false, message = "Please fill required fields", errors });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                );
+                return BadRequest(new { success = false, message = "Something went wrong", errors });
+            }
+
+            string fileName = null;
+
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/reports");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ImageFile.CopyToAsync(fileStream);
+                }
+            }
+
+            var report = new Report
+            {
+                Title = model.Title,
+                ImageName = fileName,
+                Description = model.Description,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Reports.Add(report);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Report created successfully." });
         }
+
+
 
         // POST: /Report/Update             // AGGRESSIVE WAY TO ALLOW imageFile to be empty
         [HttpPost]
@@ -871,9 +908,23 @@ namespace MVCTemplate.Controllers
             if (ModelState.ContainsKey(nameof(model.ImageFile)))
             {
                 ModelState[nameof(model.ImageFile)].Errors.Clear();
-
-                // Also mark the field as valid in ModelState dictionary
                 ModelState[nameof(model.ImageFile)].ValidationState = Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Valid;
+            }
+
+            // Check for Title uniqueness excluding current report
+            var duplicateTitle = await _context.Reports
+                .Where(r => r.Id != model.Id && r.Title == model.Title)
+                .FirstOrDefaultAsync();
+
+            if (duplicateTitle != null)
+            {
+                ModelState.AddModelError("Title", "A report with this title already exists.");
+
+                var validationErrors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                return BadRequest(new { success = false, message = "Invalid Update.", errors = validationErrors });
             }
 
             if (ModelState.IsValid)
@@ -920,15 +971,13 @@ namespace MVCTemplate.Controllers
                 return Json(new { success = true, message = "Report updated successfully." });
             }
 
-            // If invalid, return all validation errors for debugging
-            var errors = ModelState
-                .Where(kvp => kvp.Value.Errors.Count > 0)
-                .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => e.ErrorMessage).ToList() })
-                .ToList();
+            // Return other validation errors
+            var errors = ModelState.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
             return BadRequest(new { success = false, message = "Validation failed", errors });
         }
-
 
 
         // DELETE: /Report/Delete/{id}

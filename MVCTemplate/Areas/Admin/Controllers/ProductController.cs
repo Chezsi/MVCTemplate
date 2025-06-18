@@ -132,24 +132,50 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
-                var productCheck = _unitOfWork.Product.CheckIfUnique(product.Name);
-                if (productCheck != null)
+                bool hasRequiredFieldErrors = false;
+
+                if (string.IsNullOrWhiteSpace(product.Name))
                 {
-                    ModelState.AddModelError("Name", "Product already exists");
+                    ModelState.AddModelError("Name", "Product Name is required.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                if (ModelState.IsValid)
+                if (product.Quantity <= 0)
                 {
-                    _unitOfWork.Product.Add(product);
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Added Successfully" });
+                    ModelState.AddModelError("Quantity", "Quantity value is invalid.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                var errors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
+                {
+                    ModelState.AddModelError("Name", "Product already exists.");
+                    hasRequiredFieldErrors = true;
+                }
 
-                return BadRequest(new { errors, message = "Something went wrong" });
+                if (hasRequiredFieldErrors)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { message = "Please Fill Required Fields", errors });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { errors, message = "Validation failed" });
+                }
+
+                _unitOfWork.Product.Add(product);
+                _unitOfWork.Save();
+
+                return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -164,6 +190,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         private List<Product> GetProducts()
         {
@@ -226,7 +253,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (product != null)
                 {
-                    ModelState.AddModelError("Name", "Product Name Already exists");
+                    ModelState.AddModelError("Name", "Product name already exists");
+
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
 
                 if (ModelState.IsValid)
@@ -236,11 +269,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return Ok(new { message = "Updated Successfully" });
                 }
 
-                var errors = ModelState.ToDictionary(
+                var otherErrors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                return BadRequest(new { errors, message = "Something went wrong!" });
+                return BadRequest(new { errors = otherErrors, message = "Something went wrong!" });
             }
             catch (DbUpdateException)
             {
@@ -255,6 +288,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpDelete]
         public IActionResult Delete(int id)

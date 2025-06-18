@@ -296,30 +296,60 @@ namespace MVCTemplate.Areas.Admin.Controllers
             {
                 return BadRequest(new { message = "An unexpected error occurred.", detail = ex.Message });
             }
-        } 
-
+        }
 
         public IActionResult Create(Package package)
         {
             try
             {
+                bool hasRequiredFieldErrors = false;
+
+                if (string.IsNullOrWhiteSpace(package.Name))
+                {
+                    ModelState.AddModelError("Name", "Name is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(package.Description))
+                {
+                    ModelState.AddModelError("Description", "Description is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (package.Priority <= 0)
+                {
+                    ModelState.AddModelError("Priority", "Priority is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
                 Models.Package? packageCheck = _unitOfWork.Package.CheckIfUnique(package.Name);
                 if (packageCheck != null)
                 {
-                    ModelState.AddModelError("Name", "Package already exists");
+                    ModelState.AddModelError("Name", "Package already exists.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                if (ModelState.IsValid)
+                if (hasRequiredFieldErrors)
                 {
-                    _unitOfWork.Package.Add(package);
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Added Successfully" });
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { message = "Please Fill Required Fields", errors });
                 }
-                var errors = ModelState.ToDictionary(
-                     kvp => kvp.Key,
-                     kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
-                  );
-                return BadRequest(new { errors, message = "Something went wrong" });
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { errors, message = "Something went wrong" });
+                }
+
+                _unitOfWork.Package.Add(package);
+                _unitOfWork.Save();
+                return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -330,7 +360,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "Invalid Operation" });
             }
             catch (Exception)
-
             {
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
@@ -342,24 +371,32 @@ namespace MVCTemplate.Areas.Admin.Controllers
             try
             {
                 obj.GenerateUpdatedAt();
-                Package? package = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
 
+                // Check for name uniqueness
+                Package? package = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
                 if (package != null)
                 {
                     ModelState.AddModelError("Name", "Package Name Already exists");
+
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
+
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Package.Update(obj);
                     _unitOfWork.Save();
                     return Ok(new { message = "Updated Successfully" });
                 }
+
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? Array.Empty<string>());
 
                 return BadRequest(new { errors, message = "Something went wrong!" });
-
             }
             catch (DbUpdateException)
             {
@@ -374,6 +411,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
+
 
         [HttpDelete]
 
