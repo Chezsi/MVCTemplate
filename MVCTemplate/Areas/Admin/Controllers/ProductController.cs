@@ -148,7 +148,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 var productCheck = _unitOfWork.Product.CheckIfUnique(product.Name);
                 if (productCheck != null)
                 {
-                    ModelState.AddModelError("Name", "Product already exists.");
+                    return BadRequest(new { field = "Name", message = "Product already exists." });
                 }
 
                 // Return any other validation errors

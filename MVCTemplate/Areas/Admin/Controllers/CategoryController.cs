@@ -153,22 +153,38 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
-                Models.Category? productCheck = _unitOfWork.Category.CheckIfUnique(category.NameCategory);
-                if (productCheck != null)
+                // Check if CodeCategory is empty/null
+                if (string.IsNullOrWhiteSpace(category.CodeCategory))
                 {
-                    ModelState.AddModelError("Name", "Category already exists");
+                    return BadRequest(new { field = "CodeCategory", message = "Category code is required." });
                 }
 
+                // Check if NameCategory is empty/null
+                if (string.IsNullOrWhiteSpace(category.NameCategory))
+                {
+                    return BadRequest(new { field = "NameCategory", message = "Category name is required." });
+                }
+
+                // Check for uniqueness of NameCategory
+                Models.Category? categoryCheck = _unitOfWork.Category.CheckIfUnique(category.NameCategory);
+                if (categoryCheck != null)
+                {
+                    return BadRequest(new { field = "NameCategory", message = "Category already exists." });
+                }
+
+                // Proceed if model state is valid
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Category.Add(category);
                     _unitOfWork.Save();
                     return Ok(new { message = "Added Successfully" });
                 }
+
+                // Handle other validation errors
                 var errors = ModelState.ToDictionary(
                      kvp => kvp.Key,
                      kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
-                  );
+                );
                 return BadRequest(new { errors, message = "Something went wrong" });
             }
             catch (DbUpdateException)
@@ -180,11 +196,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "Invalid Operation" });
             }
             catch (Exception)
-
             {
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
         [HttpPut]
         public IActionResult Update(Category obj)
         {
