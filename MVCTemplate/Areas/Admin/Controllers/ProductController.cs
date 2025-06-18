@@ -253,7 +253,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (product != null)
                 {
-                    return BadRequest(new { field = "Name", message = "Product name already exists" });
+                    ModelState.AddModelError("Name", "Product name already exists");
+
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
 
                 if (ModelState.IsValid)
@@ -263,11 +269,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return Ok(new { message = "Updated Successfully" });
                 }
 
-                var errors = ModelState.ToDictionary(
+                var otherErrors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                return BadRequest(new { errors, message = "Something went wrong!" });
+                return BadRequest(new { errors = otherErrors, message = "Something went wrong!" });
             }
             catch (DbUpdateException)
             {
@@ -282,6 +288,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpDelete]
         public IActionResult Delete(int id)
