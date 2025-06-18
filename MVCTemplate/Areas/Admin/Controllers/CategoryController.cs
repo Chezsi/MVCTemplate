@@ -221,20 +221,27 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (category != null)
                 {
-                    return BadRequest(new { field = "NameCategory", message = "Category Name already exists" });
+                    ModelState.AddModelError("NameCategory", "Category Name already exists");
+
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
+
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Category.Update(obj);
                     _unitOfWork.Save();
                     return Ok(new { message = "Updated Successfully" });
                 }
-                var errors = ModelState.ToDictionary(
+
+                var otherErrors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                return BadRequest(new { errors, message = "Something went wrong!" });
-
+                return BadRequest(new { errors = otherErrors, message = "Something went wrong!" });
             }
             catch (DbUpdateException)
             {
@@ -249,6 +256,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpDelete]
 
