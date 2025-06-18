@@ -1,15 +1,40 @@
-.search-container {
+﻿.search-container {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-    /* Hover styles for input and select inside .search-container */
-    .search-container:hover input.form-control,
-    .search-container input.form-control:hover,
-    .search-container:hover select.form-control,
-    .search-container select.form-control:hover {
-    border-color: #007bff !important; /* Bootstrap primary blue */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.7);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
+    .search-container input.form-control {
+        width: 100%;
+        padding-right: 30px; /* space for the icon */
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        /* Your original hover styles for input and select inside .search-container */
+        .search-container:hover input.form-control,
+        .search-container input.form-control:hover,
+        .search-container:hover select.form-control,
+        .search-container select.form-control:hover {
+            border-color: #007bff !important; /* Bootstrap primary blue */
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.7);
+        }
+
+    /* Icon appears only on hover */
+    .search-container::after {
+        content: '🔍'; /* magnifying glass */
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        color: #007bff;
+        pointer-events: none;
+        user-select: none;
+        opacity: 0; /* hide by default */
+        transition: opacity 0.3s ease;
+    }
+
+    /* Show icon on hover */
+    .search-container:hover::after {
+        opacity: 1;
+    }
