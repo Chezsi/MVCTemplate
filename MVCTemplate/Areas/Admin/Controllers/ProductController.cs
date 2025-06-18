@@ -244,7 +244,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (product != null)
                 {
-                    ModelState.AddModelError("Name", "Product Name Already exists");
+                    return BadRequest(new { field = "Name", message = "Product name already exists" });
                 }
 
                 if (ModelState.IsValid)
