@@ -72,20 +72,56 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
-                // 1. Check if selected person exists
+                bool hasRequiredFieldErrors = false;
+
+                // Check required fields explicitly
+                if (string.IsNullOrWhiteSpace(model.Contract.Name))
+                {
+                    ModelState.AddModelError("Contract.Name", "Name is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(model.Contract.Description))
+                {
+                    ModelState.AddModelError("Contract.Description", "Description is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (model.Contract.Validity == default || model.Contract.Validity <= DateTime.MinValue)
+                {
+                    ModelState.AddModelError("Contract.Validity", "Validity date is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (model.Contract.PersonId <= 0)
+                {
+                    ModelState.AddModelError("Contract.PersonId", "PersonId is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                // If any required fields failed, return immediately with generic message + errors
+                if (hasRequiredFieldErrors)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { success = false, message = "Please Fill Required Fields", errors });
+                }
+
+                // Existing checks
                 if (!_unitOfWork.Person.Exists(model.Contract.PersonId))
                 {
                     ModelState.AddModelError("Contract.PersonId", "Selected person does not exist.");
                 }
 
-                // 2. Check if contract name is unique
                 var existingContract = _unitOfWork.Contract.CheckIfUnique(model.Contract.Name);
                 if (existingContract != null)
                 {
                     ModelState.AddModelError("Contract.Name", "A contract with this name already exists.");
                 }
 
-                // 3. Check if the person already has a future-valid contract
                 var hasFutureContract = _unitOfWork.Contract.GetFirstOrDefault(c =>
                     c.PersonId == model.Contract.PersonId && c.Validity > DateTime.Now);
 
@@ -94,18 +130,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     ModelState.AddModelError("Contract.PersonId", "This person already has a future-valid contract.");
                 }
 
-                // 4. If validation fails, return JSON with error messages
+                // ModelState invalid check after those
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
 
                     return BadRequest(new { success = false, message = "Validation failed", errors });
                 }
 
-                // 5. If valid, save contract and return success message
+                // Save if all valid
                 model.Contract.CreatedAt = DateTime.Now;
                 _unitOfWork.Contract.Add(model.Contract);
                 _unitOfWork.Save();
