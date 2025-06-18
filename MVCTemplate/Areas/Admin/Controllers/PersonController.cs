@@ -88,18 +88,38 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
+                // Check required fields
+                if (string.IsNullOrWhiteSpace(person.Name))
+                {
+                    return BadRequest(new { field = "Name", message = "Name is required." });
+                }
+
+                if (string.IsNullOrWhiteSpace(person.Position))
+                {
+                    return BadRequest(new { field = "Position", message = "Position is required." });
+                }
+
+                if (person.CategoryId == null)
+                {
+                    return BadRequest(new { field = "CategoryId", message = "CategoryId is required." });
+                }
+
+                // Check for duplicate Name
                 Models.Person? personCheck = _unitOfWork.Person.CheckIfUnique(person.Name);
                 if (personCheck != null)
                 {
-                    ModelState.AddModelError("Name", "Category already exists");
+                    return BadRequest(new { field = "Name", message = "Person already exists." });
                 }
 
+                // If model state is valid, save
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Person.Add(person);
                     _unitOfWork.Save();
                     return Ok(new { message = "Added Successfully" });
                 }
+
+                // Handle any other validation errors
                 var errors = ModelState.ToDictionary(
                      kvp => kvp.Key,
                      kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
@@ -114,12 +134,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
             {
                 return BadRequest(new { message = "Invalid Operation" });
             }
-            catch (Exception) //exception to personrepository
-
+            catch (Exception)
             {
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
         [HttpPut]
         public IActionResult Update(Person obj)
         {
