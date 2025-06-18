@@ -1,7 +1,8 @@
 $(document).ready(function () {
     // Initialize Ladda buttons
     Ladda.bind('.ladda-button');
-    //Initialize Create Button
+
+    // ----- CREATE FORM -----
     const createAddFormBtn = $("#createAddFormSubmitBtn").get(0);
     const createAddFormLadda = Ladda.create(createAddFormBtn);
     $('#createForm').submit(async function (event) {
@@ -15,28 +16,27 @@ $(document).ready(function () {
                 data: formData,
                 contentType: false,
                 processData: false,
-            })
-            //Show Alert
+            });
+            // Show Alert
             toastr.success(response.message);
-            //Refresh Data Table
+            // Refresh Data Table
             dataTable.ajax.reload();
-            //Reset Form
+            // Reset Form
             $('#createForm')[0].reset();
-            //Hide Modal
+            // Hide Modal
             $('#createModal').modal('hide');
         } catch (error) {
-            const formErrors = error?.responseJSON?.errors ?? {}
-            showErrors(formErrors, event.currentTarget)
+            const formErrors = error?.responseJSON?.errors ?? {};
+            showErrors(formErrors, event.currentTarget);
             toastr.error(error?.responseJSON?.message);
         } finally {
-            createAddFormLadda.stop()
+            createAddFormLadda.stop();
         }
     });
-    //Initiliaze Update Button
+
+    // ----- UPDATE FORM -----
     const createEditFormBtn = $("#createEditFormSubmitBtn").get(0);
     const createEditFormLadda = Ladda.create(createEditFormBtn);
-
-    // Handle update form submission
     $('#updateForm').submit(async function (event) {
         event.preventDefault();
         var formData = new FormData(this);
@@ -49,29 +49,30 @@ $(document).ready(function () {
                 contentType: false,
                 processData: false,
             });
-            //Show Alert
+            // Show Alert
             toastr.success(response.message);
-            //Refresh Data Table
-            dataTable.ajax.reload(); // to be used to avoid datatable reinitailization 
-            //Reset Form
+            // Refresh Data Table
+            dataTable.ajax.reload();
+            // Reset Form
             $('#updateForm')[0].reset();
-            //Hide Modal
+            // Hide Modal
             $('#updateModal').modal('hide');
         } catch (error) {
-            const formErrors = error?.responseJSON?.errors ?? {}
-            showErrors(formErrors, event.currentTarget)
+            const formErrors = error?.responseJSON?.errors ?? {};
+            showErrors(formErrors, event.currentTarget);
             toastr.error(error?.responseJSON?.message);
         } finally {
             createEditFormLadda.stop();
         }
     });
 
+    // ----- IMPORT FORM -----
     const importFileFormBtn = $("#importFileSubmitBtn").get(0);
     const importFileFormLadda = Ladda.create(importFileFormBtn);
     $('#importForm').submit(async function (event) {
         event.preventDefault();
         var formData = new FormData(this);
-        clearErrors(event.currentTarget);
+        // No clearErrors or showErrors here — import form unchanged
         try {
             const response = await $.ajax({
                 url: $(this).attr('action'),
@@ -79,23 +80,36 @@ $(document).ready(function () {
                 data: formData,
                 contentType: false,
                 processData: false,
-            })
-            //Show Alert
+            });
+            // Show Alert
             toastr.success(response.message);
-            //Refresh Data Table
+            // Refresh Data Table
             dataTable.ajax.reload();
-            //Reset Form
+            // Reset Form
             $('#importForm')[0].reset();
-            //Hide Modal
+            // Hide Modal
             $('#importModal').modal('hide');
         } catch (error) {
-            const formErrors = error?.responseJSON?.errors ?? {}
-            showErrors(formErrors, event.currentTarget)
+            const formErrors = error?.responseJSON?.errors ?? {};
+            // No showErrors call here
             toastr.error(error?.responseJSON?.message);
         } finally {
-            importFileFormLadda.stop()
+            importFileFormLadda.stop();
         }
     });
 
+    // ----- Helper functions -----
+    function clearErrors(form) {
+        $(form).find('.form-control').removeClass('input-validation-error');
+        $(form).find('span.text-danger').text('');
+    }
 
+    function showErrors(errors, form) {
+        for (const key in errors) {
+            const input = $(form).find(`[name="${key}"]`);
+            input.addClass('input-validation-error');
+            const validationSpan = input.siblings(`span[data-valmsg-for="${key}"]`);
+            validationSpan.text(errors[key][0]);
+        }
+    }
 });

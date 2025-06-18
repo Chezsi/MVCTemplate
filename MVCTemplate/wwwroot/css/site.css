@@ -73,3 +73,7 @@ body {
         fill: #007bff;
     }
 }
+
+.input-validation-error {
+    border: 1px solid red !important;
+}
