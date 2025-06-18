@@ -271,7 +271,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 // Rule 2: Prevent setting new validity in the past
                 if (obj.Validity.HasValue && obj.Validity.Value.Date < DateTime.Now.Date)
                 {
-                    ModelState.AddModelError("Contract.Validity", "New validity date cannot be in the past.");
+                    ModelState.AddModelError(nameof(obj.Validity), "New validity date cannot be in the past.");
                 }
 
                 // Copy updated values into the tracked entity
@@ -282,16 +282,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 existing.GenerateUpdatedAt();
 
-                Contract? duplicateName = _unitOfWork.Contract.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
-
                 // Rule 3: Name Uniqueness
+                Contract? duplicateName = _unitOfWork.Contract.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
                 if (duplicateName != null)
                 {
-                    ModelState.AddModelError("Contract.Name", "Contract Name already exists");
+                    ModelState.AddModelError(nameof(obj.Name), "Contract Name already exists");
                 }
 
-                // If either rule 2 or 3 is violated, return early with "Invalid Update"
-                if (ModelState.ContainsKey("Contract.Validity") || ModelState.ContainsKey("Contract.Name"))
+                // If any validation error exists, return "Invalid Update"
+                if (ModelState.Values.Any(v => v.Errors.Count > 0))
                 {
                     var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
@@ -300,17 +299,9 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return BadRequest(new { errors, message = "Invalid Update" });
                 }
 
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
-
-                    return BadRequest(new { errors, message = "Something went wrong!" });
-                }
-
-                // No need to call Update(), as 'existing' is already tracked by EF
+                // Save changes — entity is tracked by EF
                 _unitOfWork.Save();
+
                 return Ok(new { message = "Updated Successfully" });
             }
             catch (DbUpdateException)
@@ -326,8 +317,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
-
-
 
         [HttpPost]
         [Route("Admin/Contract/Unlock/{id}")]
