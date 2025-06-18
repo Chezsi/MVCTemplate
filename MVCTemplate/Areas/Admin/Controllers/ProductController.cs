@@ -132,37 +132,46 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
-                // Check for empty Name
+                bool hasRequiredFieldErrors = false;
+
                 if (string.IsNullOrWhiteSpace(product.Name))
                 {
-                    return BadRequest(new { field = "Name", message = "Product Name is required." });
+                    ModelState.AddModelError("Name", "Product Name is required.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // Check for zero or negative quantity
                 if (product.Quantity <= 0)
                 {
-                    return BadRequest(new { field = "Quantity", message = "Quantity value is invalid." });
+                    ModelState.AddModelError("Quantity", "Quantity value is invalid.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // Check for uniqueness
-                var productCheck = _unitOfWork.Product.CheckIfUnique(product.Name);
-                if (productCheck != null)
+                if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
                 {
-                    return BadRequest(new { field = "Name", message = "Product already exists." });
+                    ModelState.AddModelError("Name", "Product already exists.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // Return any other validation errors
+                if (hasRequiredFieldErrors)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { message = "Please Fill Required Fields", errors });
+                }
+
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
 
                     return BadRequest(new { errors, message = "Validation failed" });
                 }
 
-                // Save product
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
