@@ -150,7 +150,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (person != null)
                 {
-                    ModelState.AddModelError("Name", "Person Name Already exists");
+                    return BadRequest(new { field = "Name", message = "Person Name already exists" });
+
                 }
                 if (ModelState.IsValid)
                 {
