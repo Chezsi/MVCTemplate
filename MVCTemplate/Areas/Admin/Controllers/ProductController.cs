@@ -132,24 +132,41 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
+                // Check for empty Name
+                if (string.IsNullOrWhiteSpace(product.Name))
+                {
+                    return BadRequest(new { field = "Name", message = "Product Name is required." });
+                }
+
+                // Check for zero or negative quantity
+                if (product.Quantity <= 0)
+                {
+                    return BadRequest(new { field = "Quantity", message = "Quantity value is invalid." });
+                }
+
+                // Check for uniqueness
                 var productCheck = _unitOfWork.Product.CheckIfUnique(product.Name);
                 if (productCheck != null)
                 {
-                    ModelState.AddModelError("Name", "Product already exists");
+                    ModelState.AddModelError("Name", "Product already exists.");
                 }
 
-                if (ModelState.IsValid)
+                // Return any other validation errors
+                if (!ModelState.IsValid)
                 {
-                    _unitOfWork.Product.Add(product);
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Added Successfully" });
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
+                    );
+
+                    return BadRequest(new { errors, message = "Validation failed" });
                 }
 
-                var errors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []);
+                // Save product
+                _unitOfWork.Product.Add(product);
+                _unitOfWork.Save();
 
-                return BadRequest(new { errors, message = "Something went wrong" });
+                return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -164,6 +181,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         private List<Product> GetProducts()
         {
