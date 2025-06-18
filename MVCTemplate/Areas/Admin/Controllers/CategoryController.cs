@@ -211,7 +211,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
                 if (category != null)
                 {
-                    ModelState.AddModelError("Name", "Category Name Already exists");
+                    return BadRequest(new { field = "NameCategory", message = "Category Name already exists" });
                 }
                 if (ModelState.IsValid)
                 {
