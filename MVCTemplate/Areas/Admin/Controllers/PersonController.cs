@@ -81,50 +81,54 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new object[] { labels, counts });
         }
 
-
-
         [HttpPost]
         public IActionResult Create(Person person)
         {
             try
             {
-                // Check required fields
+                bool hasRequiredFieldErrors = false;
+
                 if (string.IsNullOrWhiteSpace(person.Name))
                 {
-                    return BadRequest(new { field = "Name", message = "Name is required." });
+                    ModelState.AddModelError("Name", "Name is required.");
+                    hasRequiredFieldErrors = true;
                 }
 
                 if (string.IsNullOrWhiteSpace(person.Position))
                 {
-                    return BadRequest(new { field = "Position", message = "Position is required." });
+                    ModelState.AddModelError("Position", "Position is required.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                if (person.CategoryId == null)
-                {
-                    return BadRequest(new { field = "CategoryId", message = "CategoryId is required." });
-                }
-
-                // Check for duplicate Name
                 Models.Person? personCheck = _unitOfWork.Person.CheckIfUnique(person.Name);
                 if (personCheck != null)
                 {
-                    return BadRequest(new { field = "Name", message = "Person already exists." });
+                    ModelState.AddModelError("Name", "Person already exists.");
+                    hasRequiredFieldErrors = true;
                 }
 
-                // If model state is valid, save
-                if (ModelState.IsValid)
+                if (hasRequiredFieldErrors)
                 {
-                    _unitOfWork.Person.Add(person);
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Added Successfully" });
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { message = "Please Fill Required Fields", errors });
                 }
 
-                // Handle any other validation errors
-                var errors = ModelState.ToDictionary(
-                     kvp => kvp.Key,
-                     kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage)?.ToArray() ?? []
-                  );
-                return BadRequest(new { errors, message = "Something went wrong" });
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { errors, message = "Something went wrong" });
+                }
+
+                _unitOfWork.Person.Add(person);
+                _unitOfWork.Save();
+
+                return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -139,6 +143,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpPut]
         public IActionResult Update(Person obj)
