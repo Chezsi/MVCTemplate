@@ -22,7 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'button-to-excel-report',
         'button-excelFiltered-report',
         'button-to-pdf-report',
-        'button-pdfFiltered-report'
+        'button-pdfFiltered-report',
+        'ExportAllChartsBtn',
+        'button-excel',
+        'button-pdf'
     ];
 
     buttonIds.forEach(id => {
