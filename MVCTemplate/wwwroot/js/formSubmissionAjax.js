@@ -1,4 +1,4 @@
-$(document).ready(function () {
+﻿$(document).ready(function () {
     // Initialize Ladda buttons
     Ladda.bind('.ladda-button');
 
@@ -72,7 +72,7 @@ $(document).ready(function () {
     $('#importForm').submit(async function (event) {
         event.preventDefault();
         var formData = new FormData(this);
-        // No clearErrors or showErrors here � import form unchanged
+        // No clearErrors or showErrors here — import form unchanged
         try {
             const response = await $.ajax({
                 url: $(this).attr('action'),
@@ -98,18 +98,40 @@ $(document).ready(function () {
         }
     });
 
-    // ----- Helper functions -----
+    // ----- Helper Functions -----
     function clearErrors(form) {
-        $(form).find('.form-control').removeClass('input-validation-error');
-        $(form).find('span.text-danger').text('');
+        // Only remove error class from fields that have it
+        $(form).find('.input-validation-error').removeClass('input-validation-error');
+
+        // Clear all validation messages
+        $(form).find('span[data-valmsg-for]').each(function () {
+            $(this).text('');
+        });
     }
 
+    // comments for debugging
     function showErrors(errors, form) {
         for (const key in errors) {
-            const input = $(form).find(`[name="${key}"]`);
-            input.addClass('input-validation-error');
-            const validationSpan = input.siblings(`span[data-valmsg-for="${key}"]`);
-            validationSpan.text(errors[key][0]);
+            const messages = errors[key];
+            if (!messages || messages.length === 0) {
+                continue; // ⛔ Skip fields with no actual error messages
+            }
+
+            const input = $(form).find(`[name="${key}"]`).filter(':input');
+            //console.log(`🟨 Matched inputs for '${key}':`, input);
+
+            if (input.length > 0) {
+                input.addClass('input-validation-error');
+
+                const validationSpan = $(form).find(`span[data-valmsg-for="${key}"]`);
+                //console.log(`🟦 Matched span for '${key}':`, validationSpan);
+
+                validationSpan.text(messages[0]); // Show the first error message
+            } else {
+                //console.warn(`⚠️ No input found for key: ${key}`);
+            }
         }
     }
+
+
 });
