@@ -1,0 +1,9 @@
+.btn {
+    transition: all 1s ease;
+    position: relative;
+}
+
+.expand-left {
+    transform: translateX(-30px);
+    padding-left: 30px;
+}

@@ -72,20 +72,56 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             try
             {
-                // 1. Check if selected person exists
+                bool hasRequiredFieldErrors = false;
+
+                // Check required fields explicitly
+                if (string.IsNullOrWhiteSpace(model.Contract.Name))
+                {
+                    ModelState.AddModelError("Contract.Name", "Name is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(model.Contract.Description))
+                {
+                    ModelState.AddModelError("Contract.Description", "Description is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (model.Contract.Validity == default || model.Contract.Validity <= DateTime.MinValue)
+                {
+                    ModelState.AddModelError("Contract.Validity", "Validity date is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (model.Contract.PersonId <= 0)
+                {
+                    ModelState.AddModelError("Contract.PersonId", "PersonId is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                // If any required fields failed, return immediately with generic message + errors
+                if (hasRequiredFieldErrors)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { success = false, message = "Please Fill Required Fields", errors });
+                }
+
+                // Existing checks
                 if (!_unitOfWork.Person.Exists(model.Contract.PersonId))
                 {
                     ModelState.AddModelError("Contract.PersonId", "Selected person does not exist.");
                 }
 
-                // 2. Check if contract name is unique
                 var existingContract = _unitOfWork.Contract.CheckIfUnique(model.Contract.Name);
                 if (existingContract != null)
                 {
                     ModelState.AddModelError("Contract.Name", "A contract with this name already exists.");
                 }
 
-                // 3. Check if the person already has a future-valid contract
                 var hasFutureContract = _unitOfWork.Contract.GetFirstOrDefault(c =>
                     c.PersonId == model.Contract.PersonId && c.Validity > DateTime.Now);
 
@@ -94,18 +130,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     ModelState.AddModelError("Contract.PersonId", "This person already has a future-valid contract.");
                 }
 
-                // 4. If validation fails, return JSON with error messages
+                // ModelState invalid check after those
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
 
                     return BadRequest(new { success = false, message = "Validation failed", errors });
                 }
 
-                // 5. If valid, save contract and return success message
+                // Save if all valid
                 model.Contract.CreatedAt = DateTime.Now;
                 _unitOfWork.Contract.Add(model.Contract);
                 _unitOfWork.Save();
@@ -232,8 +268,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return NotFound(new { message = "Contract not found." });
                 }
 
-                // **Removed Rule 1 that disallowed editing expired contracts**
-
                 // Rule 2: Prevent setting new validity in the past
                 if (obj.Validity.HasValue && obj.Validity.Value.Date < DateTime.Now.Date)
                 {
@@ -249,23 +283,35 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 existing.GenerateUpdatedAt();
 
                 Contract? duplicateName = _unitOfWork.Contract.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
+
+                // Rule 3: Name Uniqueness
                 if (duplicateName != null)
                 {
                     ModelState.AddModelError("Contract.Name", "Contract Name already exists");
                 }
 
-                if (ModelState.IsValid)
+                // If either rule 2 or 3 is violated, return early with "Invalid Update"
+                if (ModelState.ContainsKey("Contract.Validity") || ModelState.ContainsKey("Contract.Name"))
                 {
-                    // No need to call Update(), as 'existing' is already tracked by EF
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Updated Successfully" });
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors, message = "Invalid Update" });
                 }
 
-                var errors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                return BadRequest(new { errors, message = "Something went wrong!" });
+                    return BadRequest(new { errors, message = "Something went wrong!" });
+                }
+
+                // No need to call Update(), as 'existing' is already tracked by EF
+                _unitOfWork.Save();
+                return Ok(new { message = "Updated Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -280,6 +326,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
 
         [HttpPost]
@@ -356,6 +403,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllContracts()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             var contractList = _unitOfWork.Contract
                 .GetAll(includeProperties: "Person") // include Person navigation property
                 .Select(c => new {
@@ -374,6 +426,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllPersonsForContract()
         {
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            {
+                return Unauthorized(); // to prevent the raw json from being seen 
+            }
+
             var persons = _unitOfWork.Person.GetAll()
                 .Select(p => new {
                     p.Id,

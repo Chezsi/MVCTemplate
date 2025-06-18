@@ -18,7 +18,7 @@ namespace MVCTemplate.Models
         public string ImageName { get; set; }
 
         [Column(TypeName = "nvarchar(100)")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

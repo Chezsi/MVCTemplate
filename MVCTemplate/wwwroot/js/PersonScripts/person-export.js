@@ -1,11 +1,11 @@
 
 $(document).ready(function () {
-    $('#button-export-to-excel').on('click', function () {
+    $('#button-to-excel-person').on('click', function () {
         window.location.href = '/Admin/Person/ExportToExcel';
     });
 }); // ^ uses controller
 
-document.querySelector("#button-excel-person").addEventListener("click", async function () {
+document.querySelector("#button-to-excel-person").addEventListener("click", async function () {
     var table = $('#Persons').DataTable();
     var searchValue = table.search();
     var dataToExport;

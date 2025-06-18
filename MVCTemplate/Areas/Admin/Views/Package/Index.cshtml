@@ -29,7 +29,7 @@
             <div class="page-title-actions staggered">
                 <div class="d-inline-block dropdown">
 
-                    <button id="ExportAllChartsBtn" class="btn btn-danger btn-shadow">
+                    <button id="ExportAllChartsBtn-package" class="btn btn-danger btn-shadow mx-2">
                         <i class="fa-solid fa-file-pdf" style="color: white; margin-right: 6px;"></i>
                         Export All Charts
                     </button>  @*graph-pdf*@
@@ -38,12 +38,12 @@
                         <button type="submit">Download PDF</button>
                     </form> //uses aspose*@
 
-                    <button id="button-excelFiltered" class="btn btn-success">
+                    <button id="button-excelFiltered-package" class="btn btn-success mx-2">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Export Filtered to Excel
                     </button> @*uses controller*@
 
-                    <a href="/Admin/Package/ExportToExcel" class="btn btn-success">
+                    <a id="button-to-excel-package" href="/Admin/Package/ExportToExcel" class="btn btn-success mx-2">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> Export to Excel
                     </a> @*uses controller*@
 
@@ -52,12 +52,12 @@
                         Export to Excel
                     </button> uses js *@
 
-                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
                         Import
                     </button>
 
-                    <button type="button" class="btn-shadow btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                    <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createModal">
                         + Add Package
                     </button>
 
@@ -70,11 +70,13 @@
     <div class="row mb-3 staggered">
         <div class="col-md-2">
             <label for="ChartType"><b>Chart Type</b></label>
-            <select id="ChartType" class="form-control">
-                <option selected>--Select Chart Type--</option>
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
-            </select>
+            <div class="search-container">
+                <select id="ChartType" class="form-control">
+                    <option selected>--Select Chart Type--</option>
+                    <option value="bar">Bar</option>
+                    <option value="line">Line</option>
+                </select>
+            </div>
         </div>
         <div class="col-md-auto align-self-end">
             <button id="ShowGraphBtn" class="btn btn-primary">Show Graph</button>
@@ -82,6 +84,7 @@
             <button id="ExportChartBtn" class="btn btn-warning">Export Chart</button>
         </div>
     </div>
+
 
     <!-- Chart Container -->
     <div id="ChartView" style="display: none;">
@@ -95,36 +98,47 @@
             <div class="mb-3 row staggered">
                 <div class="col-md-4">
                     <label for="nameSearch" class="form-label">Search by Name:</label>
-                    <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                    <div class="search-container">
+                        <input type="text" id="nameSearch" class="form-control" placeholder="Package name..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="descriptionSearch" class="form-label">Search by Description:</label>
-                    <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                    <div class="search-container">
+                        <input type="text" id="descriptionSearch" class="form-control" placeholder="Package description..." />
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="prioritySearch" class="form-label">Search by Priority (1-5):</label>
-                    <select id="prioritySearch" class="form-control">
-                        <option value="">-- Select Priority --</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
+                    <div class="search-container">
+                        <select id="prioritySearch" class="form-control">
+                            <option value="">-- Select Priority --</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
                     <small id="prioritySearchError" class="text-danger" style="display: none;"></small>
                 </div>
 
                 <div class="mb-3 row staggered">
-                <div class="col-md-4">
-                    <label for="startDate" class="form-label">Start Date (Created):</label>
-                    <input type="date" id="startDate" class="form-control" />
-                </div>
-                <div class="col-md-4">
-                    <label for="endDate" class="form-label">End Date (Created):</label>
-                    <input type="date" id="endDate" class="form-control" />
-                </div>
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">Start Date (Created):</label>
+                        <div class="search-container">
+                            <input type="date" id="startDate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">End Date (Created):</label>
+                        <div class="search-container">
+                            <input type="date" id="endDate" class="form-control" />
+                        </div>
+                    </div>
                 </div>
             </div>
+
 
             <div class="table-responsive staggered">
                 <table style="width: 100%;" id="packageTable" class="table table-hover table-striped table-bordered display nowrap">
@@ -275,6 +289,9 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 }
 
 
@@ -298,4 +315,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> @*for the export graph as pdf*@
 
     <script src="~/js/fadeEffect.js"></script>
+    <script src="~/js/download-morph.js"></script>
 }
