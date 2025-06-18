@@ -261,45 +261,59 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             try
             {
-                // Fetch the original contract from DB
                 var existing = _unitOfWork.Contract.GetFirstOrDefault(c => c.Id == obj.Id);
                 if (existing == null)
                 {
                     return NotFound(new { message = "Contract not found." });
                 }
 
-                // Rule 2: Prevent setting new validity in the past
+                // Add errors with your original keys
                 if (obj.Validity.HasValue && obj.Validity.Value.Date < DateTime.Now.Date)
                 {
-                    ModelState.AddModelError(nameof(obj.Validity), "New validity date cannot be in the past.");
+                    ModelState.AddModelError("Contract.Validity", "New validity date cannot be in the past.");
                 }
 
-                // Copy updated values into the tracked entity
-                existing.Name = obj.Name;
-                existing.Description = obj.Description;
-                existing.Validity = obj.Validity;
-                // Add other property assignments as necessary
-
-                existing.GenerateUpdatedAt();
-
-                // Rule 3: Name Uniqueness
-                Contract? duplicateName = _unitOfWork.Contract.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
+                var duplicateName = _unitOfWork.Contract.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
                 if (duplicateName != null)
                 {
-                    ModelState.AddModelError(nameof(obj.Name), "Contract Name already exists");
+                    ModelState.AddModelError("Contract.Name", "Contract Name already exists");
                 }
 
-                // If any validation error exists, return "Invalid Update"
-                if (ModelState.Values.Any(v => v.Errors.Count > 0))
+                // Instead of ContainsKey, safely check if those keys exist AND have errors:
+                bool hasValidityErrors = ModelState.TryGetValue("Contract.Validity", out var validityEntry) && validityEntry.Errors.Count > 0;
+                bool hasNameErrors = ModelState.TryGetValue("Contract.Name", out var nameEntry) && nameEntry.Errors.Count > 0;
+
+                if (hasValidityErrors || hasNameErrors)
                 {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+                    var errors = ModelState
+                        .Where(kvp => kvp.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
 
                     return BadRequest(new { errors, message = "Invalid Update" });
                 }
 
-                // Save changes — entity is tracked by EF
+                // Also check general ModelState validity for any other errors
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(kvp => kvp.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+                    return BadRequest(new { errors, message = "Something went wrong!" });
+                }
+
+                // Update entity only after validation passed
+                existing.Name = obj.Name;
+                existing.Description = obj.Description;
+                existing.Validity = obj.Validity;
+                existing.GenerateUpdatedAt();
+
                 _unitOfWork.Save();
 
                 return Ok(new { message = "Updated Successfully" });
@@ -317,6 +331,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
+
 
         [HttpPost]
         [Route("Admin/Contract/Unlock/{id}")]
