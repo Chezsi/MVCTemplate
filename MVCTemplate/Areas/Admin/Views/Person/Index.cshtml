@@ -60,13 +60,12 @@
                     </div> *@
 
                     <!-- 3rd row: CS export button -->
-                    <div class="d-flex justify-content-end">
-                        <form method="get" action="/Admin/Person/ExportCurrentContractsExcel" style="display:inline;">
-                            <button id="exportContractsBtn" type="submit" class="btn btn-info mx-2">
-                                <i class="fa-solid fa-file-export" style="color: #ffffff;"></i>
-                                With Active Contracts
-                            </button>
-                        </form>
+                    <form method="get" action="/Admin/Person/ExportCurrentContractsExcel" style="display:inline;" id="exportCurrentContract">
+                        <button id="exportContractsBtn" type="submit" class="btn btn-info mx-2 ms-auto d-flex align-items-center">
+                            <i class="fa-solid fa-file-export" style="color: #ffffff; margin-right: 6px;"></i>
+                            With Active Contracts
+                        </button>
+                    </form>
                         @*cs*@
                     </div>
 

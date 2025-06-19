@@ -1,5 +1,13 @@
 ﻿$(function () {
-    $("#ExportAllChartsBtn-person").click(async function () {
+    const btn = $("#ExportAllChartsBtn-person");
+
+    btn.click(async function () {
+        if (btn.prop("disabled")) return; // Prevent if already disabled
+
+        btn.prop("disabled", true);
+        const originalText = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="color: white; margin-right: 6px;"></i> Exporting...');
+
         const chartTypes = ["bar", "line", "pie", "doughnut"];
         const { jsPDF } = window.jspdf;
 
@@ -151,6 +159,11 @@
         } catch (error) {
             console.error("Error exporting charts:", error);
             alert("An error occurred while exporting charts.");
+        } finally {
+            setTimeout(() => {
+                btn.prop("disabled", false);
+                btn.html(originalText);
+            }, 1000);
         }
     });
 });

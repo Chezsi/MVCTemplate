@@ -1,9 +1,33 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-person').on('click', function () {
         window.location.href = '/Admin/Person/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
+
+$(document).ready(function () {
+    $('#button-to-excel-person').on('click', function () {
+        const btn = $(this);
+
+        if (btn.prop('disabled')) {
+            return; // ignore clicks when disabled
+        }
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+
+        // Add spinner icon before "Exporting..." text
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+        window.location.href = '/Admin/Person/ExportToExcel';
+
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.html(originalHtml);
+        }, 1000);
+    });
+});
+// uses controller (updated)
 
 document.querySelector("#button-to-excel-person").addEventListener("click", async function () {
     var table = $('#Persons').DataTable();
@@ -85,10 +109,33 @@ document.querySelector("#button-to-excel-person").addEventListener("click", asyn
 
     XLSX.utils.book_append_sheet(wb, ws, "Persons");
     XLSX.writeFile(wb, "Persons.xlsx");
-}); // ^ purely JS
+}); // ^ uses JS (button commented out)
 
+document.querySelector("#exportCurrentContract").addEventListener("submit", function (e) {
+    e.preventDefault();  // prevent form from submitting normally
 
-document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
+    const btn = document.querySelector("#exportContractsBtn");
+    if (btn.disabled) return;
+
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+
+    // Use FontAwesome spinner with the same style as your jQuery example
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...';
+
+    // Trigger download immediately
+    const url = e.target.action;
+    window.location.href = url;
+
+    // Optional: re-enable after delay
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }, 1000);
+});
+// uses controller (updated)
+
+/*document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
     try {
         const response = await fetch('/Admin/Person/ExportPersonsWithCurrentContracts');
         const data = await response.json();
@@ -158,6 +205,6 @@ document.querySelector("#button-export-current-contracts").addEventListener("cli
         console.error("Export error:", err);
         alert("Failed to export current contracts.");
     }
-}); // ^ purely JS
+});*/ // uses js (button commented out)
 
 

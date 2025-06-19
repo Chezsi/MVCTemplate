@@ -99,4 +99,4 @@ document.querySelector("#button-to-excel-category").addEventListener("click", as
 
     XLSX.utils.book_append_sheet(wb, ws, "Categories");
     XLSX.writeFile(wb, "Category.xlsx");
-});
+}); // uses JS (button commented out)
