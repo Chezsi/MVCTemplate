@@ -1,5 +1,13 @@
 ﻿$(function () {
     $("#ExportAllChartsBtn-package").click(async function () {
+        const btn = $(this);
+        if (btn.prop('disabled')) return;
+
+        // Disable button and show spinner
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
         const chartTypes = ["bar", "line"];
         const { jsPDF } = window.jspdf;
 
@@ -140,6 +148,12 @@
         } catch (error) {
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");
+        } finally {
+            // Re-enable button & restore original content after a slight delay
+            setTimeout(() => {
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            }, 800);
         }
     });
 });

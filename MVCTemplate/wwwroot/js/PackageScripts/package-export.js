@@ -1,4 +1,4 @@
-document.querySelector("#button-excel-package").addEventListener("click", async function () {
+﻿/*document.querySelector("#button-excel-package").addEventListener("click", async function () {
     var table = $('#Packages').DataTable();
     var searchValue = table.search();
     var dataToExport;
@@ -74,4 +74,26 @@ document.querySelector("#button-excel-package").addEventListener("click", async 
     a.click();
 
     URL.revokeObjectURL(url);
+});*/ // uses js (button commented out)
+
+document.querySelector("#button-to-excel-package").addEventListener("click", function () {
+    const btn = this;
+
+    if (btn.disabled) return;
+
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...`;
+
+    // Use native browser behavior to preserve filename from server
+    window.location.href = "/Admin/Package/ExportToExcel";  // need to fix this - i can download it by manually typing it
+
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }, 1000); // Keep spinner for a second for UI feedback
 });
+// for the button using a cs
+
+

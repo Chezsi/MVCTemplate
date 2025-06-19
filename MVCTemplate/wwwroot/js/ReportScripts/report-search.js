@@ -29,6 +29,15 @@
 
     // Export filtered PDF button event handler
     $('#button-pdfFiltered-report').on('click', function () {
+        const btn = $(this);
+        if (btn.prop('disabled')) {
+            return;
+        }
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html(`<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...`);
+
         var table = $('#reportTable').DataTable();
         var titleFilter = table.column(0).search() || '';
         var descriptionFilter = table.column(2).search() || '';
@@ -47,11 +56,26 @@
             url += '?' + queryParams.join('&');
         }
 
-        window.location.href = url; /* window.open(url, '_blank'); < opens a new tab*/
+        window.location.href = url;
+
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.html(originalHtml);
+        }, 1000);
     });
+
 
     // Export filtered Excel button event handler
     $('#button-excelFiltered-report').on('click', function () {
+        const btn = $(this);
+        if (btn.prop('disabled')) {
+            return;
+        }
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html(`<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...`);
+
         var table = $('#reportTable').DataTable();
         var titleFilter = table.column(0).search() || '';
         var descriptionFilter = table.column(2).search() || '';
@@ -70,6 +94,12 @@
             url += '?' + queryParams.join('&');
         }
 
-        window.location.href = url;  /*window.open(url, '_blank'); opens a new tab*/
+        window.location.href = url;
+
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.html(originalHtml);
+        }, 1000);
     });
+
 });

@@ -1,9 +1,36 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-category').on('click', function () {
         window.location.href = '/Admin/Category/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
+
+$(document).ready(function () {
+    $('#button-to-excel-category').on('click', function () {
+        const btn = $(this);
+
+        if (btn.prop('disabled')) {
+            return; // prevent multiple clicks while disabled
+        }
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+
+        // Add spinner icon before "Exporting..." text
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+        // Trigger download by changing location
+        window.location.href = '/Admin/Category/ExportToExcel';
+
+        // Re-enable button after 1 second (hardcoded)
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.html(originalHtml);
+        }, 1000);
+    });
+});
+ // ^ uses controller (updated)
+
 
 document.querySelector("#button-to-excel-category").addEventListener("click", async function () {
     var table = $('#Categorys').DataTable();
@@ -75,4 +102,4 @@ document.querySelector("#button-to-excel-category").addEventListener("click", as
 
     XLSX.utils.book_append_sheet(wb, ws, "Categories");
     XLSX.writeFile(wb, "Category.xlsx");
-});
+}); // uses JS (button commented out)

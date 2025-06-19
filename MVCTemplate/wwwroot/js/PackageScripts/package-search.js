@@ -1,6 +1,6 @@
 // Filter by Name column
 $('#nameSearch').on('keyup change', function () {
-    dataTable.column(0).search(this.value).draw(); // 0 is the index for the "Name" column
+    dataTable.column(0).search(this.value).draw(); // 0 = "Name" column index
 });
 
 // Filter by Description column
@@ -8,16 +8,15 @@ $('#descriptionSearch').on('keyup change', function () {
     dataTable.column(1).search(this.value).draw();
 });
 
+// Filter by Priority column
 $('#prioritySearch').on('keyup change', function () {
     let val = this.value.trim();
-    const $error = $('#prioritySearchError'); // must match HTML
+    const $error = $('#prioritySearchError');
 
     if (val === '' || (/^[1-5]$/).test(val)) {
-        // Valid input
         dataTable.column(2).search(val).draw();
         $error.text('').hide();
     } else {
-        // Invalid input
         dataTable.column(2).search('').draw();
         $error.text('Please enter a number between 1 and 5.').show();
     }
@@ -39,55 +38,51 @@ function toggleExportFilteredButton() {
     }
 }
 
-$(document).ready(function () {
-    $('#button-excelFiltered-package').hide();
-
-    $('#nameSearch, #descriptionSearch, #prioritySearch, #startDate, #endDate')
-        .on('keyup change', toggleExportFilteredButton);
-});
-
-
-// Date range filter using DataTables custom filter extension
+// Date range filtering (custom)
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     let min = $('#startDate').val();
     let max = $('#endDate').val();
-    let dateStr = data[3]; // "createdAt" is column index 3
+    let dateStr = data[3]; // Assuming createdAt is at column index 3
 
     if (!dateStr) return false;
 
     let createdDate = new Date(dateStr);
-    createdDate.setHours(0, 0, 0, 0); // Normalize time to 00:00 for consistency
+    createdDate.setHours(0, 0, 0, 0);
 
     let minDate = min ? new Date(min) : null;
     let maxDate = max ? new Date(max) : null;
 
     if (minDate) minDate.setHours(0, 0, 0, 0);
-    if (maxDate) maxDate.setHours(23, 59, 59, 999); // Include full end date
+    if (maxDate) maxDate.setHours(23, 59, 59, 999);
 
-    if (
-        (!minDate || createdDate >= minDate) &&
-        (!maxDate || createdDate <= maxDate)
-    ) {
-        return true;
-    }
-
-    return false;
+    return (!minDate || createdDate >= minDate) &&
+        (!maxDate || createdDate <= maxDate);
 });
 
-
-// Redraw table on date input change
+// Redraw on date change
 $('#startDate, #endDate').on('change', function () {
     dataTable.draw();
 });
 
 $(document).ready(function () {
+    $('#button-excelFiltered-package').hide();
+
+    $('#nameSearch, #descriptionSearch, #prioritySearch, #startDate, #endDate')
+        .on('keyup change', toggleExportFilteredButton);
+
     $('#button-excelFiltered-package').on('click', function () {
+        const btn = $(this);
         let filteredData = dataTable.rows({ search: 'applied' }).data().toArray();
 
         if (filteredData.length === 0) {
             alert("No data available to export.");
             return;
         }
+
+        // Disable button and add loading spinner
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
         $.ajax({
             url: '/Admin/Package/ExportFilteredToExcel',
@@ -109,6 +104,12 @@ $(document).ready(function () {
             error: function (xhr) {
                 console.error(xhr.responseText);
                 alert("Failed to export filtered data.");
+            },
+            complete: function () {
+                setTimeout(() => {
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }, 1000); // 1-second spinner delay for visual feedback
             }
         });
     });
