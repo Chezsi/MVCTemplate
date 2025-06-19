@@ -14,8 +14,10 @@ $(document).ready(function () {
         }
 
         btn.prop('disabled', true);
-        const originalText = btn.text();
-        btn.text('Exporting...');
+        const originalHtml = btn.html();
+
+        // Add spinner icon before "Exporting..." text
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
         // Trigger download by changing location
         window.location.href = '/Admin/Category/ExportToExcel';
@@ -23,10 +25,11 @@ $(document).ready(function () {
         // Re-enable button after 1 second (hardcoded)
         setTimeout(() => {
             btn.prop('disabled', false);
-            btn.text(originalText);
+            btn.html(originalHtml);
         }, 1000);
     });
-}); // ^ uses controller (updated)
+});
+ // ^ uses controller (updated)
 
 
 document.querySelector("#button-to-excel-category").addEventListener("click", async function () {
