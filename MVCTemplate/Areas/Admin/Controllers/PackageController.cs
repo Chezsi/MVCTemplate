@@ -28,8 +28,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
     {
         db dbop = new db();
         private readonly ApplicationDbContext _context;
-        private readonly IMemoryCache _memoryCache;
         private IUnitOfWork _unitOfWork;
+        private readonly IMemoryCache _memoryCache;
 
         public PackageController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
         {
