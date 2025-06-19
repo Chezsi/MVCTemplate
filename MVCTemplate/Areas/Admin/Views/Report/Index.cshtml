@@ -58,25 +58,24 @@
                                     <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Export Report
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <a id="button-to-excel-report"
-                                               asp-action="ExportToExcel"
-                                               class="btn btn-success dropdown-item text-white">
+                                    <ul class="dropdown-menu dropdown-menu-end p-2">
+                                        <div class="d-flex flex-column align-items-stretch" style="width: max-content; min-width: 180px;">
+                                        <li class="mb-1">
+                                            <a id="button-to-excel-report" asp-action="ExportToExcel" class="btn btn-success w-100 text-white">
                                                 <i class="fa-regular fa-file-excel"></i> Export to Excel
                                             </a>
                                         </li>
                                         <li>
-                                            <a id="button-to-pdf-report"
-                                               asp-action="ExportToPdf"
-                                               class="btn btn-danger dropdown-item text-white">
+                                            <a id="button-to-pdf-report" asp-action="ExportToPdf" class="btn btn-danger w-100 text-white">
                                                 <i class="fa-regular fa-file-pdf"></i> Export to PDF
                                             </a>
                                         </li>
-                                    </ul>
                                 </div>
+                                </ul>
                             </div>
                         </div>
+                    </div>
+
                     </div>
 
                 </div>
