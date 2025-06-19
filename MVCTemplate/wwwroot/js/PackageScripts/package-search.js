@@ -63,7 +63,6 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
 $('#startDate, #endDate').on('change', function () {
     dataTable.draw();
 });
-
 $(document).ready(function () {
     $('#button-excelFiltered-package').hide();
 
@@ -79,38 +78,53 @@ $(document).ready(function () {
             return;
         }
 
-        // Disable button and add loading spinner
         btn.prop('disabled', true);
         const originalHtml = btn.html();
         btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
-        $.ajax({
-            url: '/Admin/Package/ExportFilteredToExcel',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(filteredData),
-            xhrFields: {
-                responseType: 'blob'
-            },
-            success: function (data, status, xhr) {
-                const blob = new Blob([data], { type: xhr.getResponseHeader('Content-Type') });
-                const link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = "FilteredPackages.xlsx";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            },
-            error: function (xhr) {
-                console.error(xhr.responseText);
-                alert("Failed to export filtered data.");
-            },
-            complete: function () {
-                setTimeout(() => {
+        // Step 1: Request token
+        $.post('/Admin/Package/GenerateDownloadToken')
+            .done(function (response) {
+                if (response.token) {
+                    // Step 2: Send filtered data with token as query param
+                    $.ajax({
+                        url: '/Admin/Package/ExportFilteredToExcel?token=' + encodeURIComponent(response.token),
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(filteredData),
+                        xhrFields: {
+                            responseType: 'blob'
+                        },
+                        success: function (data, status, xhr) {
+                            const blob = new Blob([data], { type: xhr.getResponseHeader('Content-Type') });
+                            const link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(blob);
+                            link.download = "FilteredPackages.xlsx";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        },
+                        error: function (xhr) {
+                            console.error(xhr.responseText);
+                            alert("Failed to export filtered data.");
+                        },
+                        complete: function () {
+                            setTimeout(() => {
+                                btn.prop('disabled', false);
+                                btn.html(originalHtml);
+                            }, 1000);
+                        }
+                    });
+                } else {
+                    alert('Failed to get download token.');
                     btn.prop('disabled', false);
                     btn.html(originalHtml);
-                }, 1000); // 1-second spinner delay for visual feedback
-            }
-        });
+                }
+            })
+            .fail(function () {
+                alert('Error generating download token.');
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            });
     });
 });
