@@ -85,15 +85,32 @@ document.querySelector("#button-to-excel-package").addEventListener("click", fun
     const originalHtml = btn.innerHTML;
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...`;
 
-    // Use native browser behavior to preserve filename from server
-    window.location.href = "/Admin/Package/ExportToExcel";  // need to fix this - i can download it by manually typing it
-
-
-    setTimeout(() => {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-    }, 1000); // Keep spinner for a second for UI feedback
+    // Step 1: Request token
+    fetch('/Admin/Package/GenerateDownloadToken', {
+        method: 'POST',
+        credentials: 'same-origin' 
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                // Step 2: Redirect to download URL with token
+                const url = "/Admin/Package/ExportToExcel?token=" + encodeURIComponent(data.token);
+                window.location.href = url;
+            } else {
+                alert('Failed to get download token.');
+            }
+        })
+        .catch(() => {
+            alert('Error generating download token.');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }, 1000);
+        });
 });
+
 // for the button using a cs
 
 
