@@ -1,4 +1,14 @@
 ﻿async function exportAllContractChartsToPDF() {
+    const btn = $("#ExportAllChartsBtn-contract");
+
+    if (btn.prop('disabled')) return; // prevent multiple clicks
+    btn.prop('disabled', true);
+
+    const originalText = btn.html();
+    btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+    const startTime = Date.now();
+
     const chartTypes = [
         { category: "annual", type: "bar", url: "/Admin/Contract/GetContractsPerYear", title: "Contracts Per Year", xTitle: "Year", yTitle: "Contracts" },
         { category: "annual", type: "line", url: "/Admin/Contract/GetContractsPerYear", title: "Contracts Per Year", xTitle: "Year", yTitle: "Contracts" },
@@ -149,8 +159,18 @@
     }
 
     pdf.save("contracts-graphs.pdf");
+
+    // Calculate elapsed time and ensure at least 1 second disabled
+    const elapsed = Date.now() - startTime;
+    const remaining = 1000 - elapsed;
+
+    setTimeout(() => {
+        btn.prop('disabled', false);
+        btn.html(originalText);
+    }, remaining > 0 ? remaining : 0);
 }
 
 $(function () {
     $("#ExportAllChartsBtn-contract").click(exportAllContractChartsToPDF);
 });
+// can be dynamic so it follows how duration of what it takes to download
