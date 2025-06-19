@@ -33,37 +33,55 @@
                     <i class="fa fa-file-import"></i> Import Excel
                     </button>*@
 
-                    <a id="button-to-excel-report" asp-action="ExportToExcel" class="btn btn-success mx-2">
-                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
-                        Export to Excel
-                    </a>
+                    <div class="container-fluid">
+                        <div class="row mb-3">
+                            <div class="col-auto">
+                                <button id="button-excelFiltered-report" class="btn btn-success mx-2">
+                                    <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i>
+                                    Export Filtered to Excel
+                                </button>
 
+                                <button id="button-pdfFiltered-report" class="btn btn-danger mx-2">
+                                    <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
+                                    Export Filtered to PDF
+                                </button>
 
-                    <button id="button-excelFiltered-report" class="btn btn-success mx-2">
-                        <i class="fa-regular fa-file-excel" style="color: #ffffff;"></i> 
-                        Export Filtered to Excel
-                    </button>
+                                <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createModal">
+                                    + Add Report
+                                </button>
+                            </div>
+                        </div>
 
-                    <a id="button-to-pdf-report" asp-action="ExportToPdf" class="btn btn-danger mx-2">
-                        <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
-                        Export to PDF
-                    </a>
+                        <div class="row">
+                            <div class="col text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Export Report
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a id="button-to-excel-report" asp-action="ExportToExcel" class="dropdown-item text-success">
+                                                <i class="fa-regular fa-file-excel"></i> Export to Excel
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a id="button-to-pdf-report" asp-action="ExportToPdf" class="dropdown-item text-danger">
+                                                <i class="fa-regular fa-file-pdf"></i> Export to PDF
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <button id="button-pdfFiltered-report" class="btn btn-danger mx-2">
-                        <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i>
-                        Export Filtered to PDF
-                    </button>
-
-                    <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createModal">
-                        + Add Report
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Search Filters -->
-    <div class="mb-3 row staggered">
+    <div class="mb-3 row staggered mt-5 pt-3">
         <div class="col-md-4">
             <label for="titleSearch" class="form-label">Search by Title:</label>
             <div class="search-container">
