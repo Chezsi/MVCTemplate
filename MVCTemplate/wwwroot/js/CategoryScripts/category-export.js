@@ -1,9 +1,33 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-category').on('click', function () {
         window.location.href = '/Admin/Category/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
+
+$(document).ready(function () {
+    $('#button-to-excel-category').on('click', function () {
+        const btn = $(this);
+
+        if (btn.prop('disabled')) {
+            return; // prevent multiple clicks while disabled
+        }
+
+        btn.prop('disabled', true);
+        const originalText = btn.text();
+        btn.text('Exporting...');
+
+        // Trigger download by changing location
+        window.location.href = '/Admin/Category/ExportToExcel';
+
+        // Re-enable button after 1 second (hardcoded)
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.text(originalText);
+        }, 1000);
+    });
+}); // ^ uses controller (updated)
+
 
 document.querySelector("#button-to-excel-category").addEventListener("click", async function () {
     var table = $('#Categorys').DataTable();
