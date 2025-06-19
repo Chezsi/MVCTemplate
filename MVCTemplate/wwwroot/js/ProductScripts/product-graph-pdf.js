@@ -7,8 +7,8 @@
         }
 
         btn.prop('disabled', true);
-        const originalText = btn.text();
-        btn.text('Exporting...');
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
         const chartTypes = ["bar", "line", "pie", "doughnut"];
         const { jsPDF } = window.jspdf;
@@ -154,7 +154,7 @@
         // Re-enable button after 1 second (hardcoded)
         setTimeout(() => {
             btn.prop('disabled', false);
-            btn.text(originalText);
+            btn.html(originalHtml);
         }, 1000);
     });
 });

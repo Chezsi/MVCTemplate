@@ -14,15 +14,18 @@ $(document).ready(function () {
         }
 
         btn.prop('disabled', true);
-        btn.text('Exporting...');
+        const originalHtml = btn.html();
+
+        // Add spinner icon before "Exporting..."
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
         // Redirect to download
         window.location.href = '/Admin/Product/ExportToExcel';
 
-        // Re-enable button after 5 seconds in case redirect is slow
+        // Re-enable button after 1 second in case redirect is slow
         setTimeout(() => {
             btn.prop('disabled', false);
-            btn.text('Export to Excel');
+            btn.html(originalHtml);
         }, 1000);
     });
 });
