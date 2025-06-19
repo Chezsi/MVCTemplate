@@ -1,5 +1,10 @@
 ﻿$(function () {
     $("#ExportAllChartsBtn").click(async function () {
+        const btn = $(this);
+        btn.prop("disabled", true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: "pt", format: "a4" });
         const pageWidth = pdf.internal.pageSize.getWidth();
@@ -109,7 +114,6 @@
         async function addCategoryPage(chartsInfo, pageIndex, title) {
             if (pageIndex > 0) pdf.addPage();
 
-            // Add title to top center
             pdf.setFontSize(16);
             pdf.setFont("helvetica", "bold");
             pdf.text(title, pageWidth / 2, 40, { align: "center" });
@@ -129,7 +133,7 @@
             const cols = 2;
             const rows = Math.ceil(charts.length / cols);
             const cellWidth = contentWidth / cols;
-            const chartAreaHeight = contentHeight - 40; // reserve space for title
+            const chartAreaHeight = contentHeight - 40;
             const cellHeight = chartAreaHeight / rows;
 
             for (let i = 0; i < charts.length; i++) {
@@ -146,14 +150,12 @@
                 chart.canvas.remove();
             }
 
-            // Add timestamp at bottom right
             const timestamp = getFormattedTimestamp();
             pdf.setFontSize(10);
             pdf.setFont("helvetica", "normal");
             pdf.text(timestamp, pageWidth - margin, pageHeight - 10, { align: "right" });
         }
 
-        // Category configurations
         const categories = [
             {
                 title: "Product Data",
@@ -200,11 +202,23 @@
             }
         ];
 
-        // Generate all pages
-        for (let i = 0; i < categories.length; i++) {
-            await addCategoryPage(categories[i].charts, i, categories[i].title);
+        try {
+            for (let i = 0; i < categories.length; i++) {
+                await addCategoryPage(categories[i].charts, i, categories[i].title);
+            }
+
+            pdf.save("Graphs.pdf");
+        } catch (error) {
+            console.error("Failed to generate PDF:", error);
+            alert("Something went wrong while exporting charts.");
         }
 
-        pdf.save("Graphs.pdf");
+        // Disable for exactly 1 second after export finishes
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        btn.prop("disabled", false);
+        btn.html(originalHtml);
     });
 });
+// somehow slower than exports outside of generate
+// can be recoded so that the the button will be re-enabled after the async is done
