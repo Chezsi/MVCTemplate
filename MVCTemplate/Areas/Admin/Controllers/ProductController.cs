@@ -217,43 +217,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return _unitOfWork.Product.ToList();
         }
 
-        /*public async Task<ActionResult> ExportToExcel()
-        {
-            var products = GetProducts();
-
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.AddWorksheet("Sheet 1");
-
-                worksheet.Cell(1, 1).Value = "ID";
-                worksheet.Cell(1, 2).Value = "Name";
-                worksheet.Cell(1, 3).Value = "Description";
-                worksheet.Cell(1, 4).Value = "Quantity";
-
-                int row = 2;
-                foreach (var item in products)
-                {
-                    worksheet.Cell(row, 1).Value = item.Id;
-                    worksheet.Cell(row, 2).Value = item.Name;
-                    worksheet.Cell(row, 3).Value = item.Description;
-                    worksheet.Cell(row, 4).Value = item.Quantity;
-                    row++;
-                }
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    workbook.SaveAs(memoryStream);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-
-                    Response.Headers.Add("Content-Disposition", "attachment; filename=ProductsExport.xlsx");
-                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-                    await memoryStream.CopyToAsync(Response.Body);
-                    return new EmptyResult();
-                }
-            }
-        }*/
-
         [HttpPost]
         public IActionResult GetProductsData()
         {
