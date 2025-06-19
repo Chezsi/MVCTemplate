@@ -9,27 +9,38 @@ $(document).ready(function () {
     $('#button-to-excel-person').on('click', function () {
         const btn = $(this);
 
-        if (btn.prop('disabled')) {
-            return; // ignore clicks when disabled
-        }
+        if (btn.prop('disabled')) return;
 
         btn.prop('disabled', true);
         const originalHtml = btn.html();
-
-        // Add spinner icon before "Exporting..." text
         btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
-        window.location.href = '/Admin/Person/ExportToExcel';
+        // Step 1: Generate token from /Admin/Person/GenerateDownloadToken
+        $.post('/Admin/Person/GenerateDownloadToken')
+            .done(function (response) {
+                if (response.token) {
+                    // Step 2: Trigger the download using token
+                    window.location.href = '/Admin/Person/ExportToExcel?token=' + encodeURIComponent(response.token);
 
-        setTimeout(() => {
-            btn.prop('disabled', false);
-            btn.html(originalHtml);
-        }, 1000);
+                    setTimeout(() => {
+                        btn.prop('disabled', false);
+                        btn.html(originalHtml);
+                    }, 1000);
+                } else {
+                    alert('Failed to get download token.');
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }
+            })
+            .fail(function () {
+                alert('Error generating download token.');
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            });
     });
-});
-// uses controller (updated)
+}); // uses controller (updated)
 
-document.querySelector("#button-to-excel-person").addEventListener("click", async function () {
+/*document.querySelector("#button-to-excel-person").addEventListener("click", async function () {
     var table = $('#Persons').DataTable();
     var searchValue = table.search();
     var dataToExport;
@@ -109,31 +120,44 @@ document.querySelector("#button-to-excel-person").addEventListener("click", asyn
 
     XLSX.utils.book_append_sheet(wb, ws, "Persons");
     XLSX.writeFile(wb, "Persons.xlsx");
-}); // ^ uses JS (button commented out)
+});*/ // ^ uses JS (button commented out)
 
 document.querySelector("#exportCurrentContract").addEventListener("submit", function (e) {
-    e.preventDefault();  // prevent form from submitting normally
+    e.preventDefault();  // prevent form submission
 
     const btn = document.querySelector("#exportContractsBtn");
     if (btn.disabled) return;
 
     btn.disabled = true;
     const originalHtml = btn.innerHTML;
-
-    // Use FontAwesome spinner with the same style as your jQuery example
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...';
 
-    // Trigger download immediately
-    const url = e.target.action;
-    window.location.href = url;
-
-    // Optional: re-enable after delay
-    setTimeout(() => {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-    }, 1000);
-});
-// uses controller (updated)
+    // Step 1: Request download token
+    fetch('/Admin/Person/GenerateDownloadToken', {
+        method: 'POST'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                // Step 2: Redirect to download with token
+                const formAction = e.target.action;
+                const urlWithToken = formAction + "?token=" + encodeURIComponent(data.token);
+                window.location.href = urlWithToken;
+            } else {
+                alert('Failed to get download token.');
+            }
+        })
+        .catch(error => {
+            console.error('Token error:', error);
+            alert('Error generating download token.');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }, 1000);
+        });
+}); // uses controller (updated)
 
 /*document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
     try {
