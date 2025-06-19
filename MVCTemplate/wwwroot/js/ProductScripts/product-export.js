@@ -1,9 +1,33 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-product').on('click', function () {
         window.location.href = '/Admin/Product/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
+
+$(document).ready(function () {
+    $('#button-to-excel-product').on('click', function () {
+        const btn = $(this);
+        if (btn.prop('disabled')) {
+            // Ignore extra clicks
+            return false;
+        }
+
+        btn.prop('disabled', true);
+        btn.text('Exporting...');
+
+        // Redirect to download
+        window.location.href = '/Admin/Product/ExportToExcel';
+
+        // Re-enable button after 5 seconds in case redirect is slow
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.text('Export to Excel');
+        }, 1000);
+    });
+});
+ // ^ uses controller (updated)
+
 
 document.querySelector("#button-to-excel-product").addEventListener("click", async function () {
     var table = $('#Products').DataTable();
@@ -95,4 +119,4 @@ document.querySelector("#button-to-excel-product").addEventListener("click", asy
 
     XLSX.utils.book_append_sheet(wb, ws, "Products");
     XLSX.writeFile(wb, "Product.xlsx");
-});
+}); // ^ uses js (button commented out)

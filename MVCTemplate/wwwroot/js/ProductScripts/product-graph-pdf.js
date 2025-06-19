@@ -1,5 +1,15 @@
 ﻿$(document).ready(() => {
     $("#ExportAllChartsBtn-product").click(async function () {
+        const btn = $(this);
+
+        if (btn.prop('disabled')) {
+            return; // prevent multiple clicks while disabled
+        }
+
+        btn.prop('disabled', true);
+        const originalText = btn.text();
+        btn.text('Exporting...');
+
         const chartTypes = ["bar", "line", "pie", "doughnut"];
         const { jsPDF } = window.jspdf;
 
@@ -140,5 +150,12 @@
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");
         }
+
+        // Re-enable button after 1 second (hardcoded)
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.text(originalText);
+        }, 1000);
     });
 });
+ // can be dynamic so hardcoding to use a static duration is only for consistency
