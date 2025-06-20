@@ -333,51 +333,70 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return true;
         }
 
-        // not being used
-        public async Task<ActionResult> ExportToExcel(string token)
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel(string token)
         {
             if (!TryValidateAndConsumeToken(token))
             {
                 return Unauthorized();
             }
 
-            var contracts = GetContracts();
+            var contractList = _unitOfWork.Contract
+                .GetAll(includeProperties: "Person")
+                .Select(c => new {
+                    c.Id,
+                    c.Name,
+                    c.Description,
+                    c.Validity,
+                    c.PersonId,
+                    PersonName = c.Person != null ? c.Person.Name : "(No Person)"
+                })
+                .ToList();
 
-            using (var workbook = new XLWorkbook())
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.AddWorksheet("Contracts");
+
+            // Title and timestamp
+            worksheet.Cell(1, 1).Value = "Contract Data";
+            worksheet.Range(1, 1, 1, 6).Merge().Style
+                .Font.SetBold().Font.FontSize = 14;
+            worksheet.Cell(2, 1).Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy, hh:mm tt}";
+            worksheet.Range(2, 1, 2, 6).Merge().Style
+                .Font.SetItalic();
+
+            // Headers
+            worksheet.Cell(3, 1).Value = "ID";
+            worksheet.Cell(3, 2).Value = "Name";
+            worksheet.Cell(3, 3).Value = "Description";
+            worksheet.Cell(3, 4).Value = "Validity";
+            worksheet.Cell(3, 5).Value = "Person ID";
+            worksheet.Cell(3, 6).Value = "Person Name";
+
+            int row = 4;
+            foreach (var c in contractList)
             {
-                var worksheet = workbook.AddWorksheet("Sheet 1");
-
-                // Header row
-                worksheet.Cell(1, 1).Value = "ID";
-                worksheet.Cell(1, 2).Value = "Name";
-                worksheet.Cell(1, 3).Value = "Description";
-
-                int row = 2;
-                foreach (var item in contracts)
-                {
-                    worksheet.Cell(row, 1).Value = item.Id;
-                    worksheet.Cell(row, 2).Value = item.Name;
-                    worksheet.Cell(row, 3).Value = item.Validity;
-                    row++;
-                }
-
-                // Apply auto-filter on the entire data range including headers
-                var lastRow = row - 1;  // last row with data
-                worksheet.Range(1, 1, lastRow, 3).SetAutoFilter();
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    workbook.SaveAs(memoryStream);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-
-                    Response.Headers.Add("Content-Disposition", "attachment; filename=ContractsExport.xlsx");
-                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-                    await memoryStream.CopyToAsync(Response.Body);
-                    return new EmptyResult();
-                }
+                worksheet.Cell(row, 1).Value = c.Id;
+                worksheet.Cell(row, 2).Value = c.Name;
+                worksheet.Cell(row, 3).Value = c.Description;
+                worksheet.Cell(row, 4).Value = c.Validity?.ToString("MMMM dd, yyyy");
+                worksheet.Cell(row, 5).Value = c.PersonId;
+                worksheet.Cell(row, 6).Value = c.PersonName;
+                row++;
             }
+
+            worksheet.Range(3, 1, row - 1, 6).SetAutoFilter();
+            worksheet.Columns().AdjustToContents();
+
+            // Remove 'using' so stream is not disposed prematurely
+            var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Contracts.xlsx");
         }
+
         #endregion
 
         #region API Calls
