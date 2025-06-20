@@ -28,22 +28,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
             _memoryCache = memoryCache;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
-
+        #region EXPORT
         [HttpGet]
         public async Task<IActionResult> ExportToExcel(string token)
         {
             // Validate token existence and validity
-            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out _))
+            if (!TryValidateAndConsumeToken(token))
             {
                 return Unauthorized();
             }
-
-            // Remove token after use for one-time access
-            _memoryCache.Remove(token);
 
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
@@ -145,7 +138,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
             var token = Guid.NewGuid().ToString();
             _memoryCache.Set(token, true, TimeSpan.FromMinutes(5)); // Cache it for 5 minutes
             return Json(new { token });
-        } 
+        }
+
+        private bool TryValidateAndConsumeToken(string token)
+        {
+            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out bool valid) || !valid)
+            {
+                return false;
+            }
+
+            // Remove the token to enforce one-time use
+            _memoryCache.Remove(token);
+            return true;
+        }
+        #endregion
+        #region CRUD
+        public IActionResult Index()
+        {
+            return View();
+        }
 
         [HttpPost]
         public IActionResult Create(Product product)
@@ -211,21 +222,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
-        private List<Product> GetProducts()
-        {
-            return _unitOfWork.Product.ToList();
-        }
-
-        [HttpPost]
-        public IActionResult GetProductsData()
-        {
-            var names = _context.Products.Select(p => p.Name).ToList();
-            var quantities = _context.Products.Select(p => p.Quantity).ToList();
-
-            return Json(new List<object> { names, quantities });
-        }
-
         [HttpPut]
         public IActionResult Update(Product obj)
         {
@@ -272,7 +268,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpDelete]
         public IActionResult Delete(int id)
         {
@@ -301,6 +296,22 @@ namespace MVCTemplate.Areas.Admin.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+        #endregion
+
+
+        private List<Product> GetProducts()
+        {
+            return _unitOfWork.Product.ToList();
+        }
+
+        [HttpPost]
+        public IActionResult GetProductsData()
+        {
+            var names = _context.Products.Select(p => p.Name).ToList();
+            var quantities = _context.Products.Select(p => p.Quantity).ToList();
+
+            return Json(new List<object> { names, quantities });
         }
 
         #region API Calls

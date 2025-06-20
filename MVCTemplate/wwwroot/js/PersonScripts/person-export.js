@@ -6,36 +6,37 @@
 });*/ // ^ uses controller no button disabling
 
 $(document).ready(function () {
-    $('#button-to-excel-person').on('click', function () {
-        const btn = $(this);
+    const btn = $('#button-to-excel-person');
 
+    btn.on('click', function () {
         if (btn.prop('disabled')) return;
 
-        btn.prop('disabled', true);
         const originalHtml = btn.html();
+        btn.prop('disabled', true);
         btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
-        // Step 1: Generate token from /Admin/Person/GenerateDownloadToken
-        $.post('/Admin/Person/GenerateDownloadToken')
+        // Step 1: Request token
+        $.ajax({
+            url: '/Admin/Person/GenerateDownloadToken',
+            method: 'POST'
+        })
             .done(function (response) {
                 if (response.token) {
-                    // Step 2: Trigger the download using token
-                    window.location.href = '/Admin/Person/ExportToExcel?token=' + encodeURIComponent(response.token);
-
-                    setTimeout(() => {
-                        btn.prop('disabled', false);
-                        btn.html(originalHtml);
-                    }, 1000);
+                    // Step 2: Navigate to export with token
+                    const tokenUrl = '/Admin/Person/ExportToExcel?token=' + encodeURIComponent(response.token);
+                    window.location.href = tokenUrl;
                 } else {
                     alert('Failed to get download token.');
-                    btn.prop('disabled', false);
-                    btn.html(originalHtml);
                 }
             })
             .fail(function () {
                 alert('Error generating download token.');
-                btn.prop('disabled', false);
-                btn.html(originalHtml);
+            })
+            .always(function () {
+                setTimeout(() => {
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }, 1000);
             });
     });
 }); // uses controller (updated)
