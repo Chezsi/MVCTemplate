@@ -10,6 +10,7 @@ using System.IO;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MVCTemplate.ViewModels;
 using System.Globalization;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -19,16 +20,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
-
         private readonly IConfiguration _configuration; // for the passkey of contract
+        private readonly IMemoryCache _memoryCache;
 
-        public ContractController(IUnitOfWork unitOfWork, ApplicationDbContext context, IConfiguration configuration)
+        public ContractController(IUnitOfWork unitOfWork, ApplicationDbContext context, IConfiguration configuration, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _configuration = configuration; // the passkey is in appsettings.json
+            _memoryCache = memoryCache;
         }
 
+        #region CRUD
         public IActionResult Index()
         {
             //var persons = _unitOfWork.Person.GetAll();
@@ -162,98 +165,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         private List<Contract> GetContracts()
         {
             return _unitOfWork.Contract.ToList();
         }
-
-        // not being used
-        public async Task<ActionResult> ExportToExcel()
-        {
-            var contracts = GetContracts();
-
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.AddWorksheet("Sheet 1");
-
-                // Header row
-                worksheet.Cell(1, 1).Value = "ID";
-                worksheet.Cell(1, 2).Value = "Name";
-                worksheet.Cell(1, 3).Value = "Description";
-
-                int row = 2;
-                foreach (var item in contracts)
-                {
-                    worksheet.Cell(row, 1).Value = item.Id;
-                    worksheet.Cell(row, 2).Value = item.Name;
-                    worksheet.Cell(row, 3).Value = item.Validity;
-                    row++;
-                }
-
-                // Apply auto-filter on the entire data range including headers
-                var lastRow = row - 1;  // last row with data
-                worksheet.Range(1, 1, lastRow, 3).SetAutoFilter();
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    workbook.SaveAs(memoryStream);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-
-                    Response.Headers.Add("Content-Disposition", "attachment; filename=ContractsExport.xlsx");
-                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-                    await memoryStream.CopyToAsync(Response.Body);
-                    return new EmptyResult();
-                }
-            }
-        }
-
-        // for donut and pie
-        [HttpPost]
-        [Route("/Admin/Contract/GetContractsPerMonth")]
-        public IActionResult GetContractsPerMonth()
-        {
-            var currentYear = DateTime.Now.Year;
-
-            var monthlyData = _context.Contracts
-                .Where(c => c.Validity.HasValue && c.Validity.Value.Year == currentYear)
-                .GroupBy(c => c.Validity.Value.Month)
-                .OrderBy(g => g.Key)
-                .Select(g => new
-                {
-                    Month = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(g.Key),
-                    Count = g.Count()
-                }).ToList();
-
-            var labels = monthlyData.Select(d => d.Month).ToList();
-            var values = monthlyData.Select(d => d.Count).ToList();
-
-            return Json(new List<object> { labels, values });
-        }
-
-        // for bar and line
-        [HttpPost]
-        public IActionResult GetContractsPerYear()
-        {
-            var contractCounts = _context.Contracts
-                .Where(c => c.Validity.HasValue)
-                .GroupBy(c => c.Validity.Value.Year)
-                .OrderBy(g => g.Key)
-                .Select(g => new
-                {
-                    Year = g.Key.ToString(),
-                    Count = g.Count()
-                })
-                .ToList();
-
-            var years = contractCounts.Select(x => x.Year).ToList();
-            var counts = contractCounts.Select(x => x.Count).ToList();
-
-            return Json(new List<object> { years, counts });
-        }
-
-
+        
         [HttpPost]
         public IActionResult Update(ContractVM vm)
         {
@@ -332,8 +248,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
-
         [HttpPost]
         [Route("Admin/Contract/Unlock/{id}")]
         public IActionResult Unlock(int id, [FromForm] string key)
@@ -359,11 +273,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Ok(new { message = "Contract unlocked successfully." });
         }
-
-
-
-
-
 
         [HttpDelete]
         public IActionResult Delete(int id)
@@ -401,7 +310,127 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = $"Unexpected error: {ex.Message}" });
             }
         }
+        #endregion
 
+        #region Export
+        [HttpPost]
+        public IActionResult GenerateDownloadToken()
+        {
+            var token = Guid.NewGuid().ToString();
+            _memoryCache.Set(token, true, TimeSpan.FromMinutes(5));
+            return Json(new { token });
+        }
+
+        private bool TryValidateAndConsumeToken(string token)
+        {
+            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out bool valid) || !valid)
+            {
+                return false;
+            }
+
+            // Remove the token to enforce one-time use
+            _memoryCache.Remove(token);
+            return true;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel(string token)
+        {
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
+            var contractList = _unitOfWork.Contract
+                .GetAll(includeProperties: "Person")
+                .Select(c => new {
+                    c.Id,
+                    c.Name,
+                    c.Description,
+                    c.Validity,
+                    c.PersonId,
+                    PersonName = c.Person != null ? c.Person.Name : "(No Person)"
+                })
+                .ToList();
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.AddWorksheet("Contracts");
+
+            // Colors
+            var blueBackground = XLColor.FromArgb(0, 51, 102);
+            var whiteFont = XLColor.White;
+            var lightGreen = XLColor.FromArgb(198, 239, 206);
+            var darkGreen = XLColor.FromArgb(155, 187, 89);
+            var borderStyle = XLBorderStyleValues.Thin;
+
+            // Title and timestamp
+            worksheet.Cell(1, 1).Value = "Contract Data";
+            worksheet.Range(1, 1, 1, 6).Merge().Style
+                .Font.SetBold().Font.FontSize = 14;
+            worksheet.Range(1, 1, 1, 6).Style
+                .Fill.SetBackgroundColor(blueBackground)
+                .Font.SetFontColor(whiteFont)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Border.OutsideBorder = borderStyle;
+
+            worksheet.Cell(2, 1).Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy, hh:mm tt}";
+            worksheet.Range(2, 1, 2, 6).Merge().Style
+                .Font.SetItalic()
+                .Fill.SetBackgroundColor(blueBackground)
+                .Font.SetFontColor(whiteFont)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Border.OutsideBorder = borderStyle;
+
+            // Headers
+            string[] headers = { "ID", "Name", "Description", "Validity", "Person ID", "Person Name" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = worksheet.Cell(3, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.SetBold();
+                cell.Style.Fill.PatternType = XLFillPatternValues.Solid;
+                var fillColor = ((i + 1) % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.SetBackgroundColor(fillColor);
+                cell.Style.Border.OutsideBorder = borderStyle;
+                cell.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            }
+
+            int row = 4;
+            foreach (var c in contractList)
+            {
+                worksheet.Cell(row, 1).Value = c.Id;
+                worksheet.Cell(row, 2).Value = c.Name;
+                worksheet.Cell(row, 3).Value = c.Description;
+                worksheet.Cell(row, 4).Value = c.Validity?.ToString("MMMM dd, yyyy");
+                worksheet.Cell(row, 5).Value = c.PersonId;
+                worksheet.Cell(row, 6).Value = c.PersonName;
+
+                for (int col = 1; col <= 6; col++)
+                {
+                    var cell = worksheet.Cell(row, col);
+                    cell.Style.Fill.PatternType = XLFillPatternValues.Solid;
+                    var fillColor = (col % 2 == 0) ? lightGreen : darkGreen;
+                    cell.Style.Fill.SetBackgroundColor(fillColor);
+                    cell.Style.Border.OutsideBorder = borderStyle;
+                    cell.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                }
+                row++;
+            }
+
+            worksheet.Range(3, 1, row - 1, 6).SetAutoFilter();
+            worksheet.Columns().AdjustToContents();
+
+            // Remove 'using' so stream is not disposed prematurely
+            var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Contracts.xlsx");
+        }
+
+        #endregion
 
         #region API Calls
 
@@ -445,6 +474,52 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(persons);
         }
+
+        // for donut and pie
+        [HttpPost]
+        [Route("/Admin/Contract/GetContractsPerMonth")]
+        public IActionResult GetContractsPerMonth()
+        {
+            var currentYear = DateTime.Now.Year;
+
+            var monthlyData = _context.Contracts
+                .Where(c => c.Validity.HasValue && c.Validity.Value.Year == currentYear)
+                .GroupBy(c => c.Validity.Value.Month)
+                .OrderBy(g => g.Key)
+                .Select(g => new
+                {
+                    Month = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(g.Key),
+                    Count = g.Count()
+                }).ToList();
+
+            var labels = monthlyData.Select(d => d.Month).ToList();
+            var values = monthlyData.Select(d => d.Count).ToList();
+
+            return Json(new List<object> { labels, values });
+        }
+
+        // for bar and line
+        [HttpPost]
+        public IActionResult GetContractsPerYear()
+        {
+            var contractCounts = _context.Contracts
+                .Where(c => c.Validity.HasValue)
+                .GroupBy(c => c.Validity.Value.Year)
+                .OrderBy(g => g.Key)
+                .Select(g => new
+                {
+                    Year = g.Key.ToString(),
+                    Count = g.Count()
+                })
+                .ToList();
+
+            var years = contractCounts.Select(x => x.Year).ToList();
+            var counts = contractCounts.Select(x => x.Count).ToList();
+
+            return Json(new List<object> { years, counts });
+        }
+
+
         #endregion
     }
 }

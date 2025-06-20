@@ -38,7 +38,6 @@ $(document).ready(function () {
             });
     });
 });
-
  // ^ uses controller (updated)
 
 

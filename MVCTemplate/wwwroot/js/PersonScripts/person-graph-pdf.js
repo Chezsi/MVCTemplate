@@ -2,7 +2,7 @@
     const btn = $("#ExportAllChartsBtn-person");
 
     btn.click(async function () {
-        if (btn.prop("disabled")) return; // Prevent if already disabled
+        if (btn.prop("disabled")) return;
 
         btn.prop("disabled", true);
         const originalText = btn.html();
@@ -12,11 +12,22 @@
         const { jsPDF } = window.jspdf;
 
         try {
+            // Step 1: Generate token
+            const tokenResponse = await $.post("/Admin/Person/GenerateDownloadToken");
+            const token = tokenResponse?.token;
+
+            if (!token) {
+                alert("Failed to get download token.");
+                return;
+            }
+
+            // Step 2: Get chart data with token
             const response = await $.ajax({
                 type: "POST",
                 url: "/Admin/Person/GetPersonsData",
                 contentType: "application/json; charset=utf-8",
-                dataType: "json"
+                dataType: "json",
+                data: JSON.stringify({ token }) // Pass token in body
             });
 
             const labels = response[0];
@@ -63,14 +74,8 @@
             function createChart(type) {
                 return new Promise((resolve) => {
                     const canvas = document.createElement("canvas");
-                    if (type === "pie" || type === "doughnut") {
-                        canvas.width = 400;
-                        canvas.height = 400;
-                    } else {
-                        canvas.width = 750;
-                        canvas.height = 400;
-                    }
-
+                    canvas.width = (type === "pie" || type === "doughnut") ? 400 : 750;
+                    canvas.height = 400;
                     const ctx = canvas.getContext("2d");
 
                     const chart = new Chart(ctx, {
@@ -80,7 +85,7 @@
                             datasets: [{
                                 label: "Number of Employees",
                                 data,
-                                backgroundColor: type === "bar" || type === "pie" || type === "doughnut"
+                                backgroundColor: (type === "bar" || type === "pie" || type === "doughnut")
                                     ? barColors.slice(0, labels.length)
                                     : "#007bff",
                                 borderColor: "#0056b3",
@@ -103,16 +108,14 @@
                                 },
                                 datalabels: {
                                     color: '#000',
-                                    anchor: type === 'bar' || type === 'line' ? 'end' : 'center',
-                                    align: type === 'bar' || type === 'line' ? 'top' : 'center',
+                                    anchor: (type === 'bar' || type === 'line') ? 'end' : 'center',
+                                    align: (type === 'bar' || type === 'line') ? 'top' : 'center',
                                     font: { weight: 'bold' },
                                     formatter: (value) => value
                                 }
                             },
                             scales: (type === 'bar' || type === 'line') ? {
-                                x: {
-                                    title: { display: true, text: 'Category' }
-                                },
+                                x: { title: { display: true, text: 'Category' } },
                                 y: {
                                     beginAtZero: true,
                                     title: { display: true, text: 'Employees' },
@@ -146,7 +149,6 @@
 
                 pdf.addImage(imgData, "PNG", x, y, fitted.w, fitted.h);
 
-                // Add timestamp to bottom-right of page
                 const timestamp = getFormattedTimestamp();
                 pdf.setFontSize(10);
                 pdf.text(timestamp, pageWidth - margin, pageHeight - 10, { align: "right" });

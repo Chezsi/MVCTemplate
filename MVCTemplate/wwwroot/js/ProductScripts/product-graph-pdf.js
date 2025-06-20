@@ -14,11 +14,27 @@
         const { jsPDF } = window.jspdf;
 
         try {
+            // ✅ Step 1: Request a secure token
+            const tokenResponse = await $.ajax({
+                type: "POST",
+                url: "/Admin/Product/GenerateDownloadToken",
+                dataType: "json"
+            });
+
+            if (!tokenResponse.token) {
+                alert("Failed to generate security token.");
+                return;
+            }
+
+            // ✅ Step 2: Fetch chart data (secured by token if needed server-side)
             const response = await $.ajax({
                 type: "POST",
                 url: "/Admin/Product/GetProductsData",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
+                headers: {
+                    "X-Download-Token": tokenResponse.token // optional: use for validation if needed
+                }
             });
 
             const _chartLabels = response[0];
@@ -151,11 +167,10 @@
             alert("Something went wrong while exporting charts.");
         }
 
-        // Re-enable button after 1 second (hardcoded)
         setTimeout(() => {
             btn.prop('disabled', false);
             btn.html(originalHtml);
         }, 1000);
     });
 });
- // can be dynamic so hardcoding to use a static duration is only for consistency
+// probably not needed since different back-end method but done for consistency

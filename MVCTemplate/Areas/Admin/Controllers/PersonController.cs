@@ -45,7 +45,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             _context = context;
             _memoryCache = memoryCache;
         }
-
+        #region CRUD
         public IActionResult Create()
         {
             return View();
@@ -63,25 +63,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             //ViewBag.CategoryList = CategoryList;
             //not working
             return View();
-        }
-
-        [HttpPost]
-        public IActionResult GetPersonsData()
-        {
-            // Fetch categories where there is at least one person linked by CategoryId
-            var data = _context.Categorys
-                .Where(c => _context.Persons.Any(p => p.CategoryId == c.IdCategory))
-                .Select(c => new
-                {
-                    CategoryName = c.NameCategory, // Changed here
-                    EmployeeCount = _context.Persons.Count(p => p.CategoryId == c.IdCategory) // Changed here
-                })
-                .ToList();
-
-            var labels = data.Select(d => d.CategoryName).ToList();
-            var counts = data.Select(d => d.EmployeeCount).ToList();
-
-            return Json(new object[] { labels, counts });
         }
 
         [HttpPost]
@@ -147,7 +128,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpPut]
         public IActionResult Update(Person obj)
         {
@@ -195,7 +175,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpDelete]
 
         public IActionResult Delete(int id)
@@ -226,6 +205,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+    #endregion
 
         #region EXPORT
         [HttpGet]
@@ -328,7 +308,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Person.xlsx");
         }
-
 
         [HttpPost]
         public IActionResult GenerateDownloadToken()
@@ -514,6 +493,26 @@ namespace MVCTemplate.Areas.Admin.Controllers
             var list = data.ToList();
 
             return Json(list);
+        }
+
+
+        [HttpPost]
+        public IActionResult GetPersonsData()
+        {
+            // Fetch categories where there is at least one person linked by CategoryId
+            var data = _context.Categorys
+                .Where(c => _context.Persons.Any(p => p.CategoryId == c.IdCategory))
+                .Select(c => new
+                {
+                    CategoryName = c.NameCategory, // Changed here
+                    EmployeeCount = _context.Persons.Count(p => p.CategoryId == c.IdCategory) // Changed here
+                })
+                .ToList();
+
+            var labels = data.Select(d => d.CategoryName).ToList();
+            var counts = data.Select(d => d.EmployeeCount).ToList();
+
+            return Json(new object[] { labels, counts });
         }
         #endregion
 

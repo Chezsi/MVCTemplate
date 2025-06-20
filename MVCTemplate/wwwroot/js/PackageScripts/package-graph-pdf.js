@@ -8,10 +8,24 @@
         const originalHtml = btn.html();
         btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
-        const chartTypes = ["bar", "line"];
-        const { jsPDF } = window.jspdf;
-
         try {
+            // Step 1: Get download token
+            const tokenResponse = await $.ajax({
+                type: "POST",
+                url: "/Admin/Package/GenerateDownloadToken",
+                dataType: "json"
+            });
+
+            if (!tokenResponse.token) {
+                alert("Failed to get download token.");
+                throw new Error("No token returned");
+            }
+
+            // Step 2: Proceed with original chart generation/export logic
+
+            const chartTypes = ["bar", "line"];
+            const { jsPDF } = window.jspdf;
+
             const response = await $.ajax({
                 type: "POST",
                 url: "/Admin/Package/GetPackagesCreatedPerDay",
@@ -145,6 +159,7 @@
             }
 
             pdf.save("packages-graphs.pdf");
+
         } catch (error) {
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");
@@ -157,3 +172,4 @@
         }
     });
 });
+// token validation may have been unnecessary since it cannot be accessed manually by typing the url, this is done for consistency
