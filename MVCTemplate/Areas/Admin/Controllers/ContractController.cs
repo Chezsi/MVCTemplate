@@ -356,21 +356,44 @@ namespace MVCTemplate.Areas.Admin.Controllers
             using var workbook = new XLWorkbook();
             var worksheet = workbook.AddWorksheet("Contracts");
 
+            // Colors
+            var blueBackground = XLColor.FromArgb(0, 51, 102);
+            var whiteFont = XLColor.White;
+            var lightGreen = XLColor.FromArgb(198, 239, 206);
+            var darkGreen = XLColor.FromArgb(155, 187, 89);
+            var borderStyle = XLBorderStyleValues.Thin;
+
             // Title and timestamp
             worksheet.Cell(1, 1).Value = "Contract Data";
             worksheet.Range(1, 1, 1, 6).Merge().Style
                 .Font.SetBold().Font.FontSize = 14;
+            worksheet.Range(1, 1, 1, 6).Style
+                .Fill.SetBackgroundColor(blueBackground)
+                .Font.SetFontColor(whiteFont)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Border.OutsideBorder = borderStyle;
+
             worksheet.Cell(2, 1).Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy, hh:mm tt}";
             worksheet.Range(2, 1, 2, 6).Merge().Style
-                .Font.SetItalic();
+                .Font.SetItalic()
+                .Fill.SetBackgroundColor(blueBackground)
+                .Font.SetFontColor(whiteFont)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Border.OutsideBorder = borderStyle;
 
             // Headers
-            worksheet.Cell(3, 1).Value = "ID";
-            worksheet.Cell(3, 2).Value = "Name";
-            worksheet.Cell(3, 3).Value = "Description";
-            worksheet.Cell(3, 4).Value = "Validity";
-            worksheet.Cell(3, 5).Value = "Person ID";
-            worksheet.Cell(3, 6).Value = "Person Name";
+            string[] headers = { "ID", "Name", "Description", "Validity", "Person ID", "Person Name" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = worksheet.Cell(3, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.SetBold();
+                cell.Style.Fill.PatternType = XLFillPatternValues.Solid;
+                var fillColor = ((i + 1) % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.SetBackgroundColor(fillColor);
+                cell.Style.Border.OutsideBorder = borderStyle;
+                cell.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            }
 
             int row = 4;
             foreach (var c in contractList)
@@ -381,6 +404,16 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 worksheet.Cell(row, 4).Value = c.Validity?.ToString("MMMM dd, yyyy");
                 worksheet.Cell(row, 5).Value = c.PersonId;
                 worksheet.Cell(row, 6).Value = c.PersonName;
+
+                for (int col = 1; col <= 6; col++)
+                {
+                    var cell = worksheet.Cell(row, col);
+                    cell.Style.Fill.PatternType = XLFillPatternValues.Solid;
+                    var fillColor = (col % 2 == 0) ? lightGreen : darkGreen;
+                    cell.Style.Fill.SetBackgroundColor(fillColor);
+                    cell.Style.Border.OutsideBorder = borderStyle;
+                    cell.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                }
                 row++;
             }
 
