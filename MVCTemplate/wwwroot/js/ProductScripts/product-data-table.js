@@ -54,8 +54,11 @@ $('#descriptionSearch').on('keyup change', function () {
     dataTable.column(1).search(this.value).draw();
 });
 
-// New event handler for min and max quantity filtering
-$('#minQuantity, #maxQuantity').on('keyup change', function () {
+// min and max quantity filtering
+$('#minQuantity, #maxQuantity').on('input', function () {
+    // Remove anything that's not a digit
+    this.value = this.value.replace(/[^0-9]/g, '');
+    // Trigger table redraw
     dataTable.draw();
 });
 
