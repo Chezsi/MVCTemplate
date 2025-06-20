@@ -87,11 +87,19 @@ namespace MVCTemplate.DataAccess.Repository
             return _db.Contracts.ToList();
         }
 
-        public void Update(Contract contract)
+        public void Update(Contract updatedContract)
         {
-            _db.Contracts.Update(contract);
-        }
+            var existing = _db.Contracts.FirstOrDefault(c => c.Id == updatedContract.Id);
+            if (existing == null) return;
 
+            existing.Name = updatedContract.Name;
+            existing.Description = updatedContract.Description;
+            existing.Validity = updatedContract.Validity;
+            existing.PersonId = updatedContract.PersonId;
+            existing.UpdatedAt = DateTime.Now;
+
+            _db.SaveChanges();
+        }
 
         Contract? IContractRepository.CheckIfUnique(string name)
         {

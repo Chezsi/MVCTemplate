@@ -35,9 +35,18 @@ namespace MVCTemplate.DataAccess.Repository
             return _db.Categorys.FirstOrDefault(predicate);
         }
 
-        public void Update(Category category)
+        public void Update(Category updatedCategory)
         {
-            _db.Categorys.Update(category);
+            var existing = _db.Categorys.FirstOrDefault(c => c.IdCategory == updatedCategory.IdCategory);
+            if (existing == null) return;
+
+            // Manually update only the mutable fields
+            existing.NameCategory = updatedCategory.NameCategory;
+            existing.CodeCategory = updatedCategory.CodeCategory;
+            existing.UpdatedAt = DateTime.Now;
+                // so CreatedAt is not being given a new value
+            _db.SaveChanges();
         }
+
     }
 }
