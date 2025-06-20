@@ -1,4 +1,27 @@
 ﻿async function exportAllContractChartsToPDF() {
+    const btn = $("#ExportAllChartsBtn-contract");
+
+    if (btn.prop('disabled')) return;
+    btn.prop('disabled', true);
+
+    const originalText = btn.html();
+    btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+    const startTime = Date.now();
+
+    // Step 1: Request a token
+    let token;
+    try {
+        const tokenResponse = await $.post("/Admin/Contract/GenerateDownloadToken");
+        token = tokenResponse?.token;
+        if (!token) throw new Error("No token received.");
+    } catch (err) {
+        alert("Failed to generate secure download token.");
+        btn.prop('disabled', false);
+        btn.html(originalText);
+        return;
+    }
+
     const chartTypes = [
         { category: "annual", type: "bar", url: "/Admin/Contract/GetContractsPerYear", title: "Contracts Per Year", xTitle: "Year", yTitle: "Contracts" },
         { category: "annual", type: "line", url: "/Admin/Contract/GetContractsPerYear", title: "Contracts Per Year", xTitle: "Year", yTitle: "Contracts" },
@@ -114,7 +137,8 @@
                 type: "POST",
                 url: typeInfo.url,
                 contentType: "application/json; charset=utf-8",
-                dataType: "json"
+                dataType: "json",
+                data: JSON.stringify({ token }) // Send token with data
             });
 
             const labels = response[0];
@@ -134,7 +158,6 @@
 
             pdf.addImage(imgData, "PNG", x, y, fitted.w, fitted.h);
 
-            // Add timestamp at bottom-right
             const timestamp = getFormattedTimestamp();
             pdf.setFontSize(10);
             pdf.setFont("helvetica", "normal");
@@ -142,13 +165,20 @@
 
             Chart.getChart(canvas)?.destroy();
             canvas.remove();
-
         } catch (error) {
             console.error(`Error generating chart for ${typeInfo.category}-${typeInfo.type}:`, error);
         }
     }
 
     pdf.save("contracts-graphs.pdf");
+
+    const elapsed = Date.now() - startTime;
+    const remaining = 1000 - elapsed;
+
+    setTimeout(() => {
+        btn.prop('disabled', false);
+        btn.html(originalText);
+    }, remaining > 0 ? remaining : 0);
 }
 
 $(function () {

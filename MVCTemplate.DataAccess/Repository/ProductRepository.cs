@@ -44,10 +44,21 @@ namespace MVCTemplate.DataAccess.Repository
             return _db.Products.ToList();
         }
 
-        public void Update(Product product)
+        public void Update(Product updatedProduct)
         {
-            _db.Products.Update(product);
+            var existing = _db.Products.FirstOrDefault(p => p.Id == updatedProduct.Id);
+            if (existing == null) return;
+
+            // Manually update fields
+            existing.Name = updatedProduct.Name;
+            existing.Description = updatedProduct.Description;
+            existing.Quantity = updatedProduct.Quantity;
+            existing.UpdatedAt = DateTime.Now;
+                // so CreatedAt is not being given a new value
+            _db.SaveChanges();
         }
+
+
 
     }
 }

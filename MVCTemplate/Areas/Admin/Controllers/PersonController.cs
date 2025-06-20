@@ -13,6 +13,7 @@ using MVCTemplate.ViewModels;
 using OfficeOpenXml.Style;
 using OfficeOpenXml;
 using System.Diagnostics;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -36,13 +37,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         private IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
+        private readonly IMemoryCache _memoryCache;
 
-        public PersonController(IUnitOfWork unitOfWork, ApplicationDbContext context)
+        public PersonController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
             _context = context;
+            _memoryCache = memoryCache;
         }
-
+        #region CRUD
         public IActionResult Create()
         {
             return View();
@@ -60,25 +63,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             //ViewBag.CategoryList = CategoryList;
             //not working
             return View();
-        }
-
-        [HttpPost]
-        public IActionResult GetPersonsData()
-        {
-            // Fetch categories where there is at least one person linked by CategoryId
-            var data = _context.Categorys
-                .Where(c => _context.Persons.Any(p => p.CategoryId == c.IdCategory))
-                .Select(c => new
-                {
-                    CategoryName = c.NameCategory, // Changed here
-                    EmployeeCount = _context.Persons.Count(p => p.CategoryId == c.IdCategory) // Changed here
-                })
-                .ToList();
-
-            var labels = data.Select(d => d.CategoryName).ToList();
-            var counts = data.Select(d => d.EmployeeCount).ToList();
-
-            return Json(new object[] { labels, counts });
         }
 
         [HttpPost]
@@ -144,7 +128,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpPut]
         public IActionResult Update(Person obj)
         {
@@ -192,7 +175,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpDelete]
 
         public IActionResult Delete(int id)
@@ -223,10 +205,19 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+    #endregion
 
-        [HttpGet] // probably did not had to use contracts
-        public async Task<IActionResult> ExportToExcel()
+        #region EXPORT
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel(string token)
         {
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
+            _memoryCache.Remove(token); // One-time use
+
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
             var persons = await _context.Persons.ToListAsync();
@@ -240,22 +231,21 @@ namespace MVCTemplate.Areas.Admin.Controllers
             var whiteFont = System.Drawing.Color.White;
             var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
             var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+            var borderStyle = ExcelBorderStyle.Thin;
 
-            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-
-            // Row 1 - Title
+            // Title
             worksheet.Cells["A1:D1"].Merge = true;
             worksheet.Cells["A1"].Value = "Person Data";
             worksheet.Cells["A1"].Style.Font.Size = 16;
             worksheet.Cells["A1"].Style.Font.Bold = true;
             worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Row 2 - Timestamp
+            // Timestamp
             worksheet.Cells["A2:D2"].Merge = true;
             worksheet.Cells["A2"].Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
             worksheet.Cells["A2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Style for Title and Timestamp rows
+            // Style header
             worksheet.Cells["A1:D2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
             worksheet.Cells["A1:D2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
             worksheet.Cells["A1:D2"].Style.Font.Color.SetColor(whiteFont);
@@ -264,9 +254,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
             worksheet.Cells["A1:D3"].Style.Border.Left.Style = borderStyle;
             worksheet.Cells["A1:D3"].Style.Border.Right.Style = borderStyle;
 
-            // Row 3 - Headers
-            string[] headers = new[] { "Person ID", "Name", "Position", "Category ID" };
-
+            // Headers
+            string[] headers = { "Person ID", "Name", "Position", "Category ID" };
             for (int i = 1; i <= headers.Length; i++)
             {
                 var cell = worksheet.Cells[3, i];
@@ -286,7 +275,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             {
                 var contractsForPerson = allContracts.Where(c => c.PersonId == person.Id);
 
-                // Export one row per contract/person combo but only person data (up to Category ID)
                 foreach (var contract in contractsForPerson)
                 {
                     worksheet.Cells[row, 1].Value = person.Id;
@@ -294,7 +282,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     worksheet.Cells[row, 3].Value = person.Position;
                     worksheet.Cells[row, 4].Value = person.CategoryId;
 
-                    // Style each cell in this row (only 4 columns)
                     for (int col = 1; col <= 4; col++)
                     {
                         var cell = worksheet.Cells[row, col];
@@ -305,17 +292,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         cell.Style.Border.Left.Style = borderStyle;
                         cell.Style.Border.Right.Style = borderStyle;
                     }
+
                     row++;
                 }
             }
 
-            // Apply autofilter to the header row (only 4 columns)
             worksheet.Cells[3, 1, row - 1, 4].AutoFilter = true;
-
-            // Auto-fit columns
             worksheet.Cells.AutoFitColumns();
 
-            // Return Excel file
             var stream = new MemoryStream();
             package.SaveAs(stream);
             stream.Position = 0;
@@ -325,11 +309,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "Person.xlsx");
         }
 
-
+        [HttpPost]
+        public IActionResult GenerateDownloadToken()
+        {
+            var token = Guid.NewGuid().ToString();
+            _memoryCache.Set(token, true, TimeSpan.FromMinutes(5));
+            return Json(new { token });
+        }
 
         [HttpGet]
-        public async Task<IActionResult> ExportCurrentContractsExcel()
+        public async Task<IActionResult> ExportCurrentContractsExcel(string token)
         {
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
+            // Remove the token after successful validation to prevent reuse
+            _memoryCache.Remove(token);
+
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
             var persons = await _context.Persons.ToListAsync();
@@ -438,9 +436,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CurrentContracts.xlsx");
         }
 
+        private bool TryValidateAndConsumeToken(string token)
+        {
+            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out bool valid) || !valid)
+            {
+                return false;
+            }
 
-
-
+            // Remove the token to enforce one-time use
+            _memoryCache.Remove(token);
+            return true;
+        }
+        #endregion
 
         #region API Calls
         [HttpGet]
@@ -486,6 +493,26 @@ namespace MVCTemplate.Areas.Admin.Controllers
             var list = data.ToList();
 
             return Json(list);
+        }
+
+
+        [HttpPost]
+        public IActionResult GetPersonsData()
+        {
+            // Fetch categories where there is at least one person linked by CategoryId
+            var data = _context.Categorys
+                .Where(c => _context.Persons.Any(p => p.CategoryId == c.IdCategory))
+                .Select(c => new
+                {
+                    CategoryName = c.NameCategory, // Changed here
+                    EmployeeCount = _context.Persons.Count(p => p.CategoryId == c.IdCategory) // Changed here
+                })
+                .ToList();
+
+            var labels = data.Select(d => d.CategoryName).ToList();
+            var counts = data.Select(d => d.EmployeeCount).ToList();
+
+            return Json(new object[] { labels, counts });
         }
         #endregion
 

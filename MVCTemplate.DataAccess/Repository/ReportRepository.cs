@@ -65,9 +65,16 @@ namespace MVCTemplate.DataAccess.Repository
             _db.Reports.RemoveRange(reports);
         }
 
-        public void Update(Report report)
+        public void Update(Report updatedReport)
         {
-            _db.Reports.Update(report);
+            var existing = _db.Reports.FirstOrDefault(r => r.Id == updatedReport.Id);
+            if (existing == null) return;
+
+            existing.Title = updatedReport.Title;
+            existing.Description = updatedReport.Description;
+            existing.UpdatedAt = DateTime.Now;
+
+            _db.SaveChanges();
         }
 
         public Report? ContinueIfNoChangeOnUpdate(string title, int id)

@@ -1,9 +1,31 @@
 ﻿$(function () {
     $("#ExportAllChartsBtn-package").click(async function () {
-        const chartTypes = ["bar", "line"];
-        const { jsPDF } = window.jspdf;
+        const btn = $(this);
+        if (btn.prop('disabled')) return;
+
+        // Disable button and show spinner
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
 
         try {
+            // Step 1: Get download token
+            const tokenResponse = await $.ajax({
+                type: "POST",
+                url: "/Admin/Package/GenerateDownloadToken",
+                dataType: "json"
+            });
+
+            if (!tokenResponse.token) {
+                alert("Failed to get download token.");
+                throw new Error("No token returned");
+            }
+
+            // Step 2: Proceed with original chart generation/export logic
+
+            const chartTypes = ["bar", "line"];
+            const { jsPDF } = window.jspdf;
+
             const response = await $.ajax({
                 type: "POST",
                 url: "/Admin/Package/GetPackagesCreatedPerDay",
@@ -137,9 +159,17 @@
             }
 
             pdf.save("packages-graphs.pdf");
+
         } catch (error) {
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");
+        } finally {
+            // Re-enable button & restore original content after a slight delay
+            setTimeout(() => {
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            }, 800);
         }
     });
 });
+// token validation may have been unnecessary since it cannot be accessed manually by typing the url, this is done for consistency

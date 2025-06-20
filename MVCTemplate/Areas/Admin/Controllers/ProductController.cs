@@ -9,6 +9,7 @@ using ClosedXML.Excel;
 using System.IO;
 using OfficeOpenXml.Style;
 using OfficeOpenXml;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -18,21 +19,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
+        private readonly IMemoryCache _memoryCache;
 
-        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context)
+        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
-            _context = context; // ✅ Fixed: assign _context
+            _context = context;
+            _memoryCache = memoryCache;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
-
+        #region EXPORT
         [HttpGet]
-        public async Task<IActionResult> ExportToExcel()
+        public async Task<IActionResult> ExportToExcel(string token)
         {
+            // Validate token existence and validity
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
             var dataToExport = _unitOfWork.Product.GetAll().ToList();
@@ -97,7 +102,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 row++;
             }
 
-            // Apply auto-filter per column on header row (row 3)
             worksheet.Cells[3, 1, row - 1, 4].AutoFilter = true;
 
             worksheet.Column(1).Width = 10;
@@ -119,12 +123,39 @@ namespace MVCTemplate.Areas.Admin.Controllers
             worksheet.Column(4).Width = 10;
 
             var stream = new MemoryStream();
-            package.SaveAs(stream);
+            await package.SaveAsAsync(stream);
             stream.Position = 0;
 
             return File(stream,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Product.xlsx");
+        }
+
+
+        [HttpPost]
+        public IActionResult GenerateDownloadToken()
+        {
+            var token = Guid.NewGuid().ToString();
+            _memoryCache.Set(token, true, TimeSpan.FromMinutes(5)); // Cache it for 5 minutes
+            return Json(new { token });
+        }
+
+        private bool TryValidateAndConsumeToken(string token)
+        {
+            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out bool valid) || !valid)
+            {
+                return false;
+            }
+
+            // Remove the token to enforce one-time use
+            _memoryCache.Remove(token);
+            return true;
+        }
+        #endregion
+        #region CRUD
+        public IActionResult Index()
+        {
+            return View();
         }
 
         [HttpPost]
@@ -191,58 +222,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
-        private List<Product> GetProducts()
-        {
-            return _unitOfWork.Product.ToList();
-        }
-
-        /*public async Task<ActionResult> ExportToExcel()
-        {
-            var products = GetProducts();
-
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.AddWorksheet("Sheet 1");
-
-                worksheet.Cell(1, 1).Value = "ID";
-                worksheet.Cell(1, 2).Value = "Name";
-                worksheet.Cell(1, 3).Value = "Description";
-                worksheet.Cell(1, 4).Value = "Quantity";
-
-                int row = 2;
-                foreach (var item in products)
-                {
-                    worksheet.Cell(row, 1).Value = item.Id;
-                    worksheet.Cell(row, 2).Value = item.Name;
-                    worksheet.Cell(row, 3).Value = item.Description;
-                    worksheet.Cell(row, 4).Value = item.Quantity;
-                    row++;
-                }
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    workbook.SaveAs(memoryStream);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-
-                    Response.Headers.Add("Content-Disposition", "attachment; filename=ProductsExport.xlsx");
-                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-                    await memoryStream.CopyToAsync(Response.Body);
-                    return new EmptyResult();
-                }
-            }
-        }*/
-
-        [HttpPost]
-        public IActionResult GetProductsData()
-        {
-            var names = _context.Products.Select(p => p.Name).ToList();
-            var quantities = _context.Products.Select(p => p.Quantity).ToList();
-
-            return Json(new List<object> { names, quantities });
-        }
-
         [HttpPut]
         public IActionResult Update(Product obj)
         {
@@ -289,7 +268,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpDelete]
         public IActionResult Delete(int id)
         {
@@ -320,6 +298,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
+        private List<Product> GetProducts()
+        {
+            return _unitOfWork.Product.ToList();
+        }
+        #endregion
+
         #region API Calls
 
         [HttpGet]
@@ -334,6 +318,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new { data = productList });
         }
 
+        [HttpPost]
+        public IActionResult GetProductsData()
+        {
+            var names = _context.Products.Select(p => p.Name).ToList();
+            var quantities = _context.Products.Select(p => p.Quantity).ToList();
+
+            return Json(new List<object> { names, quantities });
+        }
         #endregion
     }
 }

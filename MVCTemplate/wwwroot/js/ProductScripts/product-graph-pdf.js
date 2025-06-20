@@ -1,14 +1,40 @@
 ﻿$(document).ready(() => {
     $("#ExportAllChartsBtn-product").click(async function () {
+        const btn = $(this);
+
+        if (btn.prop('disabled')) {
+            return; // prevent multiple clicks while disabled
+        }
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
         const chartTypes = ["bar", "line", "pie", "doughnut"];
         const { jsPDF } = window.jspdf;
 
         try {
+            // ✅ Step 1: Request a secure token
+            const tokenResponse = await $.ajax({
+                type: "POST",
+                url: "/Admin/Product/GenerateDownloadToken",
+                dataType: "json"
+            });
+
+            if (!tokenResponse.token) {
+                alert("Failed to generate security token.");
+                return;
+            }
+
+            // ✅ Step 2: Fetch chart data (secured by token if needed server-side)
             const response = await $.ajax({
                 type: "POST",
                 url: "/Admin/Product/GetProductsData",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
+                headers: {
+                    "X-Download-Token": tokenResponse.token // optional: use for validation if needed
+                }
             });
 
             const _chartLabels = response[0];
@@ -140,5 +166,11 @@
             console.error("Failed to generate charts:", error);
             alert("Something went wrong while exporting charts.");
         }
+
+        setTimeout(() => {
+            btn.prop('disabled', false);
+            btn.html(originalHtml);
+        }, 1000);
     });
 });
+// probably not needed since different back-end method but done for consistency

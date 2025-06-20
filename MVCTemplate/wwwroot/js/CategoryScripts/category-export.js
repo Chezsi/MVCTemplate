@@ -1,11 +1,47 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-category').on('click', function () {
         window.location.href = '/Admin/Category/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
 
-document.querySelector("#button-to-excel-category").addEventListener("click", async function () {
+$(document).ready(function () {
+    $('#button-to-excel-category').on('click', function () {
+        const btn = $(this);
+
+        if (btn.prop('disabled')) return;
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+        $.post('/Admin/Category/GenerateDownloadToken')
+            .done(function (response) {
+                if (response.token) {
+                    window.location.href = '/Admin/Category/ExportToExcel?token=' + encodeURIComponent(response.token);
+
+                    // Re-enable button after 1 second
+                    setTimeout(() => {
+                        btn.prop('disabled', false);
+                        btn.html(originalHtml);
+                    }, 1000);
+                } else {
+                    alert('Failed to get download token.');
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }
+            })
+            .fail(function () {
+                alert('Error generating download token.');
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            });
+    });
+});
+ // ^ uses controller (updated)
+
+
+/*document.querySelector("#button-to-excel-category").addEventListener("click", async function () {
     var table = $('#Categorys').DataTable();
     var searchValue = table.search();
     var dataToExport;
@@ -75,4 +111,4 @@ document.querySelector("#button-to-excel-category").addEventListener("click", as
 
     XLSX.utils.book_append_sheet(wb, ws, "Categories");
     XLSX.writeFile(wb, "Category.xlsx");
-});
+});*/ // uses JS (button commented out)

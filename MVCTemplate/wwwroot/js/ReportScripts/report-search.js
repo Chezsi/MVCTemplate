@@ -16,7 +16,7 @@
         }
     }
 
-    // External inputs filter from js code columns
+    // Input field filters
     $('#titleSearch').on('keyup change', function () {
         $('#reportTable').DataTable().column(0).search(this.value).draw();
         toggleExportButtons();
@@ -27,49 +27,59 @@
         toggleExportButtons();
     });
 
-    // Export filtered PDF button event handler
-    $('#button-pdfFiltered-report').on('click', function () {
+    // Shared export logic for filtered buttons
+    function exportFilteredReport(btnSelector, exportUrlBase) {
+        const btn = $(btnSelector);
+        if (btn.prop('disabled')) return;
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html(`<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...`);
+
         var table = $('#reportTable').DataTable();
         var titleFilter = table.column(0).search() || '';
         var descriptionFilter = table.column(2).search() || '';
 
-        var url = '/Admin/Report/ExportFilteredToPdf';
         var queryParams = [];
+        if (titleFilter) queryParams.push('titleFilter=' + encodeURIComponent(titleFilter));
+        if (descriptionFilter) queryParams.push('descriptionFilter=' + encodeURIComponent(descriptionFilter));
 
-        if (titleFilter) {
-            queryParams.push('titleFilter=' + encodeURIComponent(titleFilter));
-        }
-        if (descriptionFilter) {
-            queryParams.push('descriptionFilter=' + encodeURIComponent(descriptionFilter));
-        }
+        // Step 1: Request download token
+        fetch('/Admin/Report/GenerateDownloadToken', {
+            method: 'POST'
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Token request failed");
+                return response.json();
+            })
+            .then(data => {
+                if (!data.token) throw new Error("No token received");
 
-        if (queryParams.length > 0) {
-            url += '?' + queryParams.join('&');
-        }
+                // Step 2: Append token and query params to URL
+                queryParams.push('token=' + encodeURIComponent(data.token));
+                const fullUrl = exportUrlBase + '?' + queryParams.join('&');
 
-        window.location.href = url; /* window.open(url, '_blank'); < opens a new tab*/
+                // Step 3: Trigger download
+                window.location.href = fullUrl;
+            })
+            .catch(error => {
+                console.error('Export failed:', error);
+                alert('Error generating download token or exporting report.');
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }, 1000);
+            });
+    }
+
+    // Event bindings with token logic
+    $('#button-pdfFiltered-report').on('click', function () {
+        exportFilteredReport('#button-pdfFiltered-report', '/Admin/Report/ExportFilteredToPdf');
     });
 
-    // Export filtered Excel button event handler
     $('#button-excelFiltered-report').on('click', function () {
-        var table = $('#reportTable').DataTable();
-        var titleFilter = table.column(0).search() || '';
-        var descriptionFilter = table.column(2).search() || '';
-
-        var url = '/Admin/Report/ExportFilteredToExcel';
-        var queryParams = [];
-
-        if (titleFilter) {
-            queryParams.push('titleFilter=' + encodeURIComponent(titleFilter));
-        }
-        if (descriptionFilter) {
-            queryParams.push('descriptionFilter=' + encodeURIComponent(descriptionFilter));
-        }
-
-        if (queryParams.length > 0) {
-            url += '?' + queryParams.join('&');
-        }
-
-        window.location.href = url;  /*window.open(url, '_blank'); opens a new tab*/
+        exportFilteredReport('#button-excelFiltered-report', '/Admin/Report/ExportFilteredToExcel');
     });
 });

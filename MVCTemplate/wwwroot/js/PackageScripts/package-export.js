@@ -1,4 +1,4 @@
-document.querySelector("#button-excel-package").addEventListener("click", async function () {
+﻿/*document.querySelector("#button-excel-package").addEventListener("click", async function () {
     var table = $('#Packages').DataTable();
     var searchValue = table.search();
     var dataToExport;
@@ -74,4 +74,43 @@ document.querySelector("#button-excel-package").addEventListener("click", async 
     a.click();
 
     URL.revokeObjectURL(url);
+});*/ // uses js (button commented out)
+
+document.querySelector("#button-to-excel-package").addEventListener("click", function () {
+    const btn = this;
+
+    if (btn.disabled) return;
+
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...`;
+
+    // Step 1: Request token
+    fetch('/Admin/Package/GenerateDownloadToken', {
+        method: 'POST',
+        credentials: 'same-origin' 
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                // Step 2: Redirect to download URL with token
+                const url = "/Admin/Package/ExportToExcel?token=" + encodeURIComponent(data.token);
+                window.location.href = url;
+            } else {
+                alert('Failed to get download token.');
+            }
+        })
+        .catch(() => {
+            alert('Error generating download token.');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }, 1000);
+        });
 });
+
+// for the button using a cs
+
+

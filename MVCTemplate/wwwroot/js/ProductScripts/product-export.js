@@ -1,11 +1,47 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-product').on('click', function () {
         window.location.href = '/Admin/Product/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
 
-document.querySelector("#button-to-excel-product").addEventListener("click", async function () {
+$(document).ready(function () {
+    $('#button-to-excel-product').on('click', function () {
+        const btn = $(this);
+        if (btn.prop('disabled')) return false;
+
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+        $.post('/Admin/Product/GenerateDownloadToken')
+            .done(function (response) {
+                if (response.token) {
+                    window.location.href = '/Admin/Product/ExportToExcel?token=' + encodeURIComponent(response.token);
+
+                    // If redirect fails, re-enable button after 1 seconds
+                    setTimeout(() => {
+                        btn.prop('disabled', false);
+                        btn.html(originalHtml);
+                    }, 1000);
+                } else {
+                    alert('Failed to get download token.');
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }
+            })
+            .fail(function () {
+                alert('Error generating download token.');
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            });
+    });
+});
+
+ // ^ uses controller (updated)
+
+
+/*document.querySelector("#button-to-excel-product").addEventListener("click", async function () {
     var table = $('#Products').DataTable();
     var searchValue = table.search();
     var dataToExport;
@@ -95,4 +131,4 @@ document.querySelector("#button-to-excel-product").addEventListener("click", asy
 
     XLSX.utils.book_append_sheet(wb, ws, "Products");
     XLSX.writeFile(wb, "Product.xlsx");
-});
+});*/ // ^ uses js (button commented out)

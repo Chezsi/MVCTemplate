@@ -83,10 +83,20 @@ namespace MVCTemplate.DataAccess.Repository
             throw new NotImplementedException();
         }
 
-        public void Update(Person person)
+        public void Update(Person updatedPerson)
         {
-            _db.Persons.Update(person);
+            var existing = _db.Persons.FirstOrDefault(p => p.Id == updatedPerson.Id);
+            if (existing == null) return;
+
+            // Manually update mutable fields only
+            existing.Name = updatedPerson.Name;
+            existing.Position = updatedPerson.Position;
+            existing.CategoryId = updatedPerson.CategoryId;
+            existing.UpdatedAt = DateTime.Now;
+
+            _db.SaveChanges();
         }
+
 
         IEnumerable<Person> IRepository<Person>.GetAll(string? includeProperties)
         {

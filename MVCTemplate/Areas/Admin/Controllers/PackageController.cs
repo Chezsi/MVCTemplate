@@ -16,6 +16,7 @@ using System.Data;
 using System.IO;
 using ClosedXML.Excel;
 using OfficeOpenXml.Style;
+using Microsoft.Extensions.Caching.Memory;
 //using System.IO.Packaging;
 
 namespace MVCTemplate.Areas.Admin.Controllers
@@ -27,6 +28,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
     {
         db dbop = new db();
         private readonly ApplicationDbContext _context;
+        private IUnitOfWork _unitOfWork;
+        private readonly IMemoryCache _memoryCache;
+
+        public PackageController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
+        {
+            _unitOfWork = unitOfWork;
+            _context = context;
+            _memoryCache = memoryCache;
+        }
 
         public IActionResult ShowPackagesData()
         {
@@ -80,110 +90,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new List<object> { labels, counts });
         }
 
-        [HttpPost]
-        public IActionResult ExportFilteredToExcel([FromBody] List<Package> filteredPackages)
-        {
-            ExcelPackage.License.SetNonCommercialPersonal("My Name");
-
-            using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add("Filtered Packages");
-
-            // Colors
-            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
-            var whiteFont = System.Drawing.Color.White;
-            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
-            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
-
-            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-
-            // Row 1: Title
-            worksheet.Cells[1, 1].Value = "Filtered Package Data";
-            worksheet.Cells[1, 1, 1, 5].Merge = true;
-            worksheet.Cells[1, 1].Style.Font.Size = 16;
-            worksheet.Cells[1, 1].Style.Font.Bold = true;
-            worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-            worksheet.Cells[1, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
-
-            // Row 2: Generated At
-            var now = DateTime.Now;
-            string generatedAt = $"Generated at: {now:MMMM-dd-yyyy hh:mm tt}";
-            worksheet.Cells[2, 1].Value = generatedAt;
-            worksheet.Cells[2, 1, 2, 5].Merge = true;
-            worksheet.Cells[2, 1].Style.Font.Italic = true;
-            worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-            worksheet.Cells[2, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
-
-            // Style for Title and Timestamp rows
-            worksheet.Cells["A1:E2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
-            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
-            worksheet.Cells["A1:E3"].Style.Border.Top.Style = borderStyle;
-            worksheet.Cells["A1:E3"].Style.Border.Bottom.Style = borderStyle;
-            worksheet.Cells["A1:E3"].Style.Border.Left.Style = borderStyle;
-            worksheet.Cells["A1:E3"].Style.Border.Right.Style = borderStyle;
-
-            // Row 3: Header
-            string[] headers = new[] { "Name", "Description", "Priority", "Created At", "Updated At" };
-
-            for (int i = 0; i < headers.Length; i++)
-            {
-                var colIndex = i + 1;
-                var cell = worksheet.Cells[3, colIndex];
-                cell.Value = headers[i];
-                cell.Style.Font.Bold = true;
-                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-
-                // Match the header color to the column data color
-                var fillColor = (colIndex % 2 == 0) ? lightGreen : darkGreen;
-                cell.Style.Fill.BackgroundColor.SetColor(fillColor);
-
-                cell.Style.Border.Top.Style = borderStyle;
-                cell.Style.Border.Bottom.Style = borderStyle;
-                cell.Style.Border.Left.Style = borderStyle;
-                cell.Style.Border.Right.Style = borderStyle;
-            }
-
-            // Row 4+: Data
-            for (int i = 0; i < filteredPackages.Count; i++)
-            {
-                var p = filteredPackages[i];
-                int row = i + 4;
-
-                worksheet.Cells[row, 1].Value = p.Name;
-                worksheet.Cells[row, 2].Value = p.Description;
-                worksheet.Cells[row, 3].Value = p.Priority;
-                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy");
-                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy");
-
-                for (int col = 1; col <= 5; col++)
-                {
-                    var cell = worksheet.Cells[row, col];
-                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
-
-                    cell.Style.Border.Top.Style = borderStyle;
-                    cell.Style.Border.Bottom.Style = borderStyle;
-                    cell.Style.Border.Left.Style = borderStyle;
-                    cell.Style.Border.Right.Style = borderStyle;
-                }
-            }
-
-            // Apply AutoFilter to header row
-            worksheet.Cells[3, 1, 3, 5].AutoFilter = true;
-
-            // Auto-fit columns
-            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-
-            // Return Excel file
-            var stream = new MemoryStream();
-            package.SaveAs(stream);
-            stream.Position = 0;
-
-            return File(stream,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "FilteredPackages.xlsx");
-        }
-
         public IActionResult PDF() 
         {
             var document = new Document
@@ -209,19 +115,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return File(streamOut.ToArray(), "application/pdf", "Packages.pdf");
             }
         } //used db.cs and query from server explorer
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        private IUnitOfWork _unitOfWork;
-
-        public PackageController(IUnitOfWork unitOfWork, ApplicationDbContext context)
-        {
-            _unitOfWork = unitOfWork;
-            _context = context; //avoid double constructors
-        }
 
         public IActionResult Import()
         {
@@ -297,7 +190,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred.", detail = ex.Message });
             }
         }
+        #region CRUD
 
+        public IActionResult Index()
+        {
+            return View();
+        }
         public IActionResult Create(Package package)
         {
             try
@@ -412,8 +310,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
-
         [HttpDelete]
 
         public IActionResult Delete(int id)
@@ -444,10 +340,125 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        #endregion
+        #region EXPORT
+        [HttpPost]
+        public IActionResult ExportFilteredToExcel([FromBody] List<Package> filteredPackages, [FromQuery] string token)
+        {
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Filtered Packages");
+
+            // Colors
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            // Row 1: Title
+            worksheet.Cells[1, 1].Value = "Filtered Package Data";
+            worksheet.Cells[1, 1, 1, 5].Merge = true;
+            worksheet.Cells[1, 1].Style.Font.Size = 16;
+            worksheet.Cells[1, 1].Style.Font.Bold = true;
+            worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[1, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            // Row 2: Generated At
+            var now = DateTime.Now;
+            string generatedAt = $"Generated at: {now:MMMM-dd-yyyy hh:mm tt}";
+            worksheet.Cells[2, 1].Value = generatedAt;
+            worksheet.Cells[2, 1, 2, 5].Merge = true;
+            worksheet.Cells[2, 1].Style.Font.Italic = true;
+            worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[2, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            // Style for Title and Timestamp rows
+            worksheet.Cells["A1:E2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:E3"].Style.Border.Top.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Bottom.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Left.Style = borderStyle;
+            worksheet.Cells["A1:E3"].Style.Border.Right.Style = borderStyle;
+
+            // Row 3: Header
+            string[] headers = new[] { "Name", "Description", "Priority", "Created At", "Updated At" };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var colIndex = i + 1;
+                var cell = worksheet.Cells[3, colIndex];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+
+                // Match the header color to the column data color
+                var fillColor = (colIndex % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+
+                cell.Style.Border.Top.Style = borderStyle;
+                cell.Style.Border.Bottom.Style = borderStyle;
+                cell.Style.Border.Left.Style = borderStyle;
+                cell.Style.Border.Right.Style = borderStyle;
+            }
+
+            // Row 4+: Data
+            for (int i = 0; i < filteredPackages.Count; i++)
+            {
+                var p = filteredPackages[i];
+                int row = i + 4;
+
+                worksheet.Cells[row, 1].Value = p.Name;
+                worksheet.Cells[row, 2].Value = p.Description;
+                worksheet.Cells[row, 3].Value = p.Priority;
+                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("MMMM-dd-yyyy");
+                worksheet.Cells[row, 5].Value = p.UpdatedAt.ToString("MMMM-dd-yyyy");
+
+                for (int col = 1; col <= 5; col++)
+                {
+                    var cell = worksheet.Cells[row, col];
+                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+
+                    cell.Style.Border.Top.Style = borderStyle;
+                    cell.Style.Border.Bottom.Style = borderStyle;
+                    cell.Style.Border.Left.Style = borderStyle;
+                    cell.Style.Border.Right.Style = borderStyle;
+                }
+            }
+
+            // Apply AutoFilter to header row
+            worksheet.Cells[3, 1, 3, 5].AutoFilter = true;
+
+            // Auto-fit columns
+            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+            // Return Excel file
+            var stream = new MemoryStream();
+            package.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "FilteredPackages.xlsx");
+        }
 
         [HttpGet]
-        public IActionResult ExportToExcel()
+        public IActionResult ExportToExcel(string token)
         {
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
             var packages = _unitOfWork.Package.GetAll().ToList();
@@ -548,6 +559,26 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "Packages.xlsx");
         }
 
+        [HttpPost]
+        public IActionResult GenerateDownloadToken()
+        {
+            var token = Guid.NewGuid().ToString();
+            _memoryCache.Set(token, true, TimeSpan.FromMinutes(5));
+            return Json(new { token });
+        }
+
+        private bool TryValidateAndConsumeToken(string token)
+        {
+            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out bool valid) || !valid)
+            {
+                return false;
+            }
+
+            // Remove the token to enforce one-time use
+            _memoryCache.Remove(token);
+            return true;
+        }
+        #endregion
         #region API Calls
         [HttpGet]
 

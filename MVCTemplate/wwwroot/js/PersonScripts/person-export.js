@@ -1,11 +1,47 @@
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#button-to-excel-person').on('click', function () {
         window.location.href = '/Admin/Person/ExportToExcel';
     });
-}); // ^ uses controller
+});*/ // ^ uses controller no button disabling
 
-document.querySelector("#button-to-excel-person").addEventListener("click", async function () {
+$(document).ready(function () {
+    const btn = $('#button-to-excel-person');
+
+    btn.on('click', function () {
+        if (btn.prop('disabled')) return;
+
+        const originalHtml = btn.html();
+        btn.prop('disabled', true);
+        btn.html('<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...');
+
+        // Step 1: Request token
+        $.ajax({
+            url: '/Admin/Person/GenerateDownloadToken',
+            method: 'POST'
+        })
+            .done(function (response) {
+                if (response.token) {
+                    // Step 2: Navigate to export with token
+                    const tokenUrl = '/Admin/Person/ExportToExcel?token=' + encodeURIComponent(response.token);
+                    window.location.href = tokenUrl;
+                } else {
+                    alert('Failed to get download token.');
+                }
+            })
+            .fail(function () {
+                alert('Error generating download token.');
+            })
+            .always(function () {
+                setTimeout(() => {
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }, 1000);
+            });
+    });
+}); // uses controller (updated)
+
+/*document.querySelector("#button-to-excel-person").addEventListener("click", async function () {
     var table = $('#Persons').DataTable();
     var searchValue = table.search();
     var dataToExport;
@@ -85,10 +121,46 @@ document.querySelector("#button-to-excel-person").addEventListener("click", asyn
 
     XLSX.utils.book_append_sheet(wb, ws, "Persons");
     XLSX.writeFile(wb, "Persons.xlsx");
-}); // ^ purely JS
+});*/ // ^ uses JS (button commented out)
 
+document.querySelector("#exportCurrentContract").addEventListener("submit", function (e) {
+    e.preventDefault();  // prevent form submission
 
-document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
+    const btn = document.querySelector("#exportContractsBtn");
+    if (btn.disabled) return;
+
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...';
+
+    // Step 1: Request download token
+    fetch('/Admin/Person/GenerateDownloadToken', {
+        method: 'POST'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                // Step 2: Redirect to download with token
+                const formAction = e.target.action;
+                const urlWithToken = formAction + "?token=" + encodeURIComponent(data.token);
+                window.location.href = urlWithToken;
+            } else {
+                alert('Failed to get download token.');
+            }
+        })
+        .catch(error => {
+            console.error('Token error:', error);
+            alert('Error generating download token.');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }, 1000);
+        });
+}); // uses controller (updated)
+
+/*document.querySelector("#button-export-current-contracts").addEventListener("click", async function () {
     try {
         const response = await fetch('/Admin/Person/ExportPersonsWithCurrentContracts');
         const data = await response.json();
@@ -158,6 +230,6 @@ document.querySelector("#button-export-current-contracts").addEventListener("cli
         console.error("Export error:", err);
         alert("Failed to export current contracts.");
     }
-}); // ^ purely JS
+});*/ // uses js (button commented out)
 
 

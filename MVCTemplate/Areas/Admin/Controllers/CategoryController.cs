@@ -11,6 +11,7 @@ using OfficeOpenXml;
 using System.Diagnostics;
 using MVCtemplate.DataAccess.Data;
 using MVCTemplate.DataAccess.Repository;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -18,7 +19,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
     [Area("Admin")]
     public class CategoryController : Controller
     {
-
+        private readonly IMemoryCache _memoryCache;
         public IActionResult Index()
         {
             return View();
@@ -26,14 +27,32 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         private IUnitOfWork _unitOfWork;
 
-        public CategoryController(IUnitOfWork unitOfWork)
+        public CategoryController(IUnitOfWork unitOfWork, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
+            _memoryCache = memoryCache;
+        }
+
+        [HttpPost]
+        public IActionResult GenerateDownloadToken()
+        {
+            var token = Guid.NewGuid().ToString();
+            _memoryCache.Set(token, true, TimeSpan.FromMinutes(5));
+            return Json(new { token });
         }
 
         [HttpGet]
-        public async Task<IActionResult> ExportToExcel()
+        public async Task<IActionResult> ExportToExcel(string token)
         {
+            // Validate token existence and validity
+            if (string.IsNullOrEmpty(token) || !_memoryCache.TryGetValue(token, out _))
+            {
+                return Unauthorized();
+            }
+
+            // Remove token after use for one-time access
+            _memoryCache.Remove(token);
+
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
             var dataToExport = _unitOfWork.Category.GetAll().ToList();
@@ -116,10 +135,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
             // Apply autofilter on the header row (Row 3)
             worksheet.Cells[3, 1, row - 1, 3].AutoFilter = true;
 
-            // Merge title and timestamp rows across columns A:C
-            worksheet.Cells[1, 1, 1, 3].Merge = true;
-            worksheet.Cells[2, 1, 2, 3].Merge = true;
-
             // Auto fit columns, with dynamic width for Name and Code columns
             worksheet.Column(1).Width = 10;
 
@@ -140,13 +155,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             // Save to stream and return Excel file
             var stream = new MemoryStream();
-            package.SaveAs(stream);
+            await package.SaveAsAsync(stream);
             stream.Position = 0;
 
             return File(stream,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Category.xlsx");
         }
+
 
         public IActionResult Create(Category category)
         {
