@@ -297,22 +297,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        #endregion
-
 
         private List<Product> GetProducts()
         {
             return _unitOfWork.Product.ToList();
         }
-
-        [HttpPost]
-        public IActionResult GetProductsData()
-        {
-            var names = _context.Products.Select(p => p.Name).ToList();
-            var quantities = _context.Products.Select(p => p.Quantity).ToList();
-
-            return Json(new List<object> { names, quantities });
-        }
+        #endregion
 
         #region API Calls
 
@@ -328,6 +318,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new { data = productList });
         }
 
+        [HttpPost]
+        public IActionResult GetProductsData()
+        {
+            var names = _context.Products.Select(p => p.Name).ToList();
+            var quantities = _context.Products.Select(p => p.Quantity).ToList();
+
+            return Json(new List<object> { names, quantities });
+        }
         #endregion
     }
 }
