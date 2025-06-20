@@ -1,4 +1,5 @@
-document.querySelector("#button-to-excel-contract").addEventListener("click", async function () {
+
+/*document.querySelector("#button-to-excel-contract").addEventListener("click", async function () {
     const btn = this;
     if (btn.disabled) return; // prevent multiple clicks
 
@@ -108,4 +109,46 @@ document.querySelector("#button-to-excel-contract").addEventListener("click", as
             btn.innerHTML = originalText;
         }, remaining > 0 ? remaining : 0);
     }
-});
+}); uses JS*/
+
+document.querySelector("#button-to-excel-contract").addEventListener("click", async function () {
+    const btn = this;
+    if (btn.disabled) return; // prevent multiple clicks
+
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Exporting...';
+
+    try {
+        // 1. Get the download token
+        const tokenResponse = await fetch('/Admin/Contracts/GenerateDownloadToken', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!tokenResponse.ok) throw new Error('Failed to get download token');
+
+        const { token } = await tokenResponse.json();
+
+        // 2. Trigger file download with the token in query string
+        const downloadUrl = `/Admin/Contracts/ExportToExcel?token=${encodeURIComponent(token)}`;
+
+        // Create and click a hidden link to start download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'ContractsExport.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+    } catch (error) {
+        console.error(error);
+        alert('Failed to export Excel file.');
+    } finally {
+        // Ensure button disabled for at least 1 second
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }, 1000);
+    }
+}); // uses CS
