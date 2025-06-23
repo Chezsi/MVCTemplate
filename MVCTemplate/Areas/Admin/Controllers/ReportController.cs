@@ -28,6 +28,10 @@ using NPOI.OpenXml4Net.OPC;
 using NPOI.XSSF.UserModel.Helpers;
 using System.Drawing.Imaging; // for import excel
 using Microsoft.Extensions.Caching.Memory;
+using ClosedXML.Excel;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc; // for excel no license needed
 
 namespace MVCTemplate.Controllers
 {
@@ -679,6 +683,116 @@ namespace MVCTemplate.Controllers
             }
         }
 
+        [HttpGet] // for testing only
+        public async Task<IActionResult> ExcelSample()
+        {
+            var reports = await _context.Reports.ToListAsync();
+
+            int maxDescriptionParts = reports
+                .Select(r => r.Description?.Split('-').Length ?? 1)
+                .DefaultIfEmpty(1)
+                .Max();
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Reports");
+
+            int totalCols = 2 + maxDescriptionParts; // Title + Desc Count + description parts
+
+            // Row 1 - Title
+            worksheet.Cell("A1").Value = "Reports Data";
+            worksheet.Range(1, 1, 1, totalCols).Merge();
+            worksheet.Cell("A1").Style.Font.FontSize = 18;
+            worksheet.Cell("A1").Style.Font.Bold = true;
+            worksheet.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Row(1).Height = 25;
+
+            // Row 2 - Timestamp
+            worksheet.Range(2, 1, 2, totalCols).Merge();
+            worksheet.Cell("A2").Value = $"Generated on: {DateTime.Now:MM-dd-yyyy hh:mm tt}";
+            worksheet.Cell("A2").Style.Font.FontSize = 12;
+            worksheet.Cell("A2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Row(2).Height = 20;
+
+            // Row 4 - Headers
+            worksheet.Cell(4, 1).Value = "Title";
+            worksheet.Cell(4, 2).Value = "Desc Count";
+
+            for (int i = 0; i < maxDescriptionParts; i++)
+            {
+                worksheet.Cell(4, 3 + i).Value = $"Description {i + 1}";
+            }
+
+            // Style headers
+            var blueBackground = XLColor.FromArgb(0, 51, 102);
+            var headerRange = worksheet.Range(1, 1, 4, totalCols);
+            headerRange.Style.Fill.BackgroundColor = blueBackground;
+            headerRange.Style.Font.FontColor = XLColor.White;
+            headerRange.Style.Font.Bold = true;
+            worksheet.Row(4).Height = 22;
+            worksheet.Range(4, 1, 4, totalCols).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            // Column widths
+            worksheet.Column(1).Width = 30;
+            worksheet.Column(2).Width = 15;
+            for (int i = 0; i < maxDescriptionParts; i++)
+            {
+                worksheet.Column(3 + i).Width = 25;
+            }
+
+            // Colors for rows
+            var lightGreen = XLColor.FromArgb(198, 239, 206);
+            var darkGreen = XLColor.FromArgb(155, 187, 89);
+
+            int row = 5;
+            foreach (var report in reports)
+            {
+                worksheet.Cell(row, 1).Value = report.Title;
+
+                var descriptionParts = (report.Description ?? "").Split('-');
+                worksheet.Cell(row, 2).Value = descriptionParts.Length;
+
+                for (int i = 0; i < maxDescriptionParts; i++)
+                {
+                    worksheet.Cell(row, 3 + i).Value = i < descriptionParts.Length ? descriptionParts[i].Trim().ToUpper() : "";
+                }
+
+                worksheet.Row(row).Height = 18;
+
+                // Alternate row colors
+                var fillColor = (row % 2 == 0) ? lightGreen : darkGreen;
+                worksheet.Range(row, 1, row, totalCols).Style.Fill.BackgroundColor = fillColor;
+
+                row++;
+            }
+
+            // Add borders
+            var dataRange = worksheet.Range(4, 1, row - 1, totalCols);
+
+            dataRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+            dataRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            dataRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+            dataRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+
+            var headerBorderRange = worksheet.Range(1, 1, 4, totalCols);
+            headerBorderRange.Style.Border.TopBorder = XLBorderStyleValues.Medium;
+            headerBorderRange.Style.Border.BottomBorder = XLBorderStyleValues.Medium;
+            headerBorderRange.Style.Border.LeftBorder = XLBorderStyleValues.Medium;
+            headerBorderRange.Style.Border.RightBorder = XLBorderStyleValues.Medium;
+
+            // AutoFilter
+            worksheet.Range(4, 1, row - 1, totalCols).SetAutoFilter();
+
+            // No protection or locking
+
+            // Save to MemoryStream
+            var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+
+            string fileName = "Reports.xlsx";
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }   // for testing only
+
         [HttpGet]
         public async Task<IActionResult> ExportFilteredToExcel(string? titleFilter, string? descriptionFilter, string token)
         {
@@ -1207,12 +1321,12 @@ namespace MVCTemplate.Controllers
             }
 
             // 3. Title uniqueness
-            var duplicateTitle = await _context.Reports.FirstOrDefaultAsync(r => r.Title == model.Title);
-            if (duplicateTitle != null)
-            {
-                ModelState.AddModelError("Title", "A report with this title already exists.");
-                hasRequiredFieldErrors = true;
-            }
+            //var duplicateTitle = await _context.Reports.FirstOrDefaultAsync(r => r.Title == model.Title);
+            //if (duplicateTitle != null)
+            //{
+            //    ModelState.AddModelError("Title", "A report with this title already exists.");
+            //    hasRequiredFieldErrors = true;
+            //}
 
             if (hasRequiredFieldErrors)
             {
@@ -1275,20 +1389,20 @@ namespace MVCTemplate.Controllers
             }
 
             // Check for Title uniqueness excluding current report
-            var duplicateTitle = await _context.Reports
-                .Where(r => r.Id != model.Id && r.Title == model.Title)
-                .FirstOrDefaultAsync();
+            //var duplicateTitle = await _context.Reports
+            //    .Where(r => r.Id != model.Id && r.Title == model.Title)
+            //    .FirstOrDefaultAsync();
 
-            if (duplicateTitle != null)
-            {
-                ModelState.AddModelError("Title", "A report with this title already exists.");
+            //if (duplicateTitle != null)
+            //{
+            //    ModelState.AddModelError("Title", "A report with this title already exists.");
 
-                var validationErrors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+            //    var validationErrors = ModelState.ToDictionary(
+            //        kvp => kvp.Key,
+            //        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                return BadRequest(new { success = false, message = "Invalid Update.", errors = validationErrors });
-            }
+            //    return BadRequest(new { success = false, message = "Invalid Update.", errors = validationErrors });
+            //}
 
             if (ModelState.IsValid)
             {
@@ -1388,4 +1502,6 @@ namespace MVCTemplate.Controllers
         }
         #endregion
     }
+
+
 }
