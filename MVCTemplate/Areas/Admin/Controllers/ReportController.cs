@@ -188,7 +188,7 @@ namespace MVCTemplate.Controllers
                     .AlignCenter();
         }
 
-        /*[HttpGet]
+        /*[HttpGet]     NO DELIMETER
         public async Task<IActionResult> ExportToExcel(string token)
         {
 
@@ -340,9 +340,9 @@ namespace MVCTemplate.Controllers
                 string fileName = $"Reports.xlsx";
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
-        }*/
+        }   NO DELIMETER*/
 
-        [HttpGet]
+        /* [HttpGet]        HAS DELIMTER, NO DESCRIPTION COUNT
         public async Task<IActionResult> ExportToExcel(string token)
         {
             if (!TryValidateAndConsumeToken(token))
@@ -504,8 +504,180 @@ namespace MVCTemplate.Controllers
                 string fileName = "Reports.xlsx";
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
-        }
+        }       HAS DELIMTER, NO DESCRIPTION COUNT*/
 
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel(string token)
+        {
+            if (!TryValidateAndConsumeToken(token))
+                return Unauthorized("Invalid or expired download token.");
+
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
+
+            var reports = await _context.Reports.ToListAsync();
+            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/reports");
+
+            int maxDescriptionParts = reports
+                .Select(r => r.Description?.Split('-').Length ?? 1)
+                .DefaultIfEmpty(1)
+                .Max();
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Reports");
+
+                // Row 1 - Title
+                worksheet.Cells["A1"].Value = "Reports Data";
+                worksheet.Cells[1, 1, 1, 3 + maxDescriptionParts].Merge = true;
+                worksheet.Cells["A1"].Style.Font.Size = 18;
+                worksheet.Cells["A1"].Style.Font.Bold = true;
+                worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                worksheet.Row(1).Height = 25;
+
+                // Row 2 - Timestamp
+                worksheet.Cells[2, 1, 2, 3 + maxDescriptionParts].Merge = true;
+                worksheet.Cells["A2"].Value = $"Generated on: {DateTime.Now:MM-dd-yyyy hh:mm tt}";
+                worksheet.Cells["A2"].Style.Font.Size = 12;
+                worksheet.Cells["A2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                worksheet.Row(2).Height = 20;
+
+                // Row 4 - Headers
+                worksheet.Cells[4, 1].Value = "Title";
+                worksheet.Cells[4, 2].Value = "Desc Count";
+
+                for (int i = 0; i < maxDescriptionParts; i++)
+                {
+                    worksheet.Cells[4, 3 + i].Value = $"Description {i + 1}";
+                }
+
+                int imageColIndex = 3 + maxDescriptionParts;
+                worksheet.Cells[4, imageColIndex].Value = "Image";
+
+                int totalCols = imageColIndex;
+
+                // Style headers
+                var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+                var headerRange = worksheet.Cells[1, 1, 4, totalCols];
+                headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                headerRange.Style.Fill.BackgroundColor.SetColor(blueBackground);
+                headerRange.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                headerRange.Style.Font.Bold = true;
+                worksheet.Row(4).Height = 22;
+                worksheet.Cells[4, 1, 4, totalCols].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+
+                // Column widths
+                worksheet.Column(1).Width = 30;
+                worksheet.Column(2).Width = 15;
+                for (int i = 0; i < maxDescriptionParts; i++)
+                {
+                    worksheet.Column(3 + i).Width = 25;
+                }
+                worksheet.Column(imageColIndex).Width = 15;
+
+                int row = 5;
+                var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+                var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+
+                foreach (var report in reports)
+                {
+                    worksheet.Cells[row, 1].Value = report.Title;
+
+                    var descriptionParts = (report.Description ?? "").Split('-');
+                    worksheet.Cells[row, 2].Value = descriptionParts.Length;
+
+                    for (int i = 0; i < maxDescriptionParts; i++)
+                    {
+                        worksheet.Cells[row, 3 + i].Value =
+                            i < descriptionParts.Length ? descriptionParts[i].Trim().ToUpper() : "";
+                    }
+
+                    var fillColor = (row % 2 == 0) ? lightGreen : darkGreen;
+                    worksheet.Cells[row, 1, row, totalCols].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1, row, totalCols].Style.Fill.BackgroundColor.SetColor(fillColor);
+
+                    // Insert image if exists
+                    if (!string.IsNullOrEmpty(report.ImageName))
+                    {
+                        var imagePath = Path.Combine(filePath, report.ImageName);
+                        if (System.IO.File.Exists(imagePath))
+                        {
+                            using (var imageStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                            using (var image = System.Drawing.Image.FromStream(imageStream))
+                            {
+                                int targetWidth = 80;
+                                int targetHeight = 80;
+                                double ratio = Math.Min((double)targetWidth / image.Width, (double)targetHeight / image.Height);
+                                int finalWidth = (int)(image.Width * ratio);
+                                int finalHeight = (int)(image.Height * ratio);
+
+                                worksheet.Column(imageColIndex).Width = targetWidth / 7.5;
+                                worksheet.Row(row).Height = finalHeight * 0.75;
+
+                                imageStream.Position = 0;
+                                var excelImage = worksheet.Drawings.AddPicture($"img_{row}", imageStream);
+                                excelImage.SetSize(finalWidth, finalHeight);
+                                excelImage.SetPosition(row - 1, 0, imageColIndex - 1, 0);
+                                excelImage.EditAs = eEditAs.OneCell;
+                                excelImage.Locked = true;
+                                excelImage.LockAspectRatio = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        worksheet.Row(row).Height = 18;
+                    }
+
+                    row++;
+                }
+
+                // Add borders
+                using (var range = worksheet.Cells[4, 1, row - 1, totalCols])
+                {
+                    var thin = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    var thick = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+
+                    range.Style.Border.Left.Style = thin;
+                    range.Style.Border.Right.Style = thin;
+                    range.Style.Border.Top.Style = thin;
+                    range.Style.Border.Bottom.Style = thin;
+
+                    worksheet.Cells[1, 1, 4, totalCols].Style.Border.Top.Style = thick;
+                    worksheet.Cells[1, 1, 4, totalCols].Style.Border.Bottom.Style = thick;
+                    worksheet.Cells[1, 1, 4, totalCols].Style.Border.Left.Style = thick;
+                    worksheet.Cells[1, 1, 4, totalCols].Style.Border.Right.Style = thick;
+
+                    worksheet.Cells[4, 1, row - 1, totalCols].Style.Border.Top.Style = thick;
+                    worksheet.Cells[4, 1, row - 1, totalCols].Style.Border.Bottom.Style = thick;
+                    worksheet.Cells[4, 1, row - 1, totalCols].Style.Border.Left.Style = thick;
+                    worksheet.Cells[4, 1, row - 1, totalCols].Style.Border.Right.Style = thick;
+                }
+
+                // AutoFilter
+                worksheet.Cells[4, 1, row - 1, totalCols].AutoFilter = true;
+
+                // Protection
+                worksheet.Cells.Style.Locked = true;
+                worksheet.Protection.SetPassword("YourPassword");
+                worksheet.Protection.AllowSelectLockedCells = true;
+                worksheet.Protection.AllowSelectUnlockedCells = true;
+                worksheet.Protection.AllowAutoFilter = true;
+                worksheet.Protection.AllowEditObject = false;
+                worksheet.Protection.AllowEditScenarios = false;
+                worksheet.Protection.IsProtected = true;
+
+                package.Workbook.Protection.SetPassword("YourPassword");
+                package.Workbook.Protection.LockStructure = true;
+                package.Workbook.Protection.LockWindows = true;
+
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+
+                string fileName = "Reports.xlsx";
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> ExportFilteredToExcel(string? titleFilter, string? descriptionFilter, string token)
