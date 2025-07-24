@@ -339,6 +339,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 .Where(p => p.CategoryId == categoryId)
                 .Select(p => new
                 {
+                    p.Id,
                     p.Name,
                     p.Position,
                     CreatedAt = p.CreatedAt.ToString("MMM dd, yyyy")
@@ -347,7 +348,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(persons);
         }
-
 
         #endregion
 
