@@ -7,7 +7,24 @@ function loadDataTableCategory() {
     dataTable = $('#categoryTable').DataTable({ // ensure naming consistency
         "ajax": { url: '/Admin/Category/GetAllCategory' },
         "columns": [
-            { data: 'nameCategory', "autowidth": true },
+            {
+                data: 'nameCategory',
+                render: function (data, type, full, meta) {
+                    return `
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="text-truncate">${data}</span>
+            <button class="btn btn-sm btn-outline-info category-info-btn ms-2" 
+                data-bs-toggle="modal" 
+                data-bs-target="#infoModal" 
+                data-id="${full.idCategory}" 
+                data-name="${full.nameCategory}" 
+                data-code="${full.codeCategory}">
+                <i class="fa fa-info-circle"></i>
+            </button>
+        </div>`;
+                },
+                autowidth: true
+            },
             { data: 'codeCategory', "autowidth": true },
             {
                 data: 'idCategory',
@@ -32,6 +49,41 @@ $('#updateModal').on('show.bs.modal', function (event) {
     modal.find('.modal-body #idCategory').val(idCategory);
     modal.find('.modal-body #nameCategory').val(nameCategory);
     modal.find('.modal-body #codeCategory').val(codeCategory);
+});
+
+$('#infoModal').on('show.bs.modal', function (event) {
+    const button = $(event.relatedTarget);
+    const name = button.data('name');
+    const code = button.data('code');
+    const categoryId = button.data('id');
+
+    $('#infoName').text(name);
+    $('#infoCode').text(code);
+
+    $('#personListBody').html('<tr><td colspan="3">Loading...</td></tr>');
+
+    $.ajax({
+        url: `/Admin/Category/GetPersonsByCategory?categoryId=${categoryId}`,
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (persons) {
+            if (!persons.length) {
+                $('#personListBody').html('<tr><td colspan="3" class="text-muted text-center">No persons found.</td></tr>');
+            } else {
+                const rows = persons.map(p => `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td>${p.position || '<i class="text-muted">None</i>'}</td>
+                        <td>${p.createdAt}</td>
+                    </tr>
+                `).join('');
+                $('#personListBody').html(rows);
+            }
+        },
+        error: function () {
+            $('#personListBody').html('<tr><td colspan="3" class="text-danger">Error loading data.</td></tr>');
+        }
+    });
 });
 
 /*
