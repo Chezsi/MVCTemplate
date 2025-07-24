@@ -27,12 +27,11 @@
                 </div>
             </div>
 
-            <form method="get" asp-controller="Report" asp-action="ExcelSample">
-                @*for testing only*@
+            @*<form method="get" asp-controller="Report" asp-action="ExcelSample">
                 <button type="submit" class="btn btn-primary">
                     Excel Sample
                 </button>
-            </form>
+            </form>*@
 
             <div class="page-title-actions staggered">
                 <div class="d-inline-block dropdown">
@@ -206,6 +205,24 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Description Modal -->
+    <div class="modal fade" id="viewDescriptionModal" tabindex="-1" aria-labelledby="viewDescriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Full Description</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="viewDescriptionContent">
+                    <!-- content gets injected -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>

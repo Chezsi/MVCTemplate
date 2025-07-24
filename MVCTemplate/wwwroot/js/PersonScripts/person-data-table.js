@@ -2,21 +2,42 @@ $(document).ready(function () {
     loadDataTable();
 });
 
-
 function loadDataTable() {
-    dataTable = $('#personTable').DataTable({ // ensure naming consistency
+    dataTable = $('#personTable').DataTable({
         "ajax": { url: '/Admin/Person/GetAllPersons' },
         "columns": [
-            { data: 'name', "autowidth": true },
+            {
+                data: 'name',
+                render: function (data, type, full, meta) {
+                    return `
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-truncate">${data}</span>
+                <button class="btn btn-sm btn-outline-info name-modal-btn ms-2" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#infoModal" 
+                    data-id="${full.id}" 
+                    data-name="${data}" 
+                    data-position="${full.position}" 
+                    data-categoryid="${full.categoryId}">
+                    <i class="fa fa-info-circle"></i>
+                </button>
+            </div>`;
+                },
+                autowidth: true
+            },
             { data: 'position', "autowidth": true },
-            { data: 'categoryId', "autowidth": true }, //CHECK THE NAME IN GETALLPERSONS
+            { data: 'categoryId', "autowidth": true },
             {
                 data: 'id',
-                "render": function (data, type, full, meta) {
+                render: function (data, type, full, meta) {
                     return `<div class="w-75 btn-group" role="group">                                                                               
-                                    <button type="button" data-id="${data}" data-name="${full.name}" data-position="${full.position}" data-categoryid="${full.categoryId}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal"> <i class="lnr-pencil"></i> Edit</button>
-                                    <a onClick="Delete('/Admin/Person/Delete/${data}')" class="btn-shadow btn btn-danger mx-3"> <i class="lnr-trash"></i> Delete</a>
-                                </div>`;
+                                <button type="button" data-id="${data}" data-name="${full.name}" data-position="${full.position}" data-categoryid="${full.categoryId}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal">
+                                    <i class="lnr-pencil"></i> Edit
+                                </button>
+                                <a onClick="Delete('/Admin/Person/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
+                                    <i class="lnr-trash"></i> Delete
+                                </a>
+                            </div>`;
                 },
                 width: "25%", className: "text-center", orderable: false
             }
@@ -24,16 +45,55 @@ function loadDataTable() {
     });
 }
 
+// Update Modal
 $('#updateModal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
-    var id = button.data('id'); // must be same name with data-
+    var id = button.data('id');
     var name = button.data('name');
     var position = button.data('position');
-    var categoryId = button.data('categoryid'); // for foreign key
+    var categoryId = button.data('categoryid');
     var modal = $(this);
     modal.find('.modal-body #id').val(id);
     modal.find('.modal-body #name').val(name);
     modal.find('.modal-body #position').val(position);
     modal.find('.modal-body #CategoryId').val(categoryId).trigger('change');
-    //console.log(categoryId)// for foreign key
+});
+
+// Info Modal — CONTRACTS
+$('#infoModal').on('show.bs.modal', function (event) {
+    const button = $(event.relatedTarget);
+    const name = button.data('name');
+    const position = button.data('position');
+    const personId = button.data('id'); // use data-id passed from render
+
+    $('#personInfo').html(`
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Position:</strong> ${position}</p>
+    `);
+
+    $('#contractListBody').html('<tr><td colspan="4">Loading...</td></tr>');
+
+    $.ajax({
+        url: `/Admin/Person/GetContractsByPerson?personId=${personId}`,
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (contracts) {
+            if (contracts.length === 0) {
+                $('#contractListBody').html('<tr><td colspan="4" class="text-muted text-center">No contracts found.</td></tr>');
+            } else {
+                const rows = contracts.map(c => `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${c.description}</td>
+                        <td>${c.validity}</td>
+                        <td>${c.createdAt}</td>
+                    </tr>
+                `).join('');
+                $('#contractListBody').html(rows);
+            }
+        },
+        error: function () {
+            $('#contractListBody').html('<tr><td colspan="4" class="text-danger">Failed to load contracts.</td></tr>');
+        }
+    });
 });

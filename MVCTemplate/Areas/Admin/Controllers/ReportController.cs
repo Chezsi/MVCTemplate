@@ -32,6 +32,7 @@ using ClosedXML.Excel;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc; // for excel no license needed
+using System.Text.RegularExpressions;
 
 namespace MVCTemplate.Controllers
 {
@@ -522,7 +523,7 @@ namespace MVCTemplate.Controllers
             var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/reports");
 
             int maxDescriptionParts = reports
-                .Select(r => r.Description?.Split('-').Length ?? 1)
+                .Select(r => Regex.Split(r.Description ?? "", @"[\\|,\/\-\.]+").Length)
                 .DefaultIfEmpty(1)
                 .Max();
 
@@ -586,7 +587,7 @@ namespace MVCTemplate.Controllers
                 {
                     worksheet.Cells[row, 1].Value = report.Title;
 
-                    var descriptionParts = (report.Description ?? "").Split('-');
+                    var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+");
                     worksheet.Cells[row, 2].Value = descriptionParts.Length;
 
                     for (int i = 0; i < maxDescriptionParts; i++)

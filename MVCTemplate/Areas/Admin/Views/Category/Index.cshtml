@@ -1,4 +1,4 @@
-﻿@model Category
+﻿@model CategoryVM
 
 @{
     ViewData["Title"] = "Category";
@@ -97,14 +97,14 @@
                 <form asp-action="Create" asp-controller="Category" method="post" id="createForm">
                     <div class="modal-body">
                         <div class="form-group">
-                            <label asp-for="NameCategory" class="control-label">Category Name<span class="text-danger">*</span></label>
-                            <input asp-for="NameCategory" class="form-control" />
-                            <span asp-validation-for="NameCategory" class="text-danger"></span>
+                            <label asp-for="Category.NameCategory" class="control-label">Category Name<span class="text-danger">*</span></label>
+                            <input asp-for="Category.NameCategory" class="form-control" />
+                            <span asp-validation-for="Category.NameCategory" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="CodeCategory" class="control-label">Category Code<span class="text-danger">*</span></label>
-                            <input asp-for="CodeCategory" class="form-control" />
-                            <span asp-validation-for="CodeCategory" class="text-danger"></span>
+                            <label asp-for="Category.CodeCategory" class="control-label">Category Code<span class="text-danger">*</span></label>
+                            <input asp-for="Category.CodeCategory" class="form-control" />
+                            <span asp-validation-for="Category.CodeCategory" class="text-danger"></span>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -131,16 +131,16 @@
                 </div>
                 <form asp-action="Update" asp-controller="Category" method="put" id="updateForm">
                     <div class="modal-body">
-                        <input type="hidden" asp-for="IdCategory" id="idCategory" />
+                        <input type="hidden" asp-for="Category.IdCategory" id="idCategory" />
                         <div class="form-group">
-                            <label asp-for="NameCategory" class="control-label">Category Name:<span class="text-danger">*</span></label>
-                            <input asp-for="NameCategory" class="form-control" id="nameCategory" />
-                            <span asp-validation-for="NameCategory" class="text-danger"></span>
+                            <label asp-for="Category.NameCategory" class="control-label">Category Name:<span class="text-danger">*</span></label>
+                            <input asp-for="Category.NameCategory" class="form-control" id="nameCategory" />
+                            <span asp-validation-for="Category.NameCategory" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="CodeCategory" class="control-label">Category Code<span class="text-danger">*</span></label>
-                            <input asp-for="CodeCategory" class="form-control" id="codeCategory" />
-                            <span asp-validation-for="CodeCategory" class="text-danger"></span>
+                            <label asp-for="Category.CodeCategory" class="control-label">Category Code<span class="text-danger">*</span></label>
+                            <input asp-for="Category.CodeCategory" class="form-control" id="codeCategory" />
+                            <span asp-validation-for="Category.CodeCategory" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -154,6 +154,46 @@
             </div>
         </div>
     </div>
+
+    <!-- Info Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <!-- wider for table -->
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="infoModalLabel">Category Info</h5>
+                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Name:</strong> <span id="infoName"></span></p>
+                    <p><strong>Code:</strong> <span id="infoCode"></span></p>
+
+                    <hr />
+                    <h5 class="mb-3">Associated Persons</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th> 
+                                </tr>
+                            </thead>
+                            <tbody id="personListBody">
+                                <tr><td colspan="4">Loading...</td></tr> 
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 }
 
 @section Styles {

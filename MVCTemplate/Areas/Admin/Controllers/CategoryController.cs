@@ -12,6 +12,7 @@ using System.Diagnostics;
 using MVCtemplate.DataAccess.Data;
 using MVCTemplate.DataAccess.Repository;
 using Microsoft.Extensions.Caching.Memory;
+using MVCTemplate.ViewModels;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -19,19 +20,32 @@ namespace MVCTemplate.Areas.Admin.Controllers
     [Area("Admin")]
     public class CategoryController : Controller
     {
+
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMemoryCache _memoryCache;
-        public IActionResult Index()
-        {
-            return View();
-        }
+        private readonly ApplicationDbContext _context;
 
-        private IUnitOfWork _unitOfWork;
-
-        public CategoryController(IUnitOfWork unitOfWork, IMemoryCache memoryCache)
+        public CategoryController(IUnitOfWork unitOfWork, IMemoryCache memoryCache, ApplicationDbContext context)
         {
             _unitOfWork = unitOfWork;
             _memoryCache = memoryCache;
+            _context = context;
         }
+        public IActionResult Index()
+        {
+            var viewModel = new CategoryVM
+            {
+                Category = new Category
+                {
+                    NameCategory = string.Empty,
+                    CodeCategory = string.Empty
+                },
+                Persons = _context.Persons.ToList()
+            };
+
+            return View(viewModel);
+        }
+
 
         [HttpPost]
         public IActionResult GenerateDownloadToken()
@@ -163,54 +177,51 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 "Category.xlsx");
         }
 
-
-        public IActionResult Create(Category category)
+        [HttpPost]
+        public IActionResult Create(CategoryVM vm)
         {
             try
             {
                 bool hasRequiredFieldErrors = false;
 
-                if (string.IsNullOrWhiteSpace(category.CodeCategory))
+                if (string.IsNullOrWhiteSpace(vm.Category.CodeCategory))
                 {
-                    ModelState.AddModelError("CodeCategory", "Category code is required.");
+                    ModelState.AddModelError("Category.CodeCategory", "Category code is required.");
                     hasRequiredFieldErrors = true;
                 }
 
-                if (string.IsNullOrWhiteSpace(category.NameCategory))
+                if (string.IsNullOrWhiteSpace(vm.Category.NameCategory))
                 {
-                    ModelState.AddModelError("NameCategory", "Category name is required.");
+                    ModelState.AddModelError("Category.NameCategory", "Category name is required.");
                     hasRequiredFieldErrors = true;
                 }
 
-                Models.Category? categoryCheck = _unitOfWork.Category.CheckIfUnique(category.NameCategory);
-                if (categoryCheck != null)
+                // Check for duplicate category by name
+                var existing = _unitOfWork.Category.CheckIfUnique(vm.Category.NameCategory);
+                if (existing != null)
                 {
-                    ModelState.AddModelError("NameCategory", "Category already exists.");
+                    ModelState.AddModelError("Category.NameCategory", "Category already exists.");
                     hasRequiredFieldErrors = true;
                 }
 
-                if (hasRequiredFieldErrors)
+                if (hasRequiredFieldErrors || !ModelState.IsValid)
                 {
                     var errors = ModelState.ToDictionary(
-                         kvp => kvp.Key,
-                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
-                    return BadRequest(new { message = "Please Fill Required Fields", errors });
+
+                    return BadRequest(new
+                    {
+                        message = hasRequiredFieldErrors ? "Please fill required fields" : "Something went wrong",
+                        errors
+                    });
                 }
 
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.ToDictionary(
-                         kvp => kvp.Key,
-                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
-                    );
-                    return BadRequest(new { errors, message = "Something went wrong" });
-                }
-
-                _unitOfWork.Category.Add(category);
+                _unitOfWork.Category.Add(vm.Category);
                 _unitOfWork.Save();
 
-                return Ok(new { message = "Added Successfully" });
+                return Ok(new { message = "Added successfully" });
             }
             catch (DbUpdateException)
             {
@@ -218,7 +229,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
             catch (InvalidOperationException)
             {
-                return BadRequest(new { message = "Invalid Operation" });
+                return BadRequest(new { message = "Invalid operation" });
             }
             catch (Exception)
             {
@@ -226,36 +237,37 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-
         [HttpPut]
-        public IActionResult Update(Category obj)
+        public IActionResult Update(CategoryVM vm)
         {
             try
             {
-                obj.GenerateUpdatedAt();
-                Category? category = _unitOfWork.Category.ContinueIfNoChangeOnUpdate(obj.NameCategory, obj.IdCategory);
+                vm.Category.GenerateUpdatedAt();
 
-                if (category != null)
+                var existing = _unitOfWork.Category.ContinueIfNoChangeOnUpdate(vm.Category.NameCategory, vm.Category.IdCategory);
+                if (existing != null)
                 {
-                    ModelState.AddModelError("NameCategory", "Category Name already exists");
+                    ModelState.AddModelError("Category.NameCategory", "Category name already exists");
 
-                    var validationErrors = ModelState.ToDictionary(
+                    var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>()
+                    );
 
-                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
+                    return BadRequest(new { errors, message = "Invalid update" });
                 }
 
                 if (ModelState.IsValid)
                 {
-                    _unitOfWork.Category.Update(obj);
+                    _unitOfWork.Category.Update(vm.Category);
                     _unitOfWork.Save();
-                    return Ok(new { message = "Updated Successfully" });
+                    return Ok(new { message = "Updated successfully" });
                 }
 
                 var otherErrors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>()
+                );
 
                 return BadRequest(new { errors = otherErrors, message = "Something went wrong!" });
             }
@@ -319,7 +331,24 @@ namespace MVCTemplate.Areas.Admin.Controllers
             List<Category>? categoryList = _unitOfWork.Category.GetAll().ToList();
             return Json(new { data = categoryList });
         }
-       
+
+        [HttpGet]
+        public IActionResult GetPersonsByCategory(int categoryId)
+        {
+            var persons = _context.Persons
+                .Where(p => p.CategoryId == categoryId)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Position,
+                    CreatedAt = p.CreatedAt.ToString("MMM dd, yyyy")
+                })
+                .ToList();
+
+            return Json(persons);
+        }
+
         #endregion
 
     }
