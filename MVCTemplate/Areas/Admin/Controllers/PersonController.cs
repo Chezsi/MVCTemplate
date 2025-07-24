@@ -525,8 +525,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     c.Id,
                     c.Name,
                     c.Description,
-                    Validity = c.Validity.HasValue ? c.Validity.Value.ToString("MM/dd/yyyy") : "",
-                    c.CreatedAt
+                    Validity = c.Validity.HasValue ? c.Validity.Value.ToString("MMMM dd, yyyy") : "",
+                    CreatedAt = c.CreatedAt.ToString("MMMM dd, yyyy hh:mm tt") 
                 }).ToList();
 
             return Json(contracts);

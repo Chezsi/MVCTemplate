@@ -10,16 +10,18 @@ function loadDataTable() {
                 data: 'name',
                 render: function (data, type, full, meta) {
                     return `
-                        <span>${data}</span>
-                        <button class="btn btn-sm btn-outline-info ms-2 name-modal-btn" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#infoModal" 
-                            data-id="${full.id}" 
-                            data-name="${data}" 
-                            data-position="${full.position}" 
-                            data-categoryid="${full.categoryId}">
-                            <i class="fa fa-info-circle"></i>
-                        </button>`;
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-truncate">${data}</span>
+                <button class="btn btn-sm btn-outline-info name-modal-btn ms-2" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#infoModal" 
+                    data-id="${full.id}" 
+                    data-name="${data}" 
+                    data-position="${full.position}" 
+                    data-categoryid="${full.categoryId}">
+                    <i class="fa fa-info-circle"></i>
+                </button>
+            </div>`;
                 },
                 autowidth: true
             },
