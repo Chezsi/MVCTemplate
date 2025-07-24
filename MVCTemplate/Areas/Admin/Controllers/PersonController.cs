@@ -514,6 +514,23 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(new object[] { labels, counts });
         }
+
+        [HttpGet]
+        public IActionResult GetContractsByPerson(int personId)
+        {
+            var contracts = _context.Contracts
+                .Where(c => c.PersonId == personId)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Description,
+                    Validity = c.Validity.HasValue ? c.Validity.Value.ToString("MM/dd/yyyy") : "",
+                    c.CreatedAt
+                }).ToList();
+
+            return Json(contracts);
+        }
         #endregion
 
     }

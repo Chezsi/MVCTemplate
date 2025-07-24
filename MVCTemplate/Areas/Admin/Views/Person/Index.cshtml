@@ -214,6 +214,39 @@
             </div>
         </div>
     </div>
+
+    <!-- Empty Info Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <!-- make it wider -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">Person Details & Contracts</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="personInfo">
+                        <!-- Optional: Inject person name/position here -->
+                    </div>
+                    <hr />
+                    <h6>Contracts:</h6>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Validity</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contractListBody">
+                            <!-- Will be injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @section Styles {
