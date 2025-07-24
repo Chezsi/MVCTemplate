@@ -14,6 +14,20 @@
             $('.report-thumbnail.enlarged').removeClass('enlarged');
         }
     });
+    // Show full description in modal
+    $(document).on('click', '.description-preview', function () {
+        const raw = $(this).data('description') || '';
+
+        // Split by delimiters: \ | , / - .
+        const parts = raw.split(/[\\|,\/\.\-]+/).filter(p => p.trim() !== '');
+
+        // Create a bullet list
+        const formatted = '<ul>' + parts.map(p => `<li>${p.trim()}</li>`).join('') + '</ul>';
+
+        // Show it in the modal
+        $('#viewDescriptionContent').html(formatted);
+        $('#viewDescriptionModal').modal('show');
+    });
 });
 function loadDataTableReport() {
     dataTable = $('#reportTable').DataTable({
@@ -35,7 +49,18 @@ function loadDataTableReport() {
                     }
                 }
             },
-            { data: 'description', autoWidth: true },
+            {
+                data: 'description',
+                autoWidth: true,
+                render: function (data, type, full, meta) {
+                    if (!data) return '';
+
+                    const preview = data.length > 30 ? data.substring(0, 30) + '...' : data;
+                    const safeText = data.replace(/"/g, '&quot;'); // prevent broken HTML
+
+                    return `<button class="btn btn-link text-primary p-0 description-preview" data-description="${safeText}">${preview}</button>`;
+                }
+            },
             {
                 data: 'id',
                 render: function (data, type, full, meta) {
