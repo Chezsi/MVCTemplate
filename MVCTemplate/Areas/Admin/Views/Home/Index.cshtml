@@ -47,6 +47,11 @@
     <canvas id="ageChart" width="400" height="200"></canvas>
 </div>
 
+<div class="my-5">
+    <h4>Package Distribution by Priority</h4>
+    <canvas id="priorityChart" width="600" height="300"></canvas>
+</div>
+
 <script>
     // animation
     $(document).ready(function () {
@@ -57,5 +62,9 @@
 <script>
     window.ageLabels = @Html.Raw(Json.Serialize(Model.ReportAgeDistribution.Keys));
     window.ageData = @Html.Raw(Json.Serialize(Model.ReportAgeDistribution.Values));
+
+
+    window.priorityLabels = @Html.Raw(Json.Serialize(Model.PackagePriorityDistribution.Keys));
+    window.priorityCounts = @Html.Raw(Json.Serialize(Model.PackagePriorityDistribution.Values));
 </script>
 <script src="~/js/HomeScripts/home-graph.js"></script>

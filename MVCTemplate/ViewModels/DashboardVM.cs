@@ -12,5 +12,6 @@ namespace MVCTemplate.ViewModels
         public ReportDashboardVM ReportStats { get; set; }
 
         public Dictionary<int, int> ReportAgeDistribution { get; set; } = new();
+        public Dictionary<int, int> PackagePriorityDistribution { get; set; } = new();
     }
 }

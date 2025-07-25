@@ -37,6 +37,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     g => g.Count()
                 );
 
+            var priorityDistribution = _context.Packages
+                .AsNoTracking()
+                .ToList()
+                .GroupBy(p => p.Priority)
+                .OrderBy(g => g.Key)
+                .ToDictionary(g => g.Key, g => g.Count());
+
             var dashboard = new DashboardVM
             {
                 ProductStats = new ProductDashboardVM
@@ -51,7 +58,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 {
                     ReportCount = await _context.Reports.CountAsync()
                 },
-                ReportAgeDistribution = ageDistribution
+                ReportAgeDistribution = ageDistribution,
+                PackagePriorityDistribution = priorityDistribution
             };
 
             return View(dashboard);

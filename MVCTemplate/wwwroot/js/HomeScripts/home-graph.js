@@ -45,3 +45,47 @@ const ageData = window.ageData;
     plugins: [ChartDataLabels]
     });
 
+
+document.addEventListener("DOMContentLoaded", function () {
+    const labels = window.priorityLabels;
+    const data = window.priorityCounts;
+
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Package Count by Priority',
+                data: data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: '#fff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                datalabels: {
+                    color: '#000',
+                    font: {
+                        weight: 'bold'
+                    },
+                    formatter: function (value) {
+                        return value;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+});
