@@ -1,10 +1,16 @@
-﻿@{
+﻿@model MVCTemplate.ViewModels.ProductDashboardVM
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="card shadow-sm border-0 mb-4" style="max-width: 400px;">
+    <div class="card-body text-center">
+        <h5 class="card-title text-muted">Current Products</h5>
+        <h1 class="display-4">@Model.ProductCount</h1>
+        <hr />
+        <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="btn btn-primary mt-2">SHOW ALL</a>
+    </div>
 </div>
 
 <script>
