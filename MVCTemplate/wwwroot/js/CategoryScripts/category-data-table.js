@@ -102,24 +102,30 @@ function loadPersonsForCategory(categoryId) {
                         <td>${p.position || '<i class="text-muted">None</i>'}</td>
                         <td>${p.createdAt}</td>
                         <td class="text-center">
-                            <div class="d-flex flex-wrap justify-content-center gap-2">
-                                <button
-                                    class="btn btn-sm btn-secondary px-3"
-                                    onclick="openContractsModal(${p.id}, '${p.name}', '${p.position || ''}')">
-                                    <i class="fa fa-file-contract me-1"></i> View
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Options
                                 </button>
-                                <button 
-                                    class="btn btn-sm btn-info px-3"
-                                    onclick="openEditPersonModal(${p.id}, '${p.name}', '${p.position || ''}')">
-                                    <i class="lnr-pencil me-1"></i> Edit
-                                </button>
-                                <button 
-                                    class="btn btn-sm btn-danger px-3"
-                                    onclick="deletePerson(${p.id})">
-                                    <i class="lnr-trash me-1"></i> Delete
-                                </button>
+                                <div class="dropdown-menu p-2 text-center">
+                                    <button
+                                        class="btn btn-sm btn-secondary w-100 mb-1"
+                                        onclick="openContractsModal(${p.id}, '${p.name}', '${p.position || ''}')">
+                                        <i class="fa fa-file-contract me-1"></i> View
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-info w-100 mb-1"
+                                        onclick="openEditPersonModal(${p.id}, '${p.name}', '${p.position || ''}')">
+                                        <i class="lnr-pencil me-1"></i> Edit
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-danger w-100"
+                                        onclick="deletePerson(${p.id})">
+                                        <i class="lnr-trash me-1"></i> Delete
+                                    </button>
+                                </div>
                             </div>
                         </td>
+
                     </tr>
                 `).join('');
 
