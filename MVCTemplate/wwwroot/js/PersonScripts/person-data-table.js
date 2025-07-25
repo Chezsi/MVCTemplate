@@ -8,42 +8,52 @@ function loadDataTable() {
         "columns": [
             {
                 data: 'name',
-                render: function (data, type, full, meta) {
-                    return `
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-truncate">${data}</span>
-                <button class="btn btn-sm btn-outline-info name-modal-btn ms-2" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#infoModal" 
-                    data-id="${full.id}" 
-                    data-name="${data}" 
-                    data-position="${full.position}" 
-                    data-categoryid="${full.categoryId}">
-                    <i class="fa fa-info-circle"></i>
-                </button>
-            </div>`;
+                render: function (data) {
+                    return `<span class="text-truncate">${data}</span>`;
                 },
                 autowidth: true
             },
-            { data: 'position', "autowidth": true },
-            { data: 'categoryId', "autowidth": true },
+            { data: 'position', autowidth: true },
+            { data: 'categoryId', autowidth: true },
             {
                 data: 'id',
                 render: function (data, type, full, meta) {
-                    return `<div class="w-75 btn-group" role="group">                                                                               
-                                <button type="button" data-id="${data}" data-name="${full.name}" data-position="${full.position}" data-categoryid="${full.categoryId}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal">
-                                    <i class="lnr-pencil"></i> Edit
-                                </button>
-                                <a onClick="Delete('/Admin/Person/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
-                                    <i class="lnr-trash"></i> Delete
-                                </a>
-                            </div>`;
+                    return `
+                        <div class="btn-group" role="group">
+                            <button type="button" 
+                                class="btn btn-sm btn-outline-info"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#infoModal" 
+                                data-id="${data}" 
+                                data-name="${full.name}" 
+                                data-position="${full.position}" 
+                                data-categoryid="${full.categoryId}">
+                                <i class="fa fa-info-circle"></i> View
+                            </button>
+
+                            <button type="button" 
+                                class="btn btn-sm btn-info ms-1" 
+                                data-id="${data}" 
+                                data-name="${full.name}" 
+                                data-position="${full.position}" 
+                                data-categoryid="${full.categoryId}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#updateModal">
+                                <i class="lnr-pencil"></i> Edit
+                            </button>
+
+                            <a onClick="Delete('/Admin/Person/Delete/${data}')" 
+                                class="btn btn-sm btn-danger ms-1">
+                                <i class="lnr-trash"></i> Delete
+                            </a>
+                        </div>`;
                 },
                 width: "25%", className: "text-center", orderable: false
             }
         ]
     });
 }
+
 
 // Update Modal
 $('#updateModal').on('show.bs.modal', function (event) {
