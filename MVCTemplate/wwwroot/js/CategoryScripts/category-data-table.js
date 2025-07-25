@@ -141,12 +141,17 @@ function submitEditPerson() {
         data: JSON.stringify({ id, name, position, categoryId }),
         success: function (res) {
             $('#editPersonModal').modal('hide');
-            alert(res.message || "Updated successfully.");
+            toastr.success(res.message || "Updated successfully.");
             loadPersonsForCategory(categoryId);
         },
         error: function (err) {
-            alert(err.responseJSON?.message || "Update failed.");
-            console.error(err.responseJSON?.errors);
+            toastr.error(err.responseJSON?.message || "Update failed.");
+            const errorDetails = err.responseJSON?.errors;
+            if (errorDetails) {
+                for (const field in errorDetails) {
+                    errorDetails[field].forEach(msg => toastr.error(msg));
+                }
+            }
         }
     });
 }
@@ -181,12 +186,17 @@ function submitAddPerson() {
         data: JSON.stringify({ name, position, categoryId }),
         success: function (res) {
             $('#addPersonModal').modal('hide');
-            alert(res.message || "Added successfully.");
+            toastr.success(res.message || "Added successfully.");
             loadPersonsForCategory(categoryId); // refresh list
         },
         error: function (err) {
-            alert(err.responseJSON?.message || "Failed to add person.");
-            console.error(err.responseJSON?.errors);
+            console.error("Add person failed:", err.responseJSON?.errors || err.responseJSON?.message || err);
+            const errorDetails = err.responseJSON?.errors;
+            if (errorDetails) {
+                for (const field in errorDetails) {
+                    errorDetails[field].forEach(msg => toastr.error(msg));
+                }
+            }
         }
     });
 }

@@ -167,7 +167,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         kvp => kvp.Key,
                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
-                    return BadRequest(new { message = "Please fix the errors.", errors });
+                    return BadRequest(new { errors });
                 }
 
                 person.GenerateUpdatedAt(); // set updated date
