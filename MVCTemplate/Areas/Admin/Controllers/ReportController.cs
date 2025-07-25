@@ -587,7 +587,10 @@ namespace MVCTemplate.Controllers
                 {
                     worksheet.Cells[row, 1].Value = report.Title;
 
-                    var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+");
+                    var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+")
+                            .Where(p => !string.IsNullOrWhiteSpace(p))
+                            .ToArray();
+
                     worksheet.Cells[row, 2].Value = descriptionParts.Length;
 
                     for (int i = 0; i < maxDescriptionParts; i++)
