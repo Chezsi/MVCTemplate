@@ -10,5 +10,7 @@ namespace MVCTemplate.ViewModels
         public ProductDashboardVM ProductStats { get; set; }
         public PackageDashboardVM PackageStats { get; set; }
         public ReportDashboardVM ReportStats { get; set; }
+
+        public Dictionary<int, int> ReportAgeDistribution { get; set; } = new();
     }
 }

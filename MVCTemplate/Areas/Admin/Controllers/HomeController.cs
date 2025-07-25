@@ -24,6 +24,19 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
+
+            var today = DateTime.Today;
+
+            var ageDistribution = _context.Reports
+                .AsNoTracking()
+                .ToList() // force client-side evaluation
+                .GroupBy(r => (int)(today - r.CreatedAt).TotalDays)
+                .OrderByDescending(g => g.Key)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Count()
+                );
+
             var dashboard = new DashboardVM
             {
                 ProductStats = new ProductDashboardVM
@@ -37,7 +50,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 ReportStats = new ReportDashboardVM
                 {
                     ReportCount = await _context.Reports.CountAsync()
-                }
+                },
+                ReportAgeDistribution = ageDistribution
             };
 
             return View(dashboard);
