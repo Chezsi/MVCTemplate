@@ -226,19 +226,38 @@ $(document).ready(function () {
     });
 });
 
-function deletePerson(id) {
-    if (confirm("Are you sure you want to delete this person?")) {
-        $.ajax({
-            url: `/Admin/Person/Delete/${id}`,
-            type: 'DELETE',
-            success: function (res) {
-                alert(res.message);
-                loadPersonsForCategory(currentCategoryId);
-            },
-            error: function (err) {
-                alert(err.responseJSON?.message || "Delete failed.");
-            }
-        });
+async function deletePerson(id) {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await $.ajax({
+                url: `/Admin/Person/Delete/${id}`,
+                type: 'DELETE',
+            });
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: response.message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            loadPersonsForCategory(currentCategoryId);
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed!',
+                text: error?.responseJSON?.message || "Delete failed."
+            });
+        }
     }
 }
 
