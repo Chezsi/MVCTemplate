@@ -24,13 +24,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var viewModel = new ProductDashboardVM
+            var dashboard = new DashboardVM
             {
-                ProductCount = await _context.Products.CountAsync()
+                ProductStats = new ProductDashboardVM
+                {
+                    ProductCount = await _context.Products.CountAsync()
+                },
+                PackageStats = new PackageDashboardVM
+                {
+                    PackageCount = await _context.Packages.CountAsync()
+                },
+                ReportStats = new ReportDashboardVM
+                {
+                    ReportCount = await _context.Reports.CountAsync()
+                }
             };
 
-            return View(viewModel);
+            return View(dashboard);
         }
+
 
         public IActionResult Privacy()
         {

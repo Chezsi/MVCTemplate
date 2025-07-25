@@ -1,15 +1,38 @@
-﻿@model MVCTemplate.ViewModels.ProductDashboardVM
+﻿@model MVCTemplate.ViewModels.DashboardVM
 
 @{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="card shadow-sm border-0 mb-4" style="max-width: 400px;">
-    <div class="card-body text-center">
-        <h5 class="card-title text-muted">Current Products</h5>
-        <h1 class="display-4">@Model.ProductCount</h1>
-        <hr />
-        <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="btn btn-primary mt-2">SHOW ALL</a>
+<div class="d-flex flex-wrap gap-4">
+
+    <!-- Product Card -->
+    <div class="card shadow-sm border-0 mb-4" style="max-width: 400px;">
+        <div class="card-body text-center">
+            <h5 class="card-title text-muted">Current Products</h5>
+            <h1 class="display-4">@Model.ProductStats.ProductCount</h1>
+            <hr />
+            <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="btn btn-primary mt-2">SHOW ALL</a>
+        </div>
+    </div>
+
+    <!-- Package Card -->
+    <div class="card shadow-sm border-0 mb-4" style="max-width: 400px;">
+        <div class="card-body text-center">
+            <h5 class="card-title text-muted">Current Packages</h5>
+            <h1 class="display-4">@Model.PackageStats.PackageCount</h1>
+            <hr />
+            <a asp-area="Admin" asp-controller="Package" asp-action="Index" class="btn btn-primary mt-2">SHOW ALL</a>
+        </div>
+    </div>
+    <!-- Report Card -->
+    <div class="card shadow-sm border-0 mb-4" style="max-width: 400px;">
+        <div class="card-body text-center">
+            <h5 class="card-title text-muted">Current Reports</h5>
+            <h1 class="display-4">@Model.ReportStats.ReportCount</h1>
+            <hr />
+            <a asp-area="Admin" asp-controller="Report" asp-action="Index" class="btn btn-primary mt-2">SHOW ALL</a>
+        </div>
     </div>
 </div>
 
