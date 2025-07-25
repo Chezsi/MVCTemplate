@@ -21,7 +21,7 @@ function loadDataTable() {
                     return `
                         <div class="btn-group" role="group">
                             <button type="button" 
-                                class="btn btn-sm btn-outline-info"
+                                class="btn btn-sm btn-secondary"
                                 data-bs-toggle="modal" 
                                 data-bs-target="#infoModal" 
                                 data-id="${data}" 

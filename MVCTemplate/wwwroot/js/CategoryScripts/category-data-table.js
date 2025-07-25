@@ -10,19 +10,8 @@ function loadDataTableCategory() {
         "columns": [
             {
                 data: 'nameCategory',
-                render: function (data, type, full, meta) {
-                    return `
-        <div class="d-flex justify-content-between align-items-center">
-            <span class="text-truncate">${data}</span>
-            <button class="btn btn-sm btn-outline-info category-info-btn ms-2" 
-                data-bs-toggle="modal" 
-                data-bs-target="#infoModal" 
-                data-id="${full.idCategory}" 
-                data-name="${full.nameCategory}" 
-                data-code="${full.codeCategory}">
-                <i class="fa fa-info-circle"></i>
-            </button>
-        </div>`;
+                render: function (data) {
+                    return `<span class="text-truncate">${data}</span>`;
                 },
                 autowidth: true
             },
@@ -30,20 +19,44 @@ function loadDataTableCategory() {
             {
                 data: 'idCategory',
                 render: function (data, type, full, meta) {
-                    return `<div class="w-75 btn-group" role="group">
-                                <button type="button" data-id="${data}" data-name="${full.nameCategory}" data-code="${full.codeCategory}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal">
-                                    <i class="lnr-pencil"></i> Edit
-                                </button>
-                                <a onClick="Delete('/Admin/Category/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
-                                    <i class="lnr-trash"></i> Delete
-                                </a>
-                            </div>`;
+                    return `
+                        <div class="w-100 btn-group" role="group">
+                            <button 
+                                type="button" 
+                                class="btn btn-sm btn-secondary me-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#infoModal"
+                                data-id="${full.idCategory}" 
+                                data-name="${full.nameCategory}" 
+                                data-code="${full.codeCategory}"
+                                title="View Details">
+                                <i class="fa fa-info-circle"></i> View
+                            </button>
+                            <button 
+                                type="button" 
+                                class="btn btn-sm btn-info me-2" 
+                                data-id="${data}" 
+                                data-name="${full.nameCategory}" 
+                                data-code="${full.codeCategory}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#updateModal"
+                                title="Edit Category">
+                                <i class="lnr-pencil"></i> Edit
+                            </button>
+                            <a 
+                                onClick="Delete('/Admin/Category/Delete/${data}')" 
+                                class="btn btn-sm btn-danger"
+                                title="Delete Category">
+                                <i class="lnr-trash"></i> Delete
+                            </a>
+                        </div>`;
                 },
                 width: "25%", className: "text-center", orderable: false
             }
         ]
     });
 }
+
 
 $('#updateModal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
@@ -93,17 +106,17 @@ function loadPersonsForCategory(categoryId) {
                                 <button
                                     class="btn btn-sm btn-secondary me-2"
                                     onclick="openContractsModal(${p.id}, '${p.name}', '${p.position || ''}')">
-                                    <i class="fa fa-file-contract"></i>
+                                    <i class="fa fa-file-contract"></i> View
                                 </button>
                                 <button 
                                     class="btn btn-sm btn-info me-2"
                                     onclick="openEditPersonModal(${p.id}, '${p.name}', '${p.position || ''}')">
-                                    <i class="lnr-pencil"></i>
+                                    <i class="lnr-pencil"></i> Edit
                                 </button>
                                 <button 
                                     class="btn btn-sm btn-danger"
                                     onclick="deletePerson(${p.id})">
-                                    <i class="lnr-trash"></i>
+                                    <i class="lnr-trash"></i> Delete
                                 </button>
                             </div>
                         </td>
