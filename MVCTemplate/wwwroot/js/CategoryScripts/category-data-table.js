@@ -67,6 +67,8 @@ $('#infoModal').on('show.bs.modal', function (event) {
     $('#infoName').text(name);
     $('#infoCode').text(code);
 
+    $('#exportExcelBtn').attr('href', `/Admin/Person/ExportByCategory?categoryId=${categoryId}`);
+
     loadPersonsForCategory(categoryId);
 });
 

@@ -14,6 +14,7 @@ using OfficeOpenXml.Style;
 using OfficeOpenXml;
 using System.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
+using ClosedXML.Excel;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -316,9 +317,109 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-    #endregion
+        #endregion
 
         #region EXPORT
+
+        [HttpGet]
+        public async Task<IActionResult> ExportByCategory(int categoryId)
+        {
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
+
+            var persons = await _context.Persons
+                .Where(p => p.CategoryId == categoryId)
+                .ToListAsync();
+
+            if (!persons.Any())
+            {
+                return BadRequest("No persons to export.");
+            }
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Persons");
+
+            // Define colors
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+            var borderStyle = ExcelBorderStyle.Thin;
+
+            // Title
+            worksheet.Cells["A1:D1"].Merge = true;
+            worksheet.Cells["A1"].Value = "Persons in Category";
+            worksheet.Cells["A1"].Style.Font.Size = 16;
+            worksheet.Cells["A1"].Style.Font.Bold = true;
+            worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+            // Timestamp
+            worksheet.Cells["A2:D2"].Merge = true;
+            worksheet.Cells["A2"].Value = $"Generated at: {DateTime.Now:MMMM dd, yyyy hh:mm tt}";
+            worksheet.Cells["A2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+            // Style header background
+            worksheet.Cells["A1:D2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:D2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:D2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:D2"].Style.Border.Top.Style = borderStyle;
+            worksheet.Cells["A1:D2"].Style.Border.Bottom.Style = borderStyle;
+            worksheet.Cells["A1:D2"].Style.Border.Left.Style = borderStyle;
+            worksheet.Cells["A1:D2"].Style.Border.Right.Style = borderStyle;
+
+            // Column headers
+            string[] headers = { "Person ID", "Name", "Position", "Created At" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = worksheet.Cells[3, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor((i % 2 == 0) ? lightGreen : darkGreen);
+                cell.Style.Border.Top.Style = borderStyle;
+                cell.Style.Border.Bottom.Style = borderStyle;
+                cell.Style.Border.Left.Style = borderStyle;
+                cell.Style.Border.Right.Style = borderStyle;
+            }
+
+            // Data rows
+            int row = 4;
+            foreach (var p in persons)
+            {
+                worksheet.Cells[row, 1].Value = p.Id;
+                worksheet.Cells[row, 2].Value = p.Name;
+                worksheet.Cells[row, 3].Value = p.Position ?? "";
+                worksheet.Cells[row, 4].Value = p.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+
+                for (int col = 1; col <= 4; col++)
+                {
+                    var cell = worksheet.Cells[row, col];
+                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor((col % 2 == 0) ? lightGreen : darkGreen);
+                    cell.Style.Border.Top.Style = borderStyle;
+                    cell.Style.Border.Bottom.Style = borderStyle;
+                    cell.Style.Border.Left.Style = borderStyle;
+                    cell.Style.Border.Right.Style = borderStyle;
+                }
+
+                row++;
+            }
+
+            // Autofit + filter
+            worksheet.Cells[3, 1, row - 1, 4].AutoFilter = true;
+            worksheet.Cells.AutoFitColumns();
+
+            // Return file
+            var stream = new MemoryStream();
+            package.SaveAs(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Category_{categoryId}_Persons.xlsx");
+        }
+
+
+
         [HttpGet]
         public async Task<IActionResult> ExportToExcel(string token)
         {
