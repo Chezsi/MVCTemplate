@@ -194,6 +194,36 @@
         </div>
     </div>
 
+    <!-- Edit Person Modal -->
+    <div class="modal fade" id="editPersonModal" tabindex="-1" aria-labelledby="editPersonModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editPersonModalLabel">Edit Person</h5>
+                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPersonForm">
+                        <input type="hidden" id="editPersonId" />
+                        <input type="hidden" id="editCategoryId" /> <!-- ✅ Add this hidden input -->
+
+                        <div class="mb-3">
+                            <label for="editPersonName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="editPersonName" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPersonPosition" class="form-label">Position</label>
+                            <input type="text" class="form-control" id="editPersonPosition" required />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @section Styles {

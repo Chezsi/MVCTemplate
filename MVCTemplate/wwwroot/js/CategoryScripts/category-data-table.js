@@ -113,29 +113,48 @@ function loadPersonsForCategory(categoryId) {
 }
 
 function openEditPersonModal(id, name, position) {
-    const newName = prompt("Edit Name:", name);
-    const newPosition = prompt("Edit Position:", position);
+    $('#editPersonId').val(id);
+    $('#editPersonName').val(name);
+    $('#editPersonPosition').val(position || '');
+    $('#editCategoryId').val(currentCategoryId);
 
-    if (newName !== null && newPosition !== null) {
-        $.ajax({
-            url: '/Admin/Person/Update',
-            type: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                id: id,
-                name: newName,
-                position: newPosition
-            }),
-            success: function (res) {
-                alert(res.message || "Updated successfully.");
-                loadPersonsForCategory(currentCategoryId);
-            },
-            error: function (err) {
-                alert(err.responseJSON?.message || "Update failed.");
-            }
-        });
-    }
+    $('#editPersonModal').modal('show');
 }
+
+function submitEditPerson() {
+    const id = $('#editPersonId').val();
+    const name = $('#editPersonName').val().trim();
+    const position = $('#editPersonPosition').val().trim();
+    const categoryId = $('#editCategoryId').val();
+
+    if (!name || !position || !categoryId) {
+        alert("All fields are required.");
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/Person/UpdateViaJson',
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({ id, name, position, categoryId }),
+        success: function (res) {
+            $('#editPersonModal').modal('hide');
+            alert(res.message || "Updated successfully.");
+            loadPersonsForCategory(categoryId);
+        },
+        error: function (err) {
+            alert(err.responseJSON?.message || "Update failed.");
+            console.error(err.responseJSON?.errors);
+        }
+    });
+}
+
+$(document).ready(function () {
+    $('#editPersonForm').submit(function (e) {
+        e.preventDefault(); // stop native form submit
+        submitEditPerson(); // your AJAX function
+    });
+});
 
 function deletePerson(id) {
     if (confirm("Are you sure you want to delete this person?")) {

@@ -175,6 +175,55 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
+        [HttpPut("Admin/Person/UpdateViaJson")]
+        public IActionResult UpdateViaJson([FromBody] Person obj)
+        {
+            try
+            {
+                obj.GenerateUpdatedAt();
+
+                // Check for duplicate name (excluding current record)
+                Person? person = _unitOfWork.Person.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
+                if (person != null)
+                {
+                    ModelState.AddModelError("Name", "Person Name already exists");
+
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+
+                    return BadRequest(new { errors, message = "Validation failed" });
+                }
+
+                _unitOfWork.Person.Update(obj);
+                _unitOfWork.Save();
+
+                return Ok(new { message = "Updated Successfully" });
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest(new { message = "Error occurred while saving to database" });
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest(new { message = "Invalid operation" });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { message = "An unexpected error occurred" });
+            }
+        }
+
+
         [HttpDelete]
 
         public IActionResult Delete(int id)
