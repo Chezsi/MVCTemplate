@@ -156,6 +156,46 @@ $(document).ready(function () {
     });
 });
 
+function openAddPersonModal() {
+    $('#addPersonName').val('');
+    $('#addPersonPosition').val('');
+    $('#addPersonModal').modal('show');
+}
+
+function submitAddPerson() {
+    const name = $('#addPersonName').val().trim();
+    const position = $('#addPersonPosition').val().trim();
+    const categoryId = currentCategoryId; // from modal context
+
+    if (!name || !position || !categoryId) {
+        alert("All fields are required.");
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/Person/CreateViaJson',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ name, position, categoryId }),
+        success: function (res) {
+            $('#addPersonModal').modal('hide');
+            alert(res.message || "Added successfully.");
+            loadPersonsForCategory(categoryId); // refresh list
+        },
+        error: function (err) {
+            alert(err.responseJSON?.message || "Failed to add person.");
+            console.error(err.responseJSON?.errors);
+        }
+    });
+}
+
+$(document).ready(function () {
+    $('#addPersonForm').submit(function (e) {
+        e.preventDefault();
+        submitAddPerson();
+    });
+});
+
 function deletePerson(id) {
     if (confirm("Are you sure you want to delete this person?")) {
         $.ajax({

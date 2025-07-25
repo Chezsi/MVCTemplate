@@ -128,6 +128,68 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
+        [HttpPost("Admin/Person/CreateViaJson")]
+        public IActionResult CreateViaJson([FromBody] Person person)
+        {
+            try
+            {
+                bool hasRequiredFieldErrors = false;
+
+                if (string.IsNullOrWhiteSpace(person.Name))
+                {
+                    ModelState.AddModelError("Name", "Name is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(person.Position))
+                {
+                    ModelState.AddModelError("Position", "Position is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (person.CategoryId == null || person.CategoryId == 0)
+                {
+                    ModelState.AddModelError("CategoryId", "Category is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                var personCheck = _unitOfWork.Person.CheckIfUnique(person.Name);
+                if (personCheck != null)
+                {
+                    ModelState.AddModelError("Name", "Person already exists.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (hasRequiredFieldErrors || !ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+                    return BadRequest(new { message = "Please fix the errors.", errors });
+                }
+
+                person.GenerateUpdatedAt(); // set updated date
+                _unitOfWork.Person.Add(person);
+                _unitOfWork.Save();
+
+                return Ok(new { message = "Added Successfully" });
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest(new { message = "Error occurred while saving to database" });
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest(new { message = "Invalid operation" });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { message = "An unexpected error occurred" });
+            }
+        }
+
+
         [HttpPut]
         public IActionResult Update(Person obj)
         {
