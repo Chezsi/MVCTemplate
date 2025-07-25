@@ -690,7 +690,7 @@ namespace MVCTemplate.Controllers
             var reports = await _context.Reports.ToListAsync();
 
             int maxDescriptionParts = reports
-                .Select(r => r.Description?.Split('-').Length ?? 1)
+                .Select(r => Regex.Split(r.Description ?? "", @"[\\|,\/\-\.]+").Length)
                 .DefaultIfEmpty(1)
                 .Max();
 
@@ -749,7 +749,7 @@ namespace MVCTemplate.Controllers
             {
                 worksheet.Cell(row, 1).Value = report.Title;
 
-                var descriptionParts = (report.Description ?? "").Split('-');
+                var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+");
                 worksheet.Cell(row, 2).Value = descriptionParts.Length;
 
                 for (int i = 0; i < maxDescriptionParts; i++)
@@ -783,8 +783,6 @@ namespace MVCTemplate.Controllers
             // AutoFilter
             worksheet.Range(4, 1, row - 1, totalCols).SetAutoFilter();
 
-            // No protection or locking
-
             // Save to MemoryStream
             var stream = new MemoryStream();
             workbook.SaveAs(stream);
@@ -792,7 +790,8 @@ namespace MVCTemplate.Controllers
 
             string fileName = "Reports.xlsx";
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-        }   // for testing only
+        }
+        // for testing only
 
         [HttpGet]
         public async Task<IActionResult> ExportFilteredToExcel(string? titleFilter, string? descriptionFilter, string token)
