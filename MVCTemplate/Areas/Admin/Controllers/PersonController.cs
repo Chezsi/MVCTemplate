@@ -255,7 +255,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         kvp => kvp.Key,
                         kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
-                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
+                    return BadRequest(new { errors = validationErrors});
                 }
 
                 if (!ModelState.IsValid)

@@ -145,7 +145,7 @@ function submitEditPerson() {
             loadPersonsForCategory(categoryId);
         },
         error: function (err) {
-            toastr.error(err.responseJSON?.message || "Update failed.");
+            console.error("Update failed:", err.responseJSON?.errors || err.responseJSON || err);
             const errorDetails = err.responseJSON?.errors;
             if (errorDetails) {
                 for (const field in errorDetails) {
