@@ -90,6 +90,11 @@ function loadPersonsForCategory(categoryId) {
                         <td>${p.createdAt}</td>
                         <td>
                             <div class="btn-group">
+                                <button
+                                    class="btn btn-sm btn-secondary me-2"
+                                    onclick="openContractsModal(${p.id}, '${p.name}', '${p.position || ''}')">
+                                    <i class="fa fa-file-contract"></i>
+                                </button>
                                 <button 
                                     class="btn btn-sm btn-info me-2"
                                     onclick="openEditPersonModal(${p.id}, '${p.name}', '${p.position || ''}')">
@@ -223,6 +228,42 @@ function deletePerson(id) {
         });
     }
 }
+
+function openContractsModal(personId, name, position) {
+    $('#contractPersonInfo').html(`
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Position:</strong> ${position || '<i class="text-muted">None</i>'}</p>
+    `);
+
+    $('#contractListBody').html('<tr><td colspan="4">Loading...</td></tr>');
+
+    $.ajax({
+        url: `/Admin/Person/GetContractsByPerson?personId=${personId}`,
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (contracts) {
+            if (contracts.length === 0) {
+                $('#contractListBody').html('<tr><td colspan="4" class="text-muted text-center">No contracts found.</td></tr>');
+            } else {
+                const rows = contracts.map(c => `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${c.description}</td>
+                        <td>${c.validity}</td>
+                        <td>${c.createdAt}</td>
+                    </tr>
+                `).join('');
+                $('#contractListBody').html(rows);
+            }
+        },
+        error: function () {
+            $('#contractListBody').html('<tr><td colspan="4" class="text-danger">Failed to load contracts.</td></tr>');
+        }
+    });
+
+    $('#contractsModal').modal('show');
+}
+
 
 /*
 document.querySelector("#button-excel").addEventListener("click", async function () {
