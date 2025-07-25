@@ -10,19 +10,8 @@ function loadDataTableCategory() {
         "columns": [
             {
                 data: 'nameCategory',
-                render: function (data, type, full, meta) {
-                    return `
-        <div class="d-flex justify-content-between align-items-center">
-            <span class="text-truncate">${data}</span>
-            <button class="btn btn-sm btn-outline-info category-info-btn ms-2" 
-                data-bs-toggle="modal" 
-                data-bs-target="#infoModal" 
-                data-id="${full.idCategory}" 
-                data-name="${full.nameCategory}" 
-                data-code="${full.codeCategory}">
-                <i class="fa fa-info-circle"></i>
-            </button>
-        </div>`;
+                render: function (data) {
+                    return `<span class="text-truncate">${data}</span>`;
                 },
                 autowidth: true
             },
@@ -30,20 +19,44 @@ function loadDataTableCategory() {
             {
                 data: 'idCategory',
                 render: function (data, type, full, meta) {
-                    return `<div class="w-75 btn-group" role="group">
-                                <button type="button" data-id="${data}" data-name="${full.nameCategory}" data-code="${full.codeCategory}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal">
-                                    <i class="lnr-pencil"></i> Edit
-                                </button>
-                                <a onClick="Delete('/Admin/Category/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
-                                    <i class="lnr-trash"></i> Delete
-                                </a>
-                            </div>`;
+                    return `
+                        <div class="w-100 btn-group" role="group">
+                            <button 
+                                type="button" 
+                                class="btn btn-sm btn-secondary me-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#infoModal"
+                                data-id="${full.idCategory}" 
+                                data-name="${full.nameCategory}" 
+                                data-code="${full.codeCategory}"
+                                title="View Details">
+                                <i class="fa fa-info-circle"></i> View
+                            </button>
+                            <button 
+                                type="button" 
+                                class="btn btn-sm btn-info me-2" 
+                                data-id="${data}" 
+                                data-name="${full.nameCategory}" 
+                                data-code="${full.codeCategory}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#updateModal"
+                                title="Edit Category">
+                                <i class="lnr-pencil"></i> Edit
+                            </button>
+                            <a 
+                                onClick="Delete('/Admin/Category/Delete/${data}')" 
+                                class="btn btn-sm btn-danger"
+                                title="Delete Category">
+                                <i class="lnr-trash"></i> Delete
+                            </a>
+                        </div>`;
                 },
                 width: "25%", className: "text-center", orderable: false
             }
         ]
     });
 }
+
 
 $('#updateModal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
@@ -67,6 +80,8 @@ $('#infoModal').on('show.bs.modal', function (event) {
     $('#infoName').text(name);
     $('#infoCode').text(code);
 
+    $('#exportExcelBtn').attr('href', `/Admin/Person/ExportByCategory?categoryId=${categoryId}`);
+
     loadPersonsForCategory(categoryId);
 });
 
@@ -86,20 +101,31 @@ function loadPersonsForCategory(categoryId) {
                         <td>${p.name}</td>
                         <td>${p.position || '<i class="text-muted">None</i>'}</td>
                         <td>${p.createdAt}</td>
-                        <td>
-                            <div class="btn-group">
-                                <button 
-                                    class="btn btn-sm btn-info me-2"
-                                    onclick="openEditPersonModal(${p.id}, '${p.name}', '${p.position || ''}')">
-                                    <i class="lnr-pencil"></i>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Options
                                 </button>
-                                <button 
-                                    class="btn btn-sm btn-danger"
-                                    onclick="deletePerson(${p.id})">
-                                    <i class="lnr-trash"></i>
-                                </button>
+                                <div class="dropdown-menu p-2 text-center">
+                                    <button
+                                        class="btn btn-sm btn-secondary w-100 mb-1"
+                                        onclick="openContractsModal(${p.id}, '${p.name}', '${p.position || ''}')">
+                                        <i class="fa fa-file-contract me-1"></i> View
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-info w-100 mb-1"
+                                        onclick="openEditPersonModal(${p.id}, '${p.name}', '${p.position || ''}')">
+                                        <i class="lnr-pencil me-1"></i> Edit
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-danger w-100"
+                                        onclick="deletePerson(${p.id})">
+                                        <i class="lnr-trash me-1"></i> Delete
+                                    </button>
+                                </div>
                             </div>
                         </td>
+
                     </tr>
                 `).join('');
 
@@ -113,45 +139,169 @@ function loadPersonsForCategory(categoryId) {
 }
 
 function openEditPersonModal(id, name, position) {
-    const newName = prompt("Edit Name:", name);
-    const newPosition = prompt("Edit Position:", position);
+    $('#editPersonId').val(id);
+    $('#editPersonName').val(name);
+    $('#editPersonPosition').val(position || '');
+    $('#editCategoryId').val(currentCategoryId);
 
-    if (newName !== null && newPosition !== null) {
-        $.ajax({
-            url: '/Admin/Person/Update',
-            type: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                id: id,
-                name: newName,
-                position: newPosition
-            }),
-            success: function (res) {
-                alert(res.message || "Updated successfully.");
-                loadPersonsForCategory(currentCategoryId);
-            },
-            error: function (err) {
-                alert(err.responseJSON?.message || "Update failed.");
+    $('#editPersonModal').modal('show');
+}
+
+function submitEditPerson() {
+    const id = $('#editPersonId').val();
+    const name = $('#editPersonName').val().trim();
+    const position = $('#editPersonPosition').val().trim();
+    const categoryId = $('#editCategoryId').val();
+
+    if (!name || !position || !categoryId) {
+        alert("All fields are required.");
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/Person/UpdateViaJson',
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({ id, name, position, categoryId }),
+        success: function (res) {
+            $('#editPersonModal').modal('hide');
+            toastr.success(res.message || "Updated successfully.");
+            loadPersonsForCategory(categoryId);
+        },
+        error: function (err) {
+            console.error("Update failed:", err.responseJSON?.errors || err.responseJSON || err);
+            const errorDetails = err.responseJSON?.errors;
+            if (errorDetails) {
+                for (const field in errorDetails) {
+                    errorDetails[field].forEach(msg => toastr.error(msg));
+                }
             }
-        });
+        }
+    });
+}
+
+$(document).ready(function () {
+    $('#editPersonForm').submit(function (e) {
+        e.preventDefault(); // stop native form submit
+        submitEditPerson(); // your AJAX function
+    });
+});
+
+function openAddPersonModal() {
+    $('#addPersonName').val('');
+    $('#addPersonPosition').val('');
+    $('#addPersonModal').modal('show');
+}
+
+function submitAddPerson() {
+    const name = $('#addPersonName').val().trim();
+    const position = $('#addPersonPosition').val().trim();
+    const categoryId = currentCategoryId; // from modal context
+
+    if (!name || !position || !categoryId) {
+        alert("All fields are required.");
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/Person/CreateViaJson',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ name, position, categoryId }),
+        success: function (res) {
+            $('#addPersonModal').modal('hide');
+            toastr.success(res.message || "Added successfully.");
+            loadPersonsForCategory(categoryId); // refresh list
+        },
+        error: function (err) {
+            console.error("Add person failed:", err.responseJSON?.errors || err.responseJSON?.message || err);
+            const errorDetails = err.responseJSON?.errors;
+            if (errorDetails) {
+                for (const field in errorDetails) {
+                    errorDetails[field].forEach(msg => toastr.error(msg));
+                }
+            }
+        }
+    });
+}
+
+$(document).ready(function () {
+    $('#addPersonForm').submit(function (e) {
+        e.preventDefault();
+        submitAddPerson();
+    });
+});
+
+async function deletePerson(id) {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await $.ajax({
+                url: `/Admin/Person/Delete/${id}`,
+                type: 'DELETE',
+            });
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: response.message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            loadPersonsForCategory(currentCategoryId);
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed!',
+                text: error?.responseJSON?.message || "Delete failed."
+            });
+        }
     }
 }
 
-function deletePerson(id) {
-    if (confirm("Are you sure you want to delete this person?")) {
-        $.ajax({
-            url: `/Admin/Person/Delete/${id}`,
-            type: 'DELETE',
-            success: function (res) {
-                alert(res.message);
-                loadPersonsForCategory(currentCategoryId);
-            },
-            error: function (err) {
-                alert(err.responseJSON?.message || "Delete failed.");
+function openContractsModal(personId, name, position) {
+    $('#contractPersonInfo').html(`
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Position:</strong> ${position || '<i class="text-muted">None</i>'}</p>
+    `);
+
+    $('#contractListBody').html('<tr><td colspan="4">Loading...</td></tr>');
+
+    $.ajax({
+        url: `/Admin/Person/GetContractsByPerson?personId=${personId}`,
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (contracts) {
+            if (contracts.length === 0) {
+                $('#contractListBody').html('<tr><td colspan="4" class="text-muted text-center">No contracts found.</td></tr>');
+            } else {
+                const rows = contracts.map(c => `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${c.description}</td>
+                        <td>${c.validity}</td>
+                        <td>${c.createdAt}</td>
+                    </tr>
+                `).join('');
+                $('#contractListBody').html(rows);
             }
-        });
-    }
+        },
+        error: function () {
+            $('#contractListBody').html('<tr><td colspan="4" class="text-danger">Failed to load contracts.</td></tr>');
+        }
+    });
+
+    $('#contractsModal').modal('show');
 }
+
 
 /*
 document.querySelector("#button-excel").addEventListener("click", async function () {

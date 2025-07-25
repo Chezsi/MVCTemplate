@@ -587,7 +587,10 @@ namespace MVCTemplate.Controllers
                 {
                     worksheet.Cells[row, 1].Value = report.Title;
 
-                    var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+");
+                    var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+")
+                            .Where(p => !string.IsNullOrWhiteSpace(p))
+                            .ToArray();
+
                     worksheet.Cells[row, 2].Value = descriptionParts.Length;
 
                     for (int i = 0; i < maxDescriptionParts; i++)
@@ -689,15 +692,10 @@ namespace MVCTemplate.Controllers
         {
             var reports = await _context.Reports.ToListAsync();
 
-            int maxDescriptionParts = reports
-                .Select(r => r.Description?.Split('-').Length ?? 1)
-                .DefaultIfEmpty(1)
-                .Max();
-
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Reports");
 
-            int totalCols = 2 + maxDescriptionParts; // Title + Desc Count + description parts
+            int totalCols = 3; // Title + Desc Count + Combined Description
 
             // Row 1 - Title
             worksheet.Cell("A1").Value = "Reports Data";
@@ -717,11 +715,7 @@ namespace MVCTemplate.Controllers
             // Row 4 - Headers
             worksheet.Cell(4, 1).Value = "Title";
             worksheet.Cell(4, 2).Value = "Desc Count";
-
-            for (int i = 0; i < maxDescriptionParts; i++)
-            {
-                worksheet.Cell(4, 3 + i).Value = $"Description {i + 1}";
-            }
+            worksheet.Cell(4, 3).Value = "Description Details";
 
             // Style headers
             var blueBackground = XLColor.FromArgb(0, 51, 102);
@@ -735,10 +729,7 @@ namespace MVCTemplate.Controllers
             // Column widths
             worksheet.Column(1).Width = 30;
             worksheet.Column(2).Width = 15;
-            for (int i = 0; i < maxDescriptionParts; i++)
-            {
-                worksheet.Column(3 + i).Width = 25;
-            }
+            worksheet.Column(3).Width = 50;
 
             // Colors for rows
             var lightGreen = XLColor.FromArgb(198, 239, 206);
@@ -749,14 +740,17 @@ namespace MVCTemplate.Controllers
             {
                 worksheet.Cell(row, 1).Value = report.Title;
 
-                var descriptionParts = (report.Description ?? "").Split('-');
-                worksheet.Cell(row, 2).Value = descriptionParts.Length;
+                var rawParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+")
+                                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                                    .ToList();
 
-                for (int i = 0; i < maxDescriptionParts; i++)
-                {
-                    worksheet.Cell(row, 3 + i).Value = i < descriptionParts.Length ? descriptionParts[i].Trim().ToUpper() : "";
-                }
+                worksheet.Cell(row, 2).Value = rawParts.Count;
 
+                var combinedDescription = rawParts.Count > 0
+                    ? string.Join("  ", rawParts.Select((part, index) => $"{index + 1}.) {part.Trim().ToUpper()}"))
+                    : "None";
+
+                worksheet.Cell(row, 3).Value = combinedDescription;
                 worksheet.Row(row).Height = 18;
 
                 // Alternate row colors
@@ -783,8 +777,6 @@ namespace MVCTemplate.Controllers
             // AutoFilter
             worksheet.Range(4, 1, row - 1, totalCols).SetAutoFilter();
 
-            // No protection or locking
-
             // Save to MemoryStream
             var stream = new MemoryStream();
             workbook.SaveAs(stream);
@@ -792,7 +784,8 @@ namespace MVCTemplate.Controllers
 
             string fileName = "Reports.xlsx";
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-        }   // for testing only
+        }
+        // for testing only
 
         [HttpGet]
         public async Task<IActionResult> ExportFilteredToExcel(string? titleFilter, string? descriptionFilter, string token)

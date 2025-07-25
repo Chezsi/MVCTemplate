@@ -61,12 +61,58 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
 
 // Redraw on date change
 $('#startDate, #endDate').on('change', function () {
+    const startVal = $('#startDate').val();
+    const endVal = $('#endDate').val();
+
+    if (!startVal && !endVal) {
+        dataTable.draw();
+        toggleExportFilteredButton();
+        return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const startDate = startVal ? new Date(startVal) : null;
+    const endDate = endVal ? new Date(endVal) : null;
+
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+    if (endDate) endDate.setHours(0, 0, 0, 0);
+
+    const resetAndExit = (title, message) => {
+        Swal.fire({
+            icon: 'warning',
+            title: title,
+            text: message,
+        }).then(() => {
+            $('#startDate').val('');
+            $('#endDate').val('');
+            dataTable.draw();
+            toggleExportFilteredButton();
+        });
+        return true; 
+    };
+
+    if (startDate && endDate && startDate > endDate) {
+        return resetAndExit('Invalid Date Range', 'Start date cannot be after end date.');
+    }
+
+    if (startDate && startDate > today) {
+        return resetAndExit('Future Date Detected', 'Start date cannot be in the future.');
+    }
+
+    if (endDate && endDate > today) {
+        return resetAndExit('Future Date Detected', 'End date cannot be in the future.');
+    }
+
     dataTable.draw();
+    toggleExportFilteredButton();
 });
+
 $(document).ready(function () {
     $('#button-excelFiltered-package').hide();
 
-    $('#nameSearch, #descriptionSearch, #prioritySearch, #startDate, #endDate')
+    $('#nameSearch, #descriptionSearch, #prioritySearch')
         .on('keyup change', toggleExportFilteredButton);
 
     $('#button-excelFiltered-package').on('click', function () {

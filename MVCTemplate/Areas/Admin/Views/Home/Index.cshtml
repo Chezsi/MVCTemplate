@@ -1,10 +1,55 @@
-﻿@{
+﻿@model MVCTemplate.ViewModels.DashboardVM
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row text-center justify-content-center">
+    <!-- Product Card -->
+    <div class="col-md-4 d-flex justify-content-center mb-4 mt-4">
+        <div class="card shadow-sm border-0" style="width: 300px; height: 200px;">
+            <div class="card-body d-flex flex-column text-center">
+                <h5 class="card-title text-muted">Current Products</h5>
+                <h1 class="display-4">@Model.ProductStats.ProductCount</h1>
+                <hr />
+                <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="btn btn-primary mt-auto">SHOW ALL</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Package Card -->
+    <div class="col-md-4 d-flex justify-content-center mb-4 mt-4">
+        <div class="card shadow-sm border-0" style="width: 300px; height: 200px;">
+            <div class="card-body d-flex flex-column text-center">
+                <h5 class="card-title text-muted">Processing Packages</h5>
+                <h1 class="display-4">@Model.PackageStats.PackageCount</h1>
+                <hr />
+                <a asp-area="Admin" asp-controller="Package" asp-action="Index" class="btn btn-primary mt-auto">SHOW ALL</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Card -->
+    <div class="col-md-4 d-flex justify-content-center mb-4 mt-4">
+        <div class="card shadow-sm border-0" style="width: 300px; height: 200px;">
+            <div class="card-body d-flex flex-column text-center">
+                <h5 class="card-title text-muted">Pending Reports</h5>
+                <h1 class="display-4">@Model.ReportStats.ReportCount</h1>
+                <hr />
+                <a asp-area="Admin" asp-controller="Report" asp-action="Index" class="btn btn-primary mt-auto">SHOW ALL</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="my-5">
+    <h4>Report Age Distribution</h4>
+    <canvas id="ageChart" width="400" height="200"></canvas>
+</div>
+
+<div class="my-5">
+    <h4>Package Distribution by Priority</h4>
+    <canvas id="priorityChart" width="600" height="300"></canvas>
 </div>
 
 <script>
@@ -13,3 +58,13 @@
         $(".app-main__inner").animate({ opacity: 1 }, 10);
     });
 </script>
+
+<script>
+    window.ageLabels = @Html.Raw(Json.Serialize(Model.ReportAgeDistribution.Keys));
+    window.ageData = @Html.Raw(Json.Serialize(Model.ReportAgeDistribution.Values));
+
+
+    window.priorityLabels = @Html.Raw(Json.Serialize(Model.PackagePriorityDistribution.Keys));
+    window.priorityCounts = @Html.Raw(Json.Serialize(Model.PackagePriorityDistribution.Values));
+</script>
+<script src="~/js/HomeScripts/home-graph.js"></script>
