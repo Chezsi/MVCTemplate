@@ -737,11 +737,15 @@ namespace MVCTemplate.Controllers
             {
                 worksheet.Cell(row, 1).Value = report.Title;
 
-                var descriptionParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+");
-                worksheet.Cell(row, 2).Value = descriptionParts.Length;
+                var rawParts = Regex.Split(report.Description ?? "", @"[\\|,\/\-\.]+")
+                                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                                    .ToList();
 
-                var combinedDescription = string.Join("  ", descriptionParts
-                    .Select((part, index) => $"{index + 1}.) {part.Trim().ToUpper()}"));
+                worksheet.Cell(row, 2).Value = rawParts.Count;
+
+                var combinedDescription = rawParts.Count > 0
+                    ? string.Join("  ", rawParts.Select((part, index) => $"{index + 1}.) {part.Trim().ToUpper()}"))
+                    : "None";
 
                 worksheet.Cell(row, 3).Value = combinedDescription;
                 worksheet.Row(row).Height = 18;
