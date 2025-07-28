@@ -1,0 +1,173 @@
+﻿@model IEnumerable<ApplicationUser>
+@using MVCTemplate.Util
+@using MVCTemplate.ViewModels
+
+@{
+    ViewData["Title"] = "Account";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo overlay -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-users icon-gradient bg-sunny-morning"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                User Accounts
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions staggered">
+                <div class="d-inline-block">
+                    <button class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                        + Create New User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="table-responsive staggered">
+                <table style="width: 100%;" id="accountTable" class="table table-hover table-striped table-bordered display nowrap">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> <!-- .app-main__inner -->
+@section Modal {
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="createUserForm" method="post" asp-action="Register">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createUserLabel">Create New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label>Email</label>
+                            <input name="Email" type="email" class="form-control" required />
+                            <small class="form-text text-muted">
+                                Default password: <strong>@Roles.Default_Password</strong>
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Role</label>
+                            <select name="Role" class="form-select" required>
+                                <option value="">-- Select Role --</option>
+                                <option value="@Roles.Admin">Admin</option>
+                                <option value="@Roles.User">User</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-danger d-none" id="createUserError"></div>
+                        <div class="alert alert-success d-none" id="createUserSuccess"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Create</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="editUserForm" method="post" asp-action="Edit">
+                <input type="hidden" id="editOriginalEmail" name="OriginalEmail" />
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editUserLabel">Edit User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label>Email</label>
+                            <input name="Email" id="editEmail" type="email" class="form-control" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Role</label>
+                            <select name="Role" id="editRole" class="form-select" required>
+                                <option value="">-- Select Role --</option>
+                                <option value="@Roles.Admin">Admin</option>
+                                <option value="@Roles.User">User</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="NewPassword" id="editPassword" class="form-control" />
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Leave blank to keep current password.</small>
+                        </div>
+
+                        <div class="alert alert-danger d-none" id="editUserError"></div>
+                        <div class="alert alert-success d-none" id="editUserSuccess"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+}
+
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" /> <!-- DataTables -->
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="~/css/button-hover.css" />
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Your table script AFTER DataTables is loaded -->
+    <script src="~/js/AccountScripts/account-data-table.js"></script>
+    <script src="~/js/AccountScripts/account-animation.js"></script>
+    <script src="~/js/AccountScripts/account-create-modal.js"></script>
+    <script src="~/js/AccountScripts/account-toggle-visibility.js"></script>
+}

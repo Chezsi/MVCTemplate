@@ -26,7 +26,12 @@ function loadDataTable() {
             {
                 data: 'updatedAt',
                 "render": function (data) {
-                    return new Date(data).toLocaleString('en-US', {
+                    const date = new Date(data);
+                    // Check for default .NET DateTime.MinValue
+                    if (date.getFullYear() === 1 && date.getMonth() === 0 && date.getDate() === 1) {
+                        return '';
+                    }
+                    return date.toLocaleString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -40,14 +45,30 @@ function loadDataTable() {
             {
                 data: 'id',
                 "render": function (data, type, full, meta) {
-                    return `<div class="w-75 btn-group" role="group">
-                        <button type="button" data-id="${data}" data-name="${full.name}" data-description="${full.description}" data-priority="${full.priority}" data-createdAt="${full.createdAt}" data-updatedAt="${full.updatedAt}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal">
-                            <i class="lnr-pencil"></i> Edit
-                        </button>
-                        <a onClick="Delete('/Admin/Package/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
-                            <i class="lnr-trash"></i> Delete
-                        </a>
-                    </div>`;
+                    let buttons = `
+                        <div class="w-75 btn-group" role="group">
+                            <button type="button" 
+                                data-id="${data}" 
+                                data-name="${full.name}" 
+                                data-description="${full.description}" 
+                                data-priority="${full.priority}" 
+                                data-createdAt="${full.createdAt}" 
+                                data-updatedAt="${full.updatedAt}" 
+                                class="btn-shadow btn btn-info" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#updateModal">
+                                <i class="lnr-pencil"></i> Edit
+                            </button>`;
+
+                    if (currentUserRole === 'Admin') {
+                        buttons += `
+                            <a onClick="Delete('/Admin/Package/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
+                                <i class="lnr-trash"></i> Delete
+                            </a>`;
+                    }
+
+                    buttons += `</div>`;
+                    return buttons;
                 },
                 width: "25%", className: "text-center", orderable: false
             }

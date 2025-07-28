@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
-    [Authorize(Roles = $"{Roles.Admin}")]
+    [Authorize(Roles = $"{Roles.Admin},{Roles.User}")]
     [Area("Admin")]
     public class HomeController : Controller
     {

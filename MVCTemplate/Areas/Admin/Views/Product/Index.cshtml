@@ -1,4 +1,13 @@
-﻿@model Product
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var roles = await UserManager.GetRolesAsync(currentUser);
+    var userRole = roles.FirstOrDefault() ?? "Unknown";
+}
+
+@model Product
 @{
     ViewData["Title"] = "Product";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -228,5 +237,9 @@
 
     <script src="~/js/fadeEffect.js"></script>
     <script src="~/js/download-morph.js"></script>
+
+    <script>
+        const currentUserRole = '@userRole';
+    </script>
 
 }

@@ -190,7 +190,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
 
-                    return BadRequest(new { message = "Please Fill Required Fields", errors });
+                    return BadRequest(new { message = "Invalid Operation", errors });
                 }
 
                 if (!ModelState.IsValid)
@@ -268,6 +268,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete]
         public IActionResult Delete(int id)
         {
