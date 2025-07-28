@@ -7,6 +7,7 @@ using System.Diagnostics;
 using MVCtemplate.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using MVCTemplate.ViewModels.MVCTemplate.ViewModels;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -57,6 +58,57 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
 
             return Json(new { success = false, errors = result.Errors.Select(e => e.Description) });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EditUserVM model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new
+                {
+                    success = false,
+                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+                });
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.OriginalEmail);
+            if (user == null)
+                return Json(new { success = false, errors = new[] { "User not found." } });
+
+            // Check for email conflict
+            if (model.Email != model.OriginalEmail)
+            {
+                var existing = await _userManager.FindByEmailAsync(model.Email);
+                if (existing != null)
+                    return Json(new { success = false, errors = new[] { "The new email is already in use." } });
+            }
+
+            user.Email = model.Email;
+            user.UserName = model.Email;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+                return Json(new { success = false, errors = updateResult.Errors.Select(e => e.Description) });
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            if (!currentRoles.Contains(model.Role))
+            {
+                await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                await _userManager.AddToRoleAsync(user, model.Role);
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var pwdResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+                if (!pwdResult.Succeeded)
+                    return Json(new { success = false, errors = pwdResult.Errors.Select(e => e.Description) });
+            }
+
+            return Json(new { success = true, message = "User updated successfully." });
         }
 
         // GET: /Account/RegisterSuccess
