@@ -30,7 +30,7 @@
                     <div class="input-group">
                         <input asp-for="Input.Password" id="passwordInput" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
                         <button type="button" id="showPasswordBtn" class="btn btn-outline-secondary">
-                            <i id="eyeIcon" class="lnr-eye"></i>
+                            <i id="eyeIcon" class="fas fa-eye"></i>
                         </button>
                     </div>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
@@ -54,4 +54,22 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("passwordInput");
+            const showPasswordBtn = document.getElementById("showPasswordBtn");
+            const eyeIcon = document.getElementById("eyeIcon");
+
+            // Toggle password visibility
+            showPasswordBtn.addEventListener("click", function () {
+                const isPassword = passwordInput.type === "password";
+                passwordInput.type = isPassword ? "text" : "password";
+
+                // Optional: toggle icon class
+                eyeIcon.classList.toggle("fa-eye");
+                eyeIcon.classList.toggle("fa-eye-slash");
+            });
+        });
+    </script>
 }
