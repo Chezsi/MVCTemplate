@@ -12,25 +12,49 @@
     <img src="~/LogosIcons/logo.png" alt="Logo" />
 </div>
 
-<!-- Page content starts here -->
 <div class="app-main__inner" style="opacity: 0;">
-    <h2>User Accounts</h2>
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-users icon-gradient bg-sunny-morning"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round" class="draw-text">
+                                User Accounts
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions staggered">
+                <div class="d-inline-block">
+                    <button class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                        + Create New User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
-        + Create New User
-    </button>
-
-    <!-- DataTable -->
-    <table class="table table-bordered" id="accountTable">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="table-responsive staggered">
+                <table style="width: 100%;" id="accountTable" class="table table-hover table-striped table-bordered display nowrap">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div> <!-- .app-main__inner -->
 @section Modal {
     <!-- Create User Modal -->
