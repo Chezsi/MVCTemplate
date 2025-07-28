@@ -167,62 +167,7 @@
 
     <!-- Your table script AFTER DataTables is loaded -->
     <script src="~/js/AccountScripts/account-data-table.js"></script>
-
-    <script>
-        window.onload = function () {
-            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
-                setTimeout(function () {
-                    $("#logoOverlay").fadeOut(500, function () {
-                        $(this).remove();
-                    });
-                }, 500);
-
-                const staggeredElements = document.querySelectorAll(".staggered");
-                staggeredElements.forEach((el, index) => {
-                    setTimeout(() => el.classList.add("show"), index * 200);
-                });
-            });
-        };
-    </script>
-
-    <script>
-        $(document).ready(function () {
-            $("#createUserForm").on("submit", function (e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const actionUrl = form.attr("action");
-                const formData = form.serialize();
-
-                $.post(actionUrl, formData)
-                    .done(function (res) {
-                        if (res.success) {
-                            $("#createUserError").addClass("d-none");
-                            $("#createUserSuccess").removeClass("d-none").text(res.message);
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            $("#createUserError").removeClass("d-none").text(res.errors.join(", "));
-                            $("#createUserSuccess").addClass("d-none");
-                        }
-                    })
-                    .fail(function () {
-                        $("#createUserError").removeClass("d-none").text("Something went wrong.");
-                        $("#createUserSuccess").addClass("d-none");
-                    });
-            });
-        });
-    </script>
-
-    <script>
-        $(document).on('click', '#togglePassword', function () {
-            const passwordInput = $('#editPassword');
-            const icon = $(this).find('i');
-
-            const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
-            passwordInput.attr('type', type);
-
-            icon.toggleClass('fa-eye fa-eye-slash');
-        });
-    </script>
-
+    <script src="~/js/AccountScripts/account-animation.js"></script>
+    <script src="~/js/AccountScripts/account-create-modal.js"></script>
+    <script src="~/js/AccountScripts/account-toggle-visibility.js"></script>
 }
