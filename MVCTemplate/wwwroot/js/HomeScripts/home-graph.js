@@ -2,49 +2,64 @@
 const ageLabels = window.ageLabels;
 const ageData = window.ageData;
 
-    const ctx = document.getElementById('ageChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
+const ctx = document.getElementById('ageChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
     data: {
         labels: ageLabels,
-    datasets: [{
-        label: 'Products Created (days ago)',
-    data: ageData,
-    fill: false,
-    borderColor: 'rgb(75, 192, 192)',
-    backgroundColor: 'rgb(75, 192, 192)',
-    tension: 0.3,
-    pointRadius: 5,
-    pointHoverRadius: 7
-            }]
-        },
+        datasets: [{
+            label: 'Products Created (days ago)',
+            data: ageData,
+            fill: false,
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgb(75, 192, 192)',
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
     options: {
+        layout: {
+            padding: {
+                top: 30 // <-- prevents data labels from getting cut
+            }
+        },
         plugins: {
-        legend: {display: false },
-    datalabels: {
-        anchor: 'end',
-    align: 'top',
-    font: {
-        weight: 'bold'
-                    },
-    formatter: function(value) {
-                        return value;
-                    }
-                }
-            },
-    scales: {
-        x: {
-        title: {display: true, text: 'Days Ago' }
+            legend: { display: false },
+            datalabels: {
+                anchor: 'end',
+                align: 'top',
+                clip: false,
+                padding: {
+                    top: 4,
+                    bottom: 4
                 },
-    y: {
-        title: {display: true, text: 'Count' },
-    beginAtZero: true
+                font: {
+                    weight: 'bold'
+                },
+                formatter: function (value) {
+                    return value;
                 }
             }
         },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Days Ago'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Count'
+                }
+            }
+        }
+    },
     plugins: [ChartDataLabels]
-    });
-
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     const labels = window.priorityLabels;
@@ -126,6 +141,19 @@ $(document).ready(function () {
                 },
                 options: {
                     responsive: true,
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#000',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: function (value) {
+                                return value;
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -134,7 +162,8 @@ $(document).ready(function () {
                             }
                         }
                     }
-                }
+                },
+                plugins: [ChartDataLabels]
             });
         },
         error: function () {
