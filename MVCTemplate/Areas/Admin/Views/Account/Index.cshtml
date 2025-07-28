@@ -100,8 +100,14 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label>New Password (leave blank to keep current)</label>
-                            <input name="NewPassword" type="password" class="form-control" />
+                            <label>New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="NewPassword" id="editPassword" class="form-control" />
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Leave blank to keep current password.</small>
                         </div>
 
                         <div class="alert alert-danger d-none" id="editUserError"></div>
@@ -182,4 +188,17 @@
             });
         });
     </script>
+
+    <script>
+        $(document).on('click', '#togglePassword', function () {
+            const passwordInput = $('#editPassword');
+            const icon = $(this).find('i');
+
+            const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+            passwordInput.attr('type', type);
+
+            icon.toggleClass('fa-eye fa-eye-slash');
+        });
+    </script>
+
 }
