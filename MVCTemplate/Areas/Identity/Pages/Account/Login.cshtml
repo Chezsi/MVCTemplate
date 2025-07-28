@@ -5,12 +5,12 @@
     ViewData["Title"] = "Log in";
 }
 
-<div class="h-100 d-flex bg-white justify-content-center align-items-center col-md-12 col-lg-8">
-    <div class="mx-auto app-login-box col-sm-12 col-md-10 col-lg-9">
-        <div>
-            <img src="~/LogosIcons/logo.png" width="75rem" alt="">
+<div class="container min-vh-100 d-flex justify-content-center align-items-center">
+    <div class="card shadow-lg p-4 col-md-6 col-lg-5 rounded">
+        <div class="text-center mb-3">
+            <img src="~/LogosIcons/logo.png" width="75" alt="">
         </div>
-        <h4 class="mb-0">
+        <h4 class="text-center mb-3">
             <span class="d-block">Welcome back,</span>
             <span>Please sign in to your account.</span>
         </h4>
@@ -19,39 +19,32 @@
             <form id="account" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
-                <div class="">
-                    <div class="col-md-6">
-                        <div class="position-relative mb-3">
-                            <label asp-for="Input.Email" for="exampleEmail" class="form-label">Email</label>
-                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                            <span asp-validation-for="Input.Email" class="text-danger"></span>
-
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="position-relative mb-3">
-                            <label asp-for="Input.Password" for="examplePassword" class="form-label">Password</label>
-                            <div class="input-group">
-                                <input asp-for="Input.Password" id="passwordInput" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                                <button type="button" id="showPasswordBtn" class="btn btn-sm btn-outline-secondary" style="display: none; ">
-                                    <i id="eyeIcon" class="lnr-eye"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="Input.Password" class="text-danger"></span>
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
-                <div class="position-relative form-check mb-3">
-                    <input name="check" id="exampleCheck" type="checkbox" class="form-check-input" asp-for="Input.RememberMe">
-                    <label for="exampleCheck" class="form-label form-check-label">Keep me logged in</label>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <input asp-for="Input.Password" id="passwordInput" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                        <button type="button" id="showPasswordBtn" class="btn btn-outline-secondary">
+                            <i id="eyeIcon" class="lnr-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="exampleCheck" asp-for="Input.RememberMe">
+                    <label class="form-check-label" for="exampleCheck">Keep me logged in</label>
                 </div>
                 <div class="divider row"></div>
-                <div class="d-flex align-items-center">
-                    <div class="ms-auto">
-                        @* Enable this for, forgot password *@
-                        @* <a asp-area="Identity" asp-page="/Account/ForgotPassword" class="btn-lg btn btn-link">Forgot Password?</a> *@
-                        <button type="submit" class="btn btn-primary btn-lg">Login to Dashboard</button>
-                    </div>
+                <div class="d-grid">
+                    @* Enable this for, forgot password *@
+                    @* <a asp-area="Identity" asp-page="/Account/ForgotPassword" class="btn-lg btn btn-link">Forgot Password?</a> *@
+                    <button type="submit" class="btn btn-primary btn-lg">Login to Dashboard</button>
                 </div>
             </form>
         </div>
