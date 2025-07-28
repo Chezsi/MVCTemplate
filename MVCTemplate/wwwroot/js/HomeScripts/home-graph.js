@@ -1,98 +1,50 @@
-﻿
-const ageLabels = window.ageLabels;
-const ageData = window.ageData;
+﻿try {
+    const ageLabels = window.ageLabels;
+    const ageData = window.ageData;
 
-const ctx = document.getElementById('ageChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ageLabels,
-        datasets: [{
-            label: 'Products Created (days ago)',
-            data: ageData,
-            fill: false,
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgb(75, 192, 192)',
-            tension: 0.3,
-            pointRadius: 5,
-            pointHoverRadius: 7
-        }]
-    },
-    options: {
-        layout: {
-            padding: {
-                top: 30 // <-- prevents data labels from getting cut
-            }
-        },
-        plugins: {
-            legend: { display: false },
-            datalabels: {
-                anchor: 'end',
-                align: 'top',
-                clip: false,
-                padding: {
-                    top: 4,
-                    bottom: 4
-                },
-                font: {
-                    weight: 'bold'
-                },
-                formatter: function (value) {
-                    return value;
-                }
-            }
-        },
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: 'Days Ago'
-                }
-            },
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Count'
-                }
-            }
-        }
-    },
-    plugins: [ChartDataLabels]
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    // Get original labels and append ' Priority' to each
-    const labels = window.priorityLabels.map(label => `${label} Priority`);
-    const data = window.priorityCounts;
-
-    const ctx = document.getElementById('priorityChart').getContext('2d');
+    const ctx = document.getElementById('ageChart').getContext('2d');
     new Chart(ctx, {
-        type: 'pie',
+        type: 'line',
         data: {
-            labels: labels,
+            labels: ageLabels,
             datasets: [{
-                label: 'Package Count by Priority',
-                data: data,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)'
-                ],
-                borderColor: '#fff',
-                borderWidth: 1
+                label: 'Products Created (days ago)',
+                data: ageData,
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgb(75, 192, 192)',
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 7
             }]
         },
         options: {
+            layout: {
+                padding: {
+                    top: 30
+                }
+            },
             plugins: {
-                legend: {
+                title: {
                     display: true,
-                    position: 'bottom'
+                    text: 'Report Age Distribution',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    padding: {
+                        bottom: 20
+                    }
                 },
+                legend: { display: false },
                 datalabels: {
-                    color: '#000',
+                    anchor: 'end',
+                    align: 'top',
+                    clip: false,
+                    padding: {
+                        top: 4,
+                        bottom: 4
+                    },
                     font: {
                         weight: 'bold'
                     },
@@ -100,10 +52,85 @@ document.addEventListener("DOMContentLoaded", function () {
                         return value;
                     }
                 }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Days Ago'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    }
+                }
             }
         },
         plugins: [ChartDataLabels]
     });
+} catch (error) {
+    console.error("Failed to render 'Report Chart'", error);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    try {
+        const labels = window.priorityLabels.map(label => `${label} Priority`);
+        const data = window.priorityCounts;
+
+        const ctx = document.getElementById('priorityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Package Priority Distribution',
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            bottom: 20
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    datalabels: {
+                        color: '#000',
+                        font: {
+                            weight: 'bold'
+                        },
+                        formatter: function (value) {
+                            return value;
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    } catch (error) {
+        console.error("Failed to render 'Package Chart'", error);
+    }
 });
 
 $(document).ready(function () {
@@ -118,8 +145,8 @@ $(document).ready(function () {
 
             const descriptionMap = {};
             products.forEach(product => {
-                const description = product.description || 'No Description';
-                descriptionMap[description] = (descriptionMap[description] || 0) + 1;
+                const description = product.description || 'Miscellaneous';
+                descriptionMap[description] = (descriptionMap[description] || 0) + product.quantity;
             });
 
             const labels = Object.keys(descriptionMap);
@@ -162,6 +189,17 @@ $(document).ready(function () {
                         }
                     },
                     plugins: {
+                        title: {
+                            display: true,
+                            text: 'Product Description Distribution',
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
                         legend: {
                             display: false
                         },
@@ -193,8 +231,9 @@ $(document).ready(function () {
                 plugins: [ChartDataLabels]
             });
         },
-        error: function () {
-            alert('Failed to load product data.');
+        error: function (xhr, status, error) {
+            console.error("Failed to render 'Product Chart'", error);
         }
     });
 });
+
