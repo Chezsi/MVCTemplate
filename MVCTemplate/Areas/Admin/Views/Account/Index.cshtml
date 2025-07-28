@@ -14,29 +14,23 @@
 
 <!-- Page content starts here -->
 <div class="app-main__inner" style="opacity: 0;">
-
     <h2>User Accounts</h2>
 
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
         + Create New User
     </button>
 
-    <table class="table table-bordered">
+    <!-- DataTable -->
+    <table class="table table-bordered" id="accountTable">
         <thead>
             <tr>
                 <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var user in Model)
-            {
-                <tr>
-                    <td>@user.Email</td>
-                </tr>
-            }
-        </tbody>
+        <tbody></tbody>
     </table>
-
 </div> <!-- .app-main__inner -->
 @section Modal {
     <!-- Create User Modal -->
@@ -83,6 +77,7 @@
 
 
 @section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" /> <!-- DataTables -->
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
     <link rel="stylesheet" href="~/css/search-hover.css" />
     <link rel="stylesheet" href="~/css/download-morph.css" />
@@ -91,6 +86,13 @@
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Your table script AFTER DataTables is loaded -->
+    <script src="~/js/AccountScripts/account-data-table.js"></script>
 
     <script>
         window.onload = function () {

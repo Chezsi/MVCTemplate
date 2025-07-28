@@ -64,5 +64,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             return View();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var userList = new List<object>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userList.Add(new
+                {
+                    email = user.Email,
+                    role = roles.FirstOrDefault() ?? "None"
+                });
+            }
+
+            return Json(new { data = userList });
+        }
+
     }
 }
