@@ -116,7 +116,6 @@ $(document).ready(function () {
         success: function (response) {
             const products = response.data;
 
-            // Group by description
             const descriptionMap = {};
             products.forEach(product => {
                 const description = product.description || 'No Description';
@@ -136,11 +135,11 @@ $(document).ready(function () {
                     'rgba(255, 159, 64, 0.6)',
                     'rgba(201, 203, 207, 0.6)'
                 ];
-                return colors[index % colors.length]; 
+                return colors[index % colors.length];
             });
 
             const borderColors = backgroundColors.map(color =>
-                color.replace('0.6', '1') 
+                color.replace('0.6', '1')
             );
 
             const ctx = document.getElementById('descriptionChart').getContext('2d');
@@ -149,7 +148,6 @@ $(document).ready(function () {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Product Count by Description',
                         data: counts,
                         backgroundColor: backgroundColors,
                         borderColor: borderColors,
@@ -158,17 +156,25 @@ $(document).ready(function () {
                 },
                 options: {
                     responsive: true,
+                    layout: {
+                        padding: {
+                            top: 30
+                        }
+                    },
                     plugins: {
                         legend: {
-                            display: true,
-                            onClick: null
+                            display: false
                         },
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
+                            clip: false,
                             color: '#000',
                             font: {
                                 weight: 'bold'
+                            },
+                            padding: {
+                                top: 4
                             },
                             formatter: function (value) {
                                 return value;
