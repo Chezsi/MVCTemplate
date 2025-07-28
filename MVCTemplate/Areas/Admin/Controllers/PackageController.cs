@@ -21,7 +21,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
-    [Authorize(Roles = $"{Roles.Admin}")]
+    [Authorize(Roles = $"{Roles.Admin}, {Roles.User}")]
     [Area("Admin")]
 
     public class PackageController : Controller
@@ -310,8 +310,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
+        [Authorize(Roles = $"{Roles.Admin}")]
         [HttpDelete]
-
         public IActionResult Delete(int id)
         {
             try

@@ -1451,6 +1451,7 @@ namespace MVCTemplate.Controllers
         }
 
         // DELETE: /Report/Delete/{id}
+        [Authorize(Roles = $"{Roles.Admin}")]
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {

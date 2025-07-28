@@ -56,7 +56,7 @@ function loadDataTableReport() {
                     if (!data) return '';
 
                     const preview = data.length > 30 ? data.substring(0, 30) + '...' : data;
-                    const safeText = data.replace(/"/g, '&quot;'); // prevent broken HTML
+                    const safeText = data.replace(/"/g, '&quot;');
 
                     return `<button class="btn btn-link text-primary p-0 description-preview" data-description="${safeText}">${preview}</button>`;
                 }
@@ -64,7 +64,7 @@ function loadDataTableReport() {
             {
                 data: 'id',
                 render: function (data, type, full, meta) {
-                    return `
+                    let buttons = `
                         <div class="w-75 btn-group" role="group">
                             <button type="button"
                                     data-id="${data}"
@@ -75,11 +75,17 @@ function loadDataTableReport() {
                                     data-bs-toggle="modal"
                                     data-bs-target="#updateModal">
                                 <i class="lnr-pencil"></i> Edit
-                            </button>
+                            </button>`;
+
+                    if (currentUserRole === 'Admin') {
+                        buttons += `
                             <a href="javascript:void(0);" onClick="Delete('/Admin/Report/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
                                 <i class="lnr-trash"></i> Delete
-                            </a>
-                        </div>`;
+                            </a>`;
+                    }
+
+                    buttons += `</div>`;
+                    return buttons;
                 },
                 width: "25%",
                 className: "text-center",
