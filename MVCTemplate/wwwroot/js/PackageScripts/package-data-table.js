@@ -26,7 +26,12 @@ function loadDataTable() {
             {
                 data: 'updatedAt',
                 "render": function (data) {
-                    return new Date(data).toLocaleString('en-US', {
+                    const date = new Date(data);
+                    // Check for default .NET DateTime.MinValue
+                    if (date.getFullYear() === 1 && date.getMonth() === 0 && date.getDate() === 1) {
+                        return '';
+                    }
+                    return date.toLocaleString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
