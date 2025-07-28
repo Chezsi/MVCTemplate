@@ -1,4 +1,4 @@
-
+﻿
 const ageLabels = window.ageLabels;
 const ageData = window.ageData;
 
@@ -62,7 +62,8 @@ new Chart(ctx, {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    const labels = window.priorityLabels;
+    // Get original labels and append ' Priority' to each
+    const labels = window.priorityLabels.map(label => `${label} Priority`);
     const data = window.priorityCounts;
 
     const ctx = document.getElementById('priorityChart').getContext('2d');
@@ -125,7 +126,23 @@ $(document).ready(function () {
             const labels = Object.keys(descriptionMap);
             const counts = Object.values(descriptionMap);
 
-            // Render the chart
+            const backgroundColors = labels.map((_, index) => {
+                const colors = [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(201, 203, 207, 0.6)'
+                ];
+                return colors[index % colors.length]; 
+            });
+
+            const borderColors = backgroundColors.map(color =>
+                color.replace('0.6', '1') 
+            );
+
             const ctx = document.getElementById('descriptionChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
@@ -134,14 +151,18 @@ $(document).ready(function () {
                     datasets: [{
                         label: 'Product Count by Description',
                         data: counts,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
                         borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
+                        legend: {
+                            display: true,
+                            onClick: null
+                        },
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
