@@ -53,7 +53,18 @@
                         <div class="form-group mb-3">
                             <label>Email</label>
                             <input name="Email" type="email" class="form-control" required />
-                            <small class="form-text text-muted">Default password: <strong>@Roles.Default_Password</strong></small>
+                            <small class="form-text text-muted">
+                                Default password: <strong>@Roles.Default_Password</strong>
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Role</label>
+                            <select name="Role" class="form-select" required>
+                                <option value="">-- Select Role --</option>
+                                <option value="@Roles.Admin">Admin</option>
+                                <option value="@Roles.User">User</option>
+                            </select>
                         </div>
 
                         <div class="alert alert-danger d-none" id="createUserError"></div>
@@ -69,6 +80,7 @@
         </div>
     </div>
 }
+
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />

@@ -31,43 +31,32 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return View(users);
         }
 
-        // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterVM model)
         {
             if (!ModelState.IsValid)
-                return View(model);
+            {
+                return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+            }
 
             var user = new ApplicationUser
             {
+                UserName = model.Email,
                 Email = model.Email,
-                UserName = model.Email
+                EmailConfirmed = true // Optional: auto-confirm
             };
 
             var result = await _userManager.CreateAsync(user, Roles.Default_Password);
-
             if (result.Succeeded)
             {
-                // Ensure "user" role exists
-                if (!await _roleManager.RoleExistsAsync(Roles.User))
-                {
-                    await _roleManager.CreateAsync(new IdentityRole(Roles.User));
-                }
+                // Assign the selected role (Admin/User)
+                await _userManager.AddToRoleAsync(user, model.Role);
 
-                // Assign role
-                await _userManager.AddToRoleAsync(user, Roles.User);
-
-                return RedirectToAction("RegisterSuccess");
+                return Json(new { success = true, message = "User created successfully." });
             }
 
-            // Handle errors
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-
-            return View(model);
+            return Json(new { success = false, errors = result.Errors.Select(e => e.Description) });
         }
 
         // GET: /Account/RegisterSuccess
