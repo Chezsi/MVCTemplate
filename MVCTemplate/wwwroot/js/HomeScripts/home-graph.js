@@ -89,3 +89,56 @@ document.addEventListener("DOMContentLoaded", function () {
         plugins: [ChartDataLabels]
     });
 });
+
+$(document).ready(function () {
+    $.ajax({
+        url: '/Admin/Product/GetAllProducts',
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function (response) {
+            const products = response.data;
+
+            // Group by description
+            const descriptionMap = {};
+            products.forEach(product => {
+                const description = product.description || 'No Description';
+                descriptionMap[description] = (descriptionMap[description] || 0) + 1;
+            });
+
+            const labels = Object.keys(descriptionMap);
+            const counts = Object.values(descriptionMap);
+
+            // Render the chart
+            const ctx = document.getElementById('descriptionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Product Count by Description',
+                        data: counts,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        },
+        error: function () {
+            alert('Failed to load product data.');
+        }
+    });
+});
