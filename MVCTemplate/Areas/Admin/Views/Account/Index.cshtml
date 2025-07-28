@@ -1,0 +1,127 @@
+﻿@model IEnumerable<ApplicationUser>
+@using MVCTemplate.Util
+@using MVCTemplate.ViewModels
+
+@{
+    ViewData["Title"] = "Account";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo overlay -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<!-- Page content starts here -->
+<div class="app-main__inner" style="opacity: 0;">
+
+    <h2>User Accounts</h2>
+
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        + Create New User
+    </button>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div> <!-- .app-main__inner -->
+@section Modal {
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="createUserForm" method="post" asp-action="Register">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createUserLabel">Create New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label>Email</label>
+                            <input name="Email" type="email" class="form-control" required />
+                            <small class="form-text text-muted">Default password: <strong>@Roles.Default_Password</strong></small>
+                        </div>
+
+                        <div class="alert alert-danger d-none" id="createUserError"></div>
+                        <div class="alert alert-success d-none" id="createUserSuccess"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Create</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="~/css/button-hover.css" />
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <script>
+        window.onload = function () {
+            $(".app-main__inner").animate({ opacity: 1 }, 100, function () {
+                setTimeout(function () {
+                    $("#logoOverlay").fadeOut(500, function () {
+                        $(this).remove();
+                    });
+                }, 500);
+
+                const staggeredElements = document.querySelectorAll(".staggered");
+                staggeredElements.forEach((el, index) => {
+                    setTimeout(() => el.classList.add("show"), index * 200);
+                });
+            });
+        };
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#createUserForm").on("submit", function (e) {
+                e.preventDefault();
+
+                const form = $(this);
+                const actionUrl = form.attr("action");
+                const formData = form.serialize();
+
+                $.post(actionUrl, formData)
+                    .done(function (res) {
+                        if (res.success) {
+                            $("#createUserError").addClass("d-none");
+                            $("#createUserSuccess").removeClass("d-none").text(res.message);
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            $("#createUserError").removeClass("d-none").text(res.errors.join(", "));
+                            $("#createUserSuccess").addClass("d-none");
+                        }
+                    })
+                    .fail(function () {
+                        $("#createUserError").removeClass("d-none").text("Something went wrong.");
+                        $("#createUserSuccess").addClass("d-none");
+                    });
+            });
+        });
+    </script>
+}
