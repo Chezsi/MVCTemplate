@@ -50,12 +50,13 @@ function loadDataTable() {
                             </button>
                             `;
 
-                    if (currentUserRole === 'Admin') {
+                    if ((currentUserRole || "").toLowerCase() === 'admin') {
                         buttons += `
                             <a href="javascript:void(0);" onClick="Delete('/Admin/Product/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
                                 <i class="lnr-trash"></i> Delete
                             </a>`;
                     }
+
 
                     buttons += `</div>`;
                     return buttons;
