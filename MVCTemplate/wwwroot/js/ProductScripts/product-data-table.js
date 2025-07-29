@@ -1,4 +1,4 @@
-
+﻿
 // Custom filter to handle min/max quantity filtering
 $.fn.dataTable.ext.search.push(
     function (settings, data, dataIndex) {
@@ -47,8 +47,7 @@ function loadDataTable() {
                                 data-bs-toggle="modal"
                                 data-bs-target="#updateModal">
                                 <i class="lnr-pencil"></i> Edit
-                            </button>
-                            `;
+                            </button>`;
 
                     if (currentUserRole === 'Admin') {
                         buttons += `
@@ -63,6 +62,16 @@ function loadDataTable() {
                 width: "25%", className: "text-center", orderable: false
             }
         ]
+    });
+
+    // Attach xhr event listener for debug output
+    $('#productTable').on('xhr.dt', function (e, settings, json, xhr) {
+        if (json.debug) {
+            console.log("🚨 Null Manager Count:", json.debug.nullManagerCount);
+            console.log("🚨 Products with NULL ManagerId:", json.debug.nullManagerProducts);
+        } else {
+            console.log("ℹ️ No debug info returned in response.");
+        }
     });
 }
 
