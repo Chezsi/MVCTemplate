@@ -53,10 +53,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(MVCTemplate.Models.Manager manager)
+        public IActionResult Edit(ManagerVM vm)
         {
             if (!ModelState.IsValid)
                 return Json(new { success = false, message = "Validation failed." });
+
+            var manager = vm.NewManager;
 
             var dbManager = _context.Managers.FirstOrDefault(m => m.Id == manager.Id);
             if (dbManager == null)
@@ -79,6 +81,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(new { success = true, message = "Manager updated successfully." });
         }
+
 
         [HttpDelete]
         public IActionResult Delete(int id)

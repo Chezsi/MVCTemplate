@@ -109,18 +109,24 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="Id" id="editId" />
+                        <input type="hidden" name="NewManager.Id" id="editId" />
                         <div class="mb-3">
                             <label class="form-label">Name <span class="text-danger">*</span></label>
-                            <input type="text" name="Name" id="editName" class="form-control" required />
+                            <input type="text" name="NewManager.Name" id="editName" class="form-control" required />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" name="Email" id="editEmail" class="form-control" required />
+                            <input type="email" name="NewManager.Email" id="editEmail" class="form-control" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Site ID <span class="text-danger">*</span></label>
-                            <input type="number" name="SiteId" id="editSiteId" class="form-control" required />
+                            <label class="form-label">Site <span class="text-danger">*</span></label>
+                            <select name="NewManager.SiteId" id="editSiteId" class="form-control" required>
+                                <option value="" disabled>Select a Site</option>
+                                @foreach (var site in Model.Sites)
+                                {
+                                    <option value="@site.Id">@site.Branch - @site.Location</option>
+                                }
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -131,6 +137,7 @@
             </form>
         </div>
     </div>
+
 }
 
 
@@ -213,14 +220,12 @@
 
             // EDIT OPEN
             $('#managerTable').on('click', '.btn-edit', function () {
-                const id = $(this).data('id');
-                $.get(`/Admin/Manager/Get/${id}`, function (res) {
-                    $('#editId').val(res.id);
-                    $('#editName').val(res.name);
-                    $('#editEmail').val(res.email);
-                    $('#editSiteId').val(res.siteId);
-                    $('#editManagerModal').modal('show');
-                });
+                const rowData = table.row($(this).parents('tr')).data();
+                $('#editId').val(rowData.id);
+                $('#editName').val(rowData.name);
+                $('#editEmail').val(rowData.email);
+                $('#editSiteId').val(rowData.siteId);
+                $('#editManagerModal').modal('show');
             });
 
             // EDIT SUBMIT

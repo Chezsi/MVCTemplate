@@ -1,6 +1,8 @@
 ﻿using MVCTemplate.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace MVCTemplate.Models
 {
@@ -17,10 +19,11 @@ namespace MVCTemplate.Models
         public string Email { get; set; }
 
         // Foreign Key
-        [Required]
         [Display(Name = "Site")]
         public int SiteId { get; set; }
 
+        [BindNever]
+        [ValidateNever]
         [ForeignKey("SiteId")]
         public Site Site { get; set; }
 
