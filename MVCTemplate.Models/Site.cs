@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,12 +16,13 @@ namespace MVCTemplate.Models
         public int Id { get; set; }
         [Required]
         public string Branch { get; set; }
-        public int Location { get; set; }
+        [Required]
+        public string Location { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        public ICollection<Manager> Managers { get; set; }
+        //public ICollection<Manager> Managers { get; set; }
 
         public Site()
         {
