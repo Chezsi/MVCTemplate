@@ -163,7 +163,15 @@
                     { data: 'branch' },
                     { data: 'location' },
                     { data: 'createdAt' },
-                    { data: 'updatedAt' },
+                    {
+                        data: 'updatedAt',
+                        render: function (data) {
+                            if (!data || data.includes('0001')) {
+                                return '';
+                            }
+                            return data;
+                        }
+                    },
                     {
                         data: null,
                         render: function (data, type, row) {
