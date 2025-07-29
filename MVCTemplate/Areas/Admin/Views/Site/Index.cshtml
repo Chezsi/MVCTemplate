@@ -65,13 +65,19 @@
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label asp-for="NewSite.Branch" class="form-label"></label>
+                            <label asp-for="NewSite.Branch" class="form-label">
+                                @Html.DisplayNameFor(m => m.NewSite.Branch)
+                                <span class="text-danger">*</span>
+                            </label>
                             <input asp-for="NewSite.Branch" class="form-control" />
                             <span asp-validation-for="NewSite.Branch" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="NewSite.Location" class="form-label"></label>
+                            <label asp-for="NewSite.Location" class="form-label">
+                                @Html.DisplayNameFor(m => m.NewSite.Location)
+                                <span class="text-danger">*</span>
+                            </label>
                             <input asp-for="NewSite.Location" class="form-control" type="text" />
                             <span asp-validation-for="NewSite.Location" class="text-danger"></span>
                         </div>
@@ -182,6 +188,34 @@
             });
         });
     </script>
+    <script>
+        $(document).ready(function () {
+            $('#createModal form').on('submit', function (e) {
+                e.preventDefault(); // prevent default form submit
+                var form = $(this);
 
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $('#createModal').modal('hide');
+
+                            // Optionally refresh the DataTable
+                            $('#siteTable').DataTable().ajax.reload();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function () {
+                        toastr.error("An unexpected error occurred.");
+                    }
+                });
+            });
+        });
+
+    </script>
 }
 

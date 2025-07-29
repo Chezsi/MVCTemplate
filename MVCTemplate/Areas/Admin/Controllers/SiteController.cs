@@ -36,24 +36,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Create(SiteVM vm)
         {
-            var exists = _context.Sites
-                .Any(s => s.Branch.ToLower() == vm.NewSite.Branch.Trim().ToLower());
+            var branchName = vm.NewSite?.Branch?.Trim();
+
+            bool exists = !string.IsNullOrEmpty(branchName) &&
+                _context.Sites.Any(s => s.Branch.ToLower() == branchName.ToLower());
 
             if (exists)
             {
-                ModelState.AddModelError("NewSite.Branch", "This branch name already exists.");
+                return Json(new { success = false, message = "This branch name already exists." });
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Sites.Add(vm.NewSite);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
+                return Json(new { success = false, message = "Please fill out all required fields." });
             }
 
-            // Reload Sites in case of validation error
-            vm.Sites = _context.Sites.ToList();
-            return View("Index", vm);
+            _context.Sites.Add(vm.NewSite);
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Site added successfully." });
         }
 
 
