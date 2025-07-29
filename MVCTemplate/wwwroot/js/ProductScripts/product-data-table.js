@@ -100,6 +100,6 @@ $('#updateModal').on('show.bs.modal', function (event) {
     modal.find('.modal-body #name').val(name);
     modal.find('.modal-body #description').val(description);
     modal.find('.modal-body #quantity').val(quantity);
-    modal.find('.modal-body #ManagerId').val(managerId).trigger('change');
+    modal.find('.modal-body #managerId').val(managerId).trigger('change');
 });
 
