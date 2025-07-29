@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MVCTemplate.Models.Site>
+﻿@model MVCTemplate.ViewModels.SiteVM
 @{
     ViewData["Title"] = "Site";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -45,19 +45,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var site in Model)
-                        {
-                            <tr>
-                                <td>@site.Branch</td>
-                                <td>@site.Location</td>
-                                <td>@site.CreatedAt.ToString("g")</td>
-                                <td>@site.UpdatedAt.ToString("g")</td>
-                                <td>
-                                    <button class="btn btn-warning btn-sm btn-edit" data-id="@site.Id">Edit</button>
-                                    <button class="btn btn-danger btn-sm btn-delete" data-id="@site.Id">Delete</button>
-                                </td>
-                            </tr>
-                        }
+                        
                     </tbody>
                 </table>
             </div>
@@ -66,8 +54,40 @@
 </div>
 
 @section Modal {
-    <div id="siteModalPlaceholder"></div>
+    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-area="Admin" asp-controller="Site" asp-action="Create" method="post">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="createModalLabel">Add Site</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label asp-for="NewSite.Branch" class="form-label"></label>
+                            <input asp-for="NewSite.Branch" class="form-control" />
+                            <span asp-validation-for="NewSite.Branch" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="NewSite.Location" class="form-label"></label>
+                            <input asp-for="NewSite.Location" class="form-control" type="number" />
+                            <span asp-validation-for="NewSite.Location" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 }
+
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
@@ -77,6 +97,7 @@
 }
 
 @section Scripts {
+
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
     <script src="~/js/deleteGeneralSettings.js"></script>
@@ -91,12 +112,6 @@
         });
 
         $(document).ready(function () {
-            // Create
-            $('#createModal').on('show.bs.modal', function () {
-                $.get('/Admin/Site/Create', function (html) {
-                    $('#siteModalPlaceholder').html(html);
-                });
-            });
 
             // Edit
             $('.btn-edit').on('click', function () {
@@ -117,5 +132,56 @@
             });
         });
     </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#siteTable').DataTable({
+                ajax: {
+                    url: '/Admin/Site/GetAllSites',
+                    type: 'GET',
+                    dataType: 'json',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'branch' },
+                    { data: 'location' },
+                    { data: 'createdAt' },
+                    { data: 'updatedAt' },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `
+                                    <button class="btn btn-warning btn-sm btn-edit" data-id="${row.id}">Edit</button>
+                                    <button class="btn btn-danger btn-sm btn-delete" data-id="${row.id}">Delete</button>
+                                `;
+                        },
+                        orderable: false
+                    }
+                ],
+                language: {
+                    emptyTable: 'No sites found.'
+                },
+                width: '100%'
+            });
+
+            // Event delegation for dynamically loaded buttons
+            $('#siteTable').on('click', '.btn-edit', function () {
+                const id = $(this).data('id');
+                $.get(`/Admin/Site/Edit/${id}`, function (html) {
+                    $('#siteModalPlaceholder').html(html);
+                    $('#siteModal').modal('show');
+                });
+            });
+
+            $('#siteTable').on('click', '.btn-delete', function () {
+                const id = $(this).data('id');
+                $.get(`/Admin/Site/Delete/${id}`, function (html) {
+                    $('#siteModalPlaceholder').html(html);
+                    $('#siteModal').modal('show');
+                });
+            });
+        });
+    </script>
+
 }
 

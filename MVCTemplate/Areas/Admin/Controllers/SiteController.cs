@@ -22,32 +22,40 @@ namespace MVCTemplate.Areas.Admin.Controllers
             _context = context;
         }
 
-        // Main page
         public IActionResult Index()
         {
-            var sites = _context.Sites.ToList();
-            return View(sites);
+            var vm = new SiteVM
+            {
+                Sites = _context.Sites.ToList(),
+                NewSite = new Site()
+            };
+
+            return View(vm);
         }
 
-        // GET: Create View (loaded in modal via AJAX)
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Create
         [HttpPost]
-        public IActionResult Create(Site site)
+        public IActionResult Create(SiteVM vm)
         {
+            var exists = _context.Sites
+                .Any(s => s.Branch.ToLower() == vm.NewSite.Branch.Trim().ToLower());
+
+            if (exists)
+            {
+                ModelState.AddModelError("NewSite.Branch", "This branch name already exists.");
+            }
+
             if (ModelState.IsValid)
             {
-                _context.Sites.Add(site);
+                _context.Sites.Add(vm.NewSite);
                 _context.SaveChanges();
                 return RedirectToAction("Index");
             }
 
-            return View(site);
+            // Reload Sites in case of validation error
+            vm.Sites = _context.Sites.ToList();
+            return View("Index", vm);
         }
+
 
         // GET: Edit View (loaded in modal via AJAX)
         public IActionResult Edit(int id)
@@ -93,5 +101,22 @@ namespace MVCTemplate.Areas.Admin.Controllers
             _context.SaveChanges();
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        public IActionResult GetAllSites()
+        {
+            var sites = _context.Sites
+                .Select(s => new {
+                    s.Id,
+                    s.Branch,
+                    s.Location,
+                    CreatedAt = s.CreatedAt.ToString("MMM dd, yyyy"),
+                    UpdatedAt = s.UpdatedAt.ToString("MMM dd, yyyy")
+                })
+                .ToList();
+
+            return Json(new { data = sites });
+        }
+
     }
 }
