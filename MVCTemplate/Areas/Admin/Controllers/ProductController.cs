@@ -299,7 +299,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,admin")]
         [HttpDelete]
         public IActionResult Delete(int id)
         {
