@@ -10,6 +10,8 @@ using System.IO;
 using OfficeOpenXml.Style;
 using OfficeOpenXml;
 using Microsoft.Extensions.Caching.Memory;
+using MVCTemplate.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -155,52 +157,62 @@ namespace MVCTemplate.Areas.Admin.Controllers
         #region CRUD
         public IActionResult Index()
         {
-            return View();
+            var vm = new ProductVM
+            {
+                Product = new Product(),
+                Managers = _unitOfWork.Manager
+                    .GetAll()
+                    .Select(m => new SelectListItem
+                    {
+                        Text = m.Name,
+                        Value = m.Id.ToString()
+                    })
+            };
+
+            return View(vm); // if you're using Index to directly pass the model
         }
 
         [HttpPost]
-        public IActionResult Create(Product product)
+        public IActionResult Create(ProductVM vm)
         {
             try
             {
+                var product = vm.Product;
                 bool hasRequiredFieldErrors = false;
 
+                // Server-side validations
                 if (string.IsNullOrWhiteSpace(product.Name))
                 {
-                    ModelState.AddModelError("Name", "Product Name is required.");
+                    ModelState.AddModelError("Product.Name", "Product Name is required.");
                     hasRequiredFieldErrors = true;
                 }
 
                 if (product.Quantity <= 0)
                 {
-                    ModelState.AddModelError("Quantity", "Quantity value is invalid.");
+                    ModelState.AddModelError("Product.Quantity", "Quantity must be greater than zero.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (product.ManagerId == null || !_unitOfWork.Manager.Exists((int)product.ManagerId))
+                {
+                    ModelState.AddModelError("Product.ManagerId", "Please select a valid manager.");
                     hasRequiredFieldErrors = true;
                 }
 
                 if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
                 {
-                    ModelState.AddModelError("Name", "Product already exists.");
+                    ModelState.AddModelError("Product.Name", "Product name already exists.");
                     hasRequiredFieldErrors = true;
                 }
 
-                if (hasRequiredFieldErrors)
+                if (hasRequiredFieldErrors || !ModelState.IsValid)
                 {
                     var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
 
-                    return BadRequest(new { message = "Invalid Operation", errors });
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
-                    );
-
-                    return BadRequest(new { errors, message = "Validation failed" });
+                    return BadRequest(new { message = "Validation failed", errors });
                 }
 
                 _unitOfWork.Product.Add(product);
@@ -223,36 +235,54 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Product obj)
+        public IActionResult Update(ProductVM vm)
         {
             try
             {
-                obj.GenerateUpdatedAt();
-                var product = _unitOfWork.Product.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
+                var product = vm.Product;
+                product.GenerateUpdatedAt();
 
-                if (product != null)
+                bool hasValidationError = false;
+
+                if (string.IsNullOrWhiteSpace(product.Name))
                 {
-                    ModelState.AddModelError("Name", "Product name already exists");
+                    ModelState.AddModelError("Product.Name", "Product Name is required.");
+                    hasValidationError = true;
+                }
 
-                    var validationErrors = ModelState.ToDictionary(
+                if (product.Quantity <= 0)
+                {
+                    ModelState.AddModelError("Product.Quantity", "Quantity value is invalid.");
+                    hasValidationError = true;
+                }
+
+                if (product.ManagerId == null || !_unitOfWork.Manager.Exists((int)product.ManagerId))
+                {
+                    ModelState.AddModelError("Product.ManagerId", "Selected manager does not exist.");
+                    hasValidationError = true;
+                }
+
+                var duplicate = _unitOfWork.Product.ContinueIfNoChangeOnUpdate(product.Name, product.Id);
+                if (duplicate != null)
+                {
+                    ModelState.AddModelError("Product.Name", "Product name already exists.");
+                    hasValidationError = true;
+                }
+
+                if (hasValidationError || !ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
 
-                    return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
+                    return BadRequest(new { errors, message = "Validation failed" });
                 }
 
-                if (ModelState.IsValid)
-                {
-                    _unitOfWork.Product.Update(obj);
-                    _unitOfWork.Save();
-                    return Ok(new { message = "Updated Successfully" });
-                }
+                _unitOfWork.Product.Update(product);
+                _unitOfWork.Save();
 
-                var otherErrors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
-
-                return BadRequest(new { errors = otherErrors, message = "Something went wrong!" });
+                return Ok(new { message = "Updated Successfully" });
             }
             catch (DbUpdateException)
             {
@@ -267,6 +297,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [Authorize(Roles = "Admin")]
         [HttpDelete]
@@ -312,12 +343,22 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
             {
-                return Unauthorized(); // to prevent the raw json from being seen 
+                return Unauthorized();
             }
 
-            var productList = _unitOfWork.Product.GetAll().ToList();
+            var productList = _unitOfWork.Product.GetAll(includeProperties: "Manager")
+            .Select(p => new {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Quantity,
+                p.ManagerId,
+                ManagerName = p.Manager != null ? p.Manager.Name : "Unassigned"
+            }).ToList();
+
             return Json(new { data = productList });
         }
+
 
         [HttpPost]
         public IActionResult GetProductsData()

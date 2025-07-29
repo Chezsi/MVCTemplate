@@ -31,14 +31,24 @@ function loadDataTable() {
             { data: 'name', "autowidth": true },
             { data: 'description', "autowidth": true },
             { data: 'quantity', "autowidth": true },
+            { data: 'managerName', title: 'Manager', autowidth: true },
             {
                 data: 'id',
                 "render": function (data, type, full, meta) {
                     let buttons = `
                         <div class="w-75 btn-group" role="group">
-                            <button type="button" data-id="${data}" data-name="${full.name}" data-description="${full.description}" data-quantity="${full.quantity}" class="btn-shadow btn btn-info" data-bs-toggle="modal" data-bs-target="#updateModal">
+                            <button type="button"
+                                data-id="${data}"
+                                data-name="${full.name}"
+                                data-description="${full.description}"
+                                data-quantity="${full.quantity}"
+                                data-managerid="${full.managerId}"
+                                class="btn-shadow btn btn-info"
+                                data-bs-toggle="modal"
+                                data-bs-target="#updateModal">
                                 <i class="lnr-pencil"></i> Edit
-                            </button>`;
+                            </button>
+                            `;
 
                     if (currentUserRole === 'Admin') {
                         buttons += `
@@ -82,11 +92,13 @@ $('#updateModal').on('show.bs.modal', function (event) {
     var name = button.data('name');
     var description = button.data('description');
     var quantity = button.data('quantity');
-    var modal = $(this);
+    var managerId = button.data('managerid');
 
+    var modal = $(this);
     modal.find('.modal-body #productId').val(id);
     modal.find('.modal-body #name').val(name);
     modal.find('.modal-body #description').val(description);
     modal.find('.modal-body #quantity').val(quantity);
+    modal.find('.modal-body #ManagerId').val(managerId).trigger('change');
 });
 

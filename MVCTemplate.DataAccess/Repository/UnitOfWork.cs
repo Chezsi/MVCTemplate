@@ -1,4 +1,5 @@
-﻿using MVCtemplate.DataAccess.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MVCtemplate.DataAccess.Data;
 using MVCTemplate.DataAccess.Repository.IRepository;
 
 namespace MVCTemplate.DataAccess.Repository 
@@ -14,6 +15,7 @@ namespace MVCTemplate.DataAccess.Repository
         public IPackageRepository Package { get; private set; }
         public IReportRepository Report { get; private set; }
         public IContractRepository Contract { get; private set; }
+        public IManagerRepository Manager { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -24,6 +26,7 @@ namespace MVCTemplate.DataAccess.Repository
             Package = new PackageRepository(_db);
             Report = new ReportRepository(_db);
             Contract = new ContractRepository(_db);
+            Manager = new ManagerRepository(_db);
         }
 
         public void Save()
