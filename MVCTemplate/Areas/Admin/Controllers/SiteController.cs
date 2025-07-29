@@ -58,49 +58,38 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
 
-        // GET: Edit View (loaded in modal via AJAX)
-        public IActionResult Edit(int id)
-        {
-            var site = _context.Sites.Find(id);
-            if (site == null) return NotFound();
-
-            return View(site);
-        }
-
-        // POST: Edit
         [HttpPost]
         public IActionResult Edit(Site site)
         {
-            if (ModelState.IsValid)
-            {
-                site.GenerateUpdatedAt();
-                _context.Sites.Update(site);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
-            }
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Validation failed." });
 
-            return View(site);
+            var dbSite = _context.Sites.FirstOrDefault(s => s.Id == site.Id);
+            if (dbSite == null)
+                return Json(new { success = false, message = "Site not found." });
+
+            dbSite.Branch = site.Branch;
+            dbSite.Location = site.Location;
+            dbSite.GenerateUpdatedAt();
+
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Site updated successfully." });
         }
 
-        // GET: Delete Confirmation View
+        [HttpDelete]
         public IActionResult Delete(int id)
         {
             var site = _context.Sites.Find(id);
-            if (site == null) return NotFound();
-
-            return View(site);
-        }
-
-        // POST: Delete
-        [HttpPost, ActionName("Delete")]
-        public IActionResult DeleteConfirmed(int id)
-        {
-            var site = _context.Sites.Find(id);
-            if (site == null) return NotFound();
+            if (site == null)
+            {
+                return Json(new { success = false, message = "Site not found." });
+            }
 
             _context.Sites.Remove(site);
             _context.SaveChanges();
-            return RedirectToAction("Index");
+
+            return Json(new { success = true, message = "Site deleted successfully." });
         }
 
         [HttpGet]
@@ -118,6 +107,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(new { data = sites });
         }
-
+        
     }
 }

@@ -92,6 +92,38 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="editForm" method="post">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title" id="editModalLabel">Edit Site</h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="Id" id="editId" />
+                        <div class="mb-3">
+                            <label for="editBranch" class="form-label">Branch <span class="text-danger">*</span></label>
+                            <input type="text" name="Branch" id="editBranch" class="form-control" required />
+                            <div class="text-danger field-validation-valid" data-valmsg-for="Branch"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editLocation" class="form-label">Location <span class="text-danger">*</span></label>
+                            <input type="text" name="Location" id="editLocation" class="form-control" required />
+                            <div class="text-danger field-validation-valid" data-valmsg-for="Location"></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 }
 
 
@@ -116,27 +148,6 @@
             const logoOverlay = document.getElementById('logoOverlay');
             if (logoOverlay) logoOverlay.style.display = 'none';
         });
-
-        $(document).ready(function () {
-
-            // Edit
-            $('.btn-edit').on('click', function () {
-                const id = $(this).data('id');
-                $.get(`/Admin/Site/Edit/${id}`, function (html) {
-                    $('#siteModalPlaceholder').html(html);
-                    $('#siteModal').modal('show');
-                });
-            });
-
-            // Delete
-            $('.btn-delete').on('click', function () {
-                const id = $(this).data('id');
-                $.get(`/Admin/Site/Delete/${id}`, function (html) {
-                    $('#siteModalPlaceholder').html(html);
-                    $('#siteModal').modal('show');
-                });
-            });
-        });
     </script>
 
     <script>
@@ -157,9 +168,14 @@
                         data: null,
                         render: function (data, type, row) {
                             return `
-                                    <button class="btn btn-warning btn-sm btn-edit" data-id="${row.id}">Edit</button>
-                                    <button class="btn btn-danger btn-sm btn-delete" data-id="${row.id}">Delete</button>
-                                `;
+                                <button class="btn btn-warning btn-sm btn-edit"
+                                    data-id="${row.id}"
+                                    data-branch="${row.branch}"
+                                    data-location="${row.location}">
+                                    Edit
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="Delete('/Admin/Site/Delete/${row.id}')">Delete</button>
+                            `;
                         },
                         orderable: false
                     }
@@ -173,10 +189,11 @@
             // Event delegation for dynamically loaded buttons
             $('#siteTable').on('click', '.btn-edit', function () {
                 const id = $(this).data('id');
-                $.get(`/Admin/Site/Edit/${id}`, function (html) {
-                    $('#siteModalPlaceholder').html(html);
-                    $('#siteModal').modal('show');
-                });
+                const button = $(this);
+                $('#editId').val(button.data('id'));
+                $('#editBranch').val(button.data('branch'));
+                $('#editLocation').val(button.data('location'));
+                $('#editModal').modal('show');
             });
 
             $('#siteTable').on('click', '.btn-delete', function () {
@@ -215,7 +232,50 @@
                 });
             });
         });
+    </script>
+    <script>
+        $(document).ready(function () {
+            // EDIT BUTTON CLICK
+            $('#siteTable').on('click', '.btn-edit', function () {
+                const id = $(this).data('id');
 
+                $.get(`/Admin/Site/Get/${id}`, function (site) {
+                    $('#editId').val(site.id);
+                    $('#editBranch').val(site.branch);
+                    $('#editLocation').val(site.location);
+                    $('#editModal').modal('show');
+                });
+            });
+
+            // EDIT FORM SUBMIT (AJAX)
+            $('#editForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const data = {
+                    Id: $('#editId').val(),
+                    Branch: $('#editBranch').val(),
+                    Location: $('#editLocation').val()
+                };
+
+                $.ajax({
+                    url: '/Admin/Site/Edit',
+                    type: 'POST',
+                    data: data,
+                    success: function (res) {
+                        if (res.success) {
+                            toastr.success(res.message);
+                            $('#editModal').modal('hide');
+                            $('#siteTable').DataTable().ajax.reload();
+                        } else {
+                            toastr.error(res.message || "Failed to update site.");
+                        }
+                    },
+                    error: function (xhr) {
+                        toastr.error(xhr.responseJSON?.message || "An error occurred.");
+                    }
+                });
+            });
+        });
     </script>
 }
 
