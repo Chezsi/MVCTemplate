@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MVCTemplate.Models.Manager>
+﻿@model MVCTemplate.ViewModels.ManagerVM
 
 @{
     ViewData["Title"] = "Manager";
@@ -42,6 +42,7 @@
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Email</th>
                             <th>Branch</th>
                             <th>Location</th>
                             <th>Created</th>
@@ -50,20 +51,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var m in Model)
-                        {
-                            <tr>
-                                <td>@m.Name</td>
-                                <td>@m.Site?.Branch</td>
-                                <td>@m.Site?.Location</td>
-                                <td>@m.CreatedAt.ToString("g")</td>
-                                <td>@m.UpdatedAt.ToString("g")</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning btn-edit" data-id="@m.Id">Edit</button>
-                                    <button class="btn btn-sm btn-danger btn-delete" data-id="@m.Id">Delete</button>
-                                </td>
-                            </tr>
-                        }
+
                     </tbody>
                 </table>
             </div>
@@ -71,10 +59,80 @@
     </div>
 </div>
 
-<!-- Modal placeholder for Create/Edit/Delete -->
 @section Modal {
-    <div id="managerModalPlaceholder"></div>
+    <!-- Create Manager Modal -->
+    <div class="modal fade" id="createManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="createManagerForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Add Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="NewManager.Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="NewManager.Email" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Site<span class="text-danger">*</span></label>
+                            <select name="NewManager.SiteId" class="form-control" required>
+                                <option value="" disabled selected>Select a Site</option>
+                                @foreach (var site in Model.Sites)
+                                {
+                                    <option value="@site.Id">@site.Branch - @site.Location</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Edit Manager Modal -->
+    <div class="modal fade" id="editManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editManagerForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">Edit Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="Id" id="editId" />
+                        <div class="mb-3">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="Name" id="editName" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="Email" id="editEmail" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Site ID <span class="text-danger">*</span></label>
+                            <input type="number" name="SiteId" id="editSiteId" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 }
+
 
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
@@ -86,35 +144,129 @@
 @section Scripts {
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
-    <script src="~/js/deleteGeneralSettings.js"></script>
     <script src="~/js/fadeEffect.js"></script>
     <script src="~/js/download-morph.js"></script>
 
     <script>
         $(document).ready(function () {
-            // Open Create modal
-            $('#createManagerModal').on('show.bs.modal', function () {
-                $.get('/Manager/Create', function (html) {
-                    $('#managerModalPlaceholder').html(html);
+            const table = $('#managerTable').DataTable({
+                ajax: {
+                    url: '/Admin/Manager/GetAllManagers',
+                    type: 'GET',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'name' },
+                    { data: 'email' },
+                    { data: 'branch' },
+                    { data: 'location' },
+                    {
+                        data: 'createdAt',
+                        render: function (data) {
+                            if (!data) return '';
+                            const date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: '2-digit'
+                            });
+                        }
+                    },
+                    {
+                        data: 'updatedAt',
+                        render: function (data) {
+                            if (!data || data.includes('0001')) return '';
+                            const date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: '2-digit'
+                            });
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return `
+                                    <button class="btn btn-warning btn-sm btn-edit" data-id="${data.id}">Edit</button>
+                                    <button class="btn btn-danger btn-sm btn-delete" data-id="${data.id}">Delete</button>
+                                `;
+                        },
+                        orderable: false
+                    }
+                ]
+            });
+
+            // CREATE
+            $('#createManagerForm').submit(function (e) {
+                e.preventDefault();
+                $.post('/Admin/Manager/Create', $(this).serialize(), function (res) {
+                    if (res.success) {
+                        toastr.success(res.message);
+                        $('#createManagerModal').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        toastr.error(res.message);
+                    }
                 });
             });
 
-            // Open Edit modal
-            $('.btn-edit').on('click', function () {
+            // EDIT OPEN
+            $('#managerTable').on('click', '.btn-edit', function () {
                 const id = $(this).data('id');
-                $.get('/Manager/Edit/' + id, function (html) {
-                    $('#managerModalPlaceholder').html(html);
-                    $('#managerModal').modal('show');
+                $.get(`/Admin/Manager/Get/${id}`, function (res) {
+                    $('#editId').val(res.id);
+                    $('#editName').val(res.name);
+                    $('#editEmail').val(res.email);
+                    $('#editSiteId').val(res.siteId);
+                    $('#editManagerModal').modal('show');
                 });
             });
 
-            // Open Delete modal
-            $('.btn-delete').on('click', function () {
-                const id = $(this).data('id');
-                $.get('/Manager/Delete/' + id, function (html) {
-                    $('#managerModalPlaceholder').html(html);
-                    $('#managerModal').modal('show');
+            // EDIT SUBMIT
+            $('#editManagerForm').submit(function (e) {
+                e.preventDefault();
+                $.post('/Admin/Manager/Edit', $(this).serialize(), function (res) {
+                    if (res.success) {
+                        toastr.success(res.message);
+                        $('#editManagerModal').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        toastr.error(res.message);
+                    }
                 });
+            });
+
+            // DELETE
+            $('#managerTable').on('click', '.btn-delete', async function () {
+                const id = $(this).data('id');
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                });
+
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/Admin/Manager/Delete/${id}`,
+                        type: 'DELETE',
+                        success: function (res) {
+                            if (res.success) {
+                                toastr.success(res.message);
+                                table.ajax.reload();
+                            } else {
+                                toastr.error(res.message);
+                            }
+                        },
+                        error: function () {
+                            toastr.error('An error occurred while deleting.');
+                        }
+                    });
+                }
             });
         });
     </script>
