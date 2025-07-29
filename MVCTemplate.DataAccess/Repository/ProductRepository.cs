@@ -29,6 +29,11 @@ namespace MVCTemplate.DataAccess.Repository
             return _db.Products.FirstOrDefault(i => i.Name == name && i.Id != countryId);
         }
 
+        //public IEnumerable<Product> GetAll()
+        //{
+        //    return _db.Products.ToList(); //redundant code
+        //}
+
         public Product GetFirstOrDefault(Expression<Func<Product, bool>> predicate)
         {
             return _db.Products.FirstOrDefault(predicate);
@@ -53,21 +58,7 @@ namespace MVCTemplate.DataAccess.Repository
             _db.SaveChanges();
         }
 
-        public IEnumerable<Product> GetAll(string? includeProperties = null)
-        {
-            IQueryable<Product> query = _db.Products;
 
-            if (!string.IsNullOrWhiteSpace(includeProperties))
-            {
-                foreach (var includeProp in includeProperties
-                    .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    query = query.Include(includeProp);
-                }
-            }
-
-            return query.ToList();
-        }
 
     }
 }

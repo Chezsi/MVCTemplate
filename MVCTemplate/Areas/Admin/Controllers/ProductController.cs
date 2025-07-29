@@ -341,13 +341,12 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllProducts()
         {
-            /*if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
             {
                 return Unauthorized();
-            }*/
+            }
 
             var productList = _unitOfWork.Product.GetAll(includeProperties: "Manager")
-            .ToList()
             .Select(p => new {
                 p.Id,
                 p.Name,
@@ -357,17 +356,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 ManagerName = p.Manager != null ? p.Manager.Name : "Unassigned"
             }).ToList();
 
-            var nullManagers = productList.Where(p => p.ManagerId == null).ToList();
-
-            return Json(new
-            {
-                data = productList,
-                debug = new
-                {
-                    nullManagerCount = nullManagers.Count,
-                    nullManagerProducts = nullManagers
-                }
-            });
+            return Json(new { data = productList });
         }
 
 
