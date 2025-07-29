@@ -1,0 +1,122 @@
+﻿@model IEnumerable<MVCTemplate.Models.Manager>
+
+@{
+    ViewData["Title"] = "Manager";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo overlay -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-user icon-gradient bg-heavy-rain"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round">
+                                Managers
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions staggered">
+                <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createManagerModal">
+                    + Add Manager
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-card mb-3 card staggered">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped table-bordered display nowrap" style="width: 100%;" id="managerTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Location</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model)
+                        {
+                            <tr>
+                                <td>@m.Name</td>
+                                <td>@m.Branch</td>
+                                <td>@m.Location</td>
+                                <td>@m.CreatedAt.ToString("g")</td>
+                                <td>@m.UpdatedAt.ToString("g")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning btn-edit" data-id="@m.Id">Edit</button>
+                                    <button class="btn btn-sm btn-danger btn-delete" data-id="@m.Id">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal placeholder for Create/Edit/Delete -->
+@section Modal {
+    <div id="managerModalPlaceholder"></div>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="~/css/button-hover.css" />
+}
+
+@section Scripts {
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/fadeEffect.js"></script>
+    <script src="~/js/download-morph.js"></script>
+
+    <script>
+
+        $(document).ready(function () {
+            // Open Create modal
+            $('#createManagerModal').on('show.bs.modal', function () {
+                $.get('/Manager/Create', function (html) {
+                    $('#managerModalPlaceholder').html(html);
+                });
+            });
+
+            // Open Edit modal
+            $('.btn-edit').on('click', function () {
+                const id = $(this).data('id');
+                $.get('/Manager/Edit/' + id, function (html) {
+                    $('#managerModalPlaceholder').html(html);
+                    $('#managerModal').modal('show');
+                });
+            });
+
+            // Open Delete modal
+            $('.btn-delete').on('click', function () {
+                const id = $(this).data('id');
+                $.get('/Manager/Delete/' + id, function (html) {
+                    $('#managerModalPlaceholder').html(html);
+                    $('#managerModal').modal('show');
+                });
+            });
+        });
+    </script>
+}
