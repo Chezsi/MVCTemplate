@@ -31,7 +31,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
         #region EXPORT
-        [HttpGet]
+        /*[HttpGet]
         public async Task<IActionResult> ExportToExcel(string token)
         {
             // Validate token existence and validity
@@ -131,8 +131,111 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return File(stream,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Product.xlsx");
-        }
+        }*/
 
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel(string token)
+        {
+            if (!TryValidateAndConsumeToken(token))
+            {
+                return Unauthorized();
+            }
+
+            ExcelPackage.License.SetNonCommercialPersonal("My Name");
+
+            // Include ManagerName from navigation property (safe check for null Manager)
+            var dataToExport = _unitOfWork.Product.GetAll(includeProperties: "Manager").ToList();
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Products");
+
+            var blueBackground = System.Drawing.Color.FromArgb(0, 51, 102);
+            var whiteFont = System.Drawing.Color.White;
+            var lightGreen = System.Drawing.Color.FromArgb(198, 239, 206);
+            var darkGreen = System.Drawing.Color.FromArgb(155, 187, 89);
+            var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            string FormatDateTimeWordMDY(DateTime dt) =>
+                dt.ToString("MMMM dd, yyyy, hh:mm tt");
+
+            worksheet.Cells[1, 1].Value = "Product Data";
+            worksheet.Cells[1, 1, 1, 5].Merge = true; // Adjusted for 5 columns
+            worksheet.Cells[1, 1].Style.Font.Size = 14;
+            worksheet.Cells[1, 1].Style.Font.Bold = true;
+            worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+            var now = DateTime.Now;
+            worksheet.Cells[2, 1].Value = $"Generated at: {FormatDateTimeWordMDY(now)}";
+            worksheet.Cells[2, 1, 2, 5].Merge = true; // Adjusted for 5 columns
+            worksheet.Cells[2, 1].Style.Font.Italic = true;
+            worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+            worksheet.Cells["A1:E2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:E2"].Style.Border.BorderAround(borderStyle);
+
+            string[] headers = { "ID", "Name", "Description", "Quantity", "Manager" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = worksheet.Cells[3, i + 1];
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                var fillColor = ((i + 1) % 2 == 0) ? lightGreen : darkGreen;
+                cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+                cell.Style.Border.BorderAround(borderStyle);
+            }
+
+            int row = 4;
+            foreach (var item in dataToExport)
+            {
+                worksheet.Cells[row, 1].Value = item.Id;
+                worksheet.Cells[row, 2].Value = item.Name;
+                worksheet.Cells[row, 3].Value = item.Description;
+                worksheet.Cells[row, 4].Value = item.Quantity;
+                worksheet.Cells[row, 5].Value = item.Manager?.Name ?? "";
+
+                for (int col = 1; col <= 5; col++)
+                {
+                    var cell = worksheet.Cells[row, col];
+                    cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    var fillColor = (col % 2 == 0) ? lightGreen : darkGreen;
+                    cell.Style.Fill.BackgroundColor.SetColor(fillColor);
+                    cell.Style.Border.BorderAround(borderStyle);
+                }
+                row++;
+            }
+
+            worksheet.Cells[3, 1, row - 1, 5].AutoFilter = true;
+
+            worksheet.Column(1).Width = 10;
+
+            int GetMaxLength(int colIndex)
+            {
+                int maxLen = headers[colIndex - 1].Length;
+                for (int r = 4; r < row; r++)
+                {
+                    var val = worksheet.Cells[r, colIndex].Text;
+                    if (!string.IsNullOrEmpty(val))
+                        maxLen = Math.Max(maxLen, val.Length);
+                }
+                return maxLen + 2;
+            }
+
+            worksheet.Column(2).Width = GetMaxLength(2);
+            worksheet.Column(3).Width = GetMaxLength(3);
+            worksheet.Column(4).Width = 10;
+            worksheet.Column(5).Width = GetMaxLength(5);
+
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream);
+            stream.Position = 0;
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Product.xlsx");
+        }
 
         [HttpPost]
         public IActionResult GenerateDownloadToken()
