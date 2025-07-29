@@ -1,11 +1,9 @@
-﻿@model IEnumerable<MVCTemplate.Models.Manager>
-
+﻿@model IEnumerable<MVCTemplate.Models.Site>
 @{
-    ViewData["Title"] = "Manager";
+    ViewData["Title"] = "Site";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- Logo overlay -->
 <div id="logoOverlay">
     <img src="~/LogosIcons/logo.png" alt="Logo" />
 </div>
@@ -15,22 +13,20 @@
         <div class="page-title-wrapper">
             <div class="page-title-heading">
                 <div class="page-title-icon">
-                    <i class="lnr-user icon-gradient bg-heavy-rain"></i>
+                    <i class="lnr-map icon-gradient bg-plum-plate"></i>
                 </div>
                 <div>
                     <span class="text-primary">
                         <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg">
                             <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round">
-                                Managers
+                                Sites
                             </text>
                         </svg>
                     </span>
                 </div>
             </div>
             <div class="page-title-actions staggered">
-                <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createManagerModal">
-                    + Add Manager
-                </button>
+                <button class="btn btn-primary btn-shadow mx-2" data-bs-toggle="modal" data-bs-target="#createModal">+ Add Site</button>
             </div>
         </div>
     </div>
@@ -38,10 +34,9 @@
     <div class="main-card mb-3 card staggered">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-striped table-bordered display nowrap" style="width: 100%;" id="managerTable">
+                <table class="table table-hover table-bordered" id="siteTable">
                     <thead>
                         <tr>
-                            <th>Name</th>
                             <th>Branch</th>
                             <th>Location</th>
                             <th>Created</th>
@@ -50,17 +45,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var m in Model)
+                        @foreach (var site in Model)
                         {
                             <tr>
-                                <td>@m.Name</td>
-                                <td>@m.Site?.Branch</td>
-                                <td>@m.Site?.Location</td>
-                                <td>@m.CreatedAt.ToString("g")</td>
-                                <td>@m.UpdatedAt.ToString("g")</td>
+                                <td>@site.Branch</td>
+                                <td>@site.Location</td>
+                                <td>@site.CreatedAt.ToString("g")</td>
+                                <td>@site.UpdatedAt.ToString("g")</td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning btn-edit" data-id="@m.Id">Edit</button>
-                                    <button class="btn btn-sm btn-danger btn-delete" data-id="@m.Id">Delete</button>
+                                    <button class="btn btn-warning btn-sm btn-edit" data-id="@site.Id">Edit</button>
+                                    <button class="btn btn-danger btn-sm btn-delete" data-id="@site.Id">Delete</button>
                                 </td>
                             </tr>
                         }
@@ -71,9 +65,8 @@
     </div>
 </div>
 
-<!-- Modal placeholder for Create/Edit/Delete -->
 @section Modal {
-    <div id="managerModalPlaceholder"></div>
+    <div id="siteModalPlaceholder"></div>
 }
 
 @section Styles {
@@ -91,31 +84,38 @@
     <script src="~/js/download-morph.js"></script>
 
     <script>
+        window.addEventListener('load', function () {
+            document.querySelector('.app-main__inner').style.opacity = 1;
+            const logoOverlay = document.getElementById('logoOverlay');
+            if (logoOverlay) logoOverlay.style.display = 'none';
+        });
+
         $(document).ready(function () {
-            // Open Create modal
-            $('#createManagerModal').on('show.bs.modal', function () {
-                $.get('/Manager/Create', function (html) {
-                    $('#managerModalPlaceholder').html(html);
+            // Create
+            $('#createModal').on('show.bs.modal', function () {
+                $.get('/Admin/Site/Create', function (html) {
+                    $('#siteModalPlaceholder').html(html);
                 });
             });
 
-            // Open Edit modal
+            // Edit
             $('.btn-edit').on('click', function () {
                 const id = $(this).data('id');
-                $.get('/Manager/Edit/' + id, function (html) {
-                    $('#managerModalPlaceholder').html(html);
-                    $('#managerModal').modal('show');
+                $.get(`/Admin/Site/Edit/${id}`, function (html) {
+                    $('#siteModalPlaceholder').html(html);
+                    $('#siteModal').modal('show');
                 });
             });
 
-            // Open Delete modal
+            // Delete
             $('.btn-delete').on('click', function () {
                 const id = $(this).data('id');
-                $.get('/Manager/Delete/' + id, function (html) {
-                    $('#managerModalPlaceholder').html(html);
-                    $('#managerModal').modal('show');
+                $.get(`/Admin/Site/Delete/${id}`, function (html) {
+                    $('#siteModalPlaceholder').html(html);
+                    $('#siteModal').modal('show');
                 });
             });
         });
     </script>
 }
+
