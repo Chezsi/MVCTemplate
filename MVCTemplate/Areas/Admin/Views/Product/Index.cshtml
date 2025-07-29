@@ -7,7 +7,7 @@
     var userRole = roles.FirstOrDefault() ?? "Unknown";
 }
 
-@model Product
+@model MVCTemplate.ViewModels.ProductVM
 @{
     ViewData["Title"] = "Product";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -129,6 +129,7 @@
                             <th>Name</th>
                             <th>Description</th>
                             <th>Quantity</th>
+                            <th>Manager</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -151,19 +152,26 @@
                 <form asp-action="Create" asp-controller="Product" method="post" id="createForm">
                     <div class="modal-body">
                         <div class="form-group">
-                            <label asp-for="Name">Product Name<span class="text-danger">*</span></label>
-                            <input asp-for="Name" class="form-control" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <label asp-for="Product.Name">Product Name<span class="text-danger">*</span></label>
+                            <input asp-for="Product.Name" class="form-control" />
+                            <span asp-validation-for="Product.Name" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Description">Product Description</label>
-                            <input asp-for="Description" class="form-control" />
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <label asp-for="Product.Description">Product Description</label>
+                            <input asp-for="Product.Description" class="form-control" />
+                            <span asp-validation-for="Product.Description" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Quantity">Product Quantity<span class="text-danger">*</span></label>
-                            <input asp-for="Quantity" type="number" class="form-control" />
-                            <span asp-validation-for="Quantity" class="text-danger"></span>
+                            <label asp-for="Product.Quantity">Product Quantity<span class="text-danger">*</span></label>
+                            <input asp-for="Product.Quantity" type="number" class="form-control" />
+                            <span asp-validation-for="Product.Quantity" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Product.ManagerId">Manager<span class="text-danger">*</span></label>
+                            <select asp-for="Product.ManagerId" asp-items="Model.Managers" class="form-control">
+                                <option value="">-- Select Manager --</option>
+                            </select>
+                            <span asp-validation-for="Product.ManagerId" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -182,31 +190,42 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Update Product</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form asp-action="Update" asp-controller="Product" method="put" id="updateForm">
                     <div class="modal-body">
-                        <input type="hidden" asp-for="Id" id="productId" />
+                        <input type="hidden" asp-for="Product.Id" id="productId" />
+
                         <div class="form-group">
-                            <label asp-for="Name" class="control-label">Product Name<span class="text-danger">*</span></label>
-                            <input asp-for="Name" class="form-control" id="name" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <label asp-for="Product.Name" class="control-label">Product Name<span class="text-danger">*</span></label>
+                            <input asp-for="Product.Name" class="form-control" id="name" />
+                            <span asp-validation-for="Product.Name" class="text-danger"></span>
                         </div>
+
                         <div class="form-group">
-                            <label asp-for="Description" class="control-label">Product Description</label>
-                            <input asp-for="Description" class="form-control" id="description" />
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <label asp-for="Product.Description" class="control-label">Product Description</label>
+                            <input asp-for="Product.Description" class="form-control" id="description" />
+                            <span asp-validation-for="Product.Description" class="text-danger"></span>
                         </div>
+
                         <div class="form-group">
-                            <label asp-for="Quantity" class="control-label">Product Quantity<span class="text-danger">*</span></label>
-                            <input asp-for="Quantity" type="number" class="form-control" id="quantity" />
-                            <span asp-validation-for="Quantity" class="text-danger"></span>
+                            <label asp-for="Product.Quantity" class="control-label">Product Quantity<span class="text-danger">*</span></label>
+                            <input asp-for="Product.Quantity" type="number" class="form-control" id="quantity" />
+                            <span asp-validation-for="Product.Quantity" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Product.ManagerId" class="control-label">Manager<span class="text-danger">*</span></label>
+                            <select asp-for="Product.ManagerId" asp-items="Model.Managers" class="form-control" id="managerId">
+                                <option value="">-- Select Manager --</option>
+                            </select>
+                            <span asp-validation-for="Product.ManagerId" class="text-danger"></span>
                         </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button id="createEditFormSubmitBtn" class="ladda-button  me-2 btn-shadow btn btn-primary" data-style="expand-left">
+                        <button id="createEditFormSubmitBtn" class="ladda-button me-2 btn-shadow btn btn-primary" data-style="expand-left">
                             <span class="ladda-label">Save Changes</span>
                             <span class="ladda-spinner"></span>
                         </button>
@@ -215,7 +234,6 @@
             </div>
         </div>
     </div>
-
 }
 
 @section Styles {
@@ -226,6 +244,10 @@
 }
 
 @section Scripts {
+    <script>
+        const currentUserRole = @Html.Raw(Json.Serialize(userRole));
+        //console.log("🟡 User role injected by Razor:", currentUserRole);
+    </script>
 
     <script src="~/js/validation.js"></script>
     <script src="~/js/formSubmissionAjax.js"></script>
@@ -237,9 +259,4 @@
 
     <script src="~/js/fadeEffect.js"></script>
     <script src="~/js/download-morph.js"></script>
-
-    <script>
-        const currentUserRole = '@userRole';
-    </script>
-
 }

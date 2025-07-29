@@ -16,6 +16,8 @@ namespace MVCtemplate.DataAccess.Data
         public DbSet<Package> Packages { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Contract> Contracts { get; set; }
+        public DbSet<Manager> Managers { get; set; }
+        public DbSet<Site> Sites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

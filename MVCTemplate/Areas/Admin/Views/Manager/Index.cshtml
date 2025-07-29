@@ -1,0 +1,278 @@
+﻿@model MVCTemplate.ViewModels.ManagerVM
+
+@{
+    ViewData["Title"] = "Manager";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo overlay -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-user icon-gradient bg-heavy-rain"></i>
+                </div>
+                <div>
+                    <span class="text-primary">
+                        <svg viewBox="0 0 240 40" width="240" height="40" xmlns="http://www.w3.org/2000/svg">
+                            <text x="0" y="30" font-family="Arial, sans-serif" font-size="32" fill="none" stroke="#007bff" stroke-width="1.5" stroke-linejoin="round">
+                                Managers
+                            </text>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="page-title-actions staggered">
+                <button type="button" class="btn-shadow btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createManagerModal">
+                    + Add Manager
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-card mb-3 card staggered">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped table-bordered display nowrap" style="width: 100%;" id="managerTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Branch</th>
+                            <th>Location</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Modal {
+    <!-- Create Manager Modal -->
+    <div class="modal fade" id="createManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="createManagerForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Add Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="NewManager.Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="NewManager.Email" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Site<span class="text-danger">*</span></label>
+                            <select name="NewManager.SiteId" class="form-control" required>
+                                <option value="" disabled selected>Select a Site</option>
+                                @foreach (var site in Model.Sites)
+                                {
+                                    <option value="@site.Id">@site.Branch - @site.Location</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Edit Manager Modal -->
+    <div class="modal fade" id="editManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editManagerForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">Edit Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="NewManager.Id" id="editId" />
+                        <div class="mb-3">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="NewManager.Name" id="editName" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="NewManager.Email" id="editEmail" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Site <span class="text-danger">*</span></label>
+                            <select name="NewManager.SiteId" id="editSiteId" class="form-control" required>
+                                <option value="" disabled>Select a Site</option>
+                                @foreach (var site in Model.Sites)
+                                {
+                                    <option value="@site.Id">@site.Branch - @site.Location</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+}
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="~/css/button-hover.css" />
+}
+
+@section Scripts {
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/fadeEffect.js"></script>
+    <script src="~/js/download-morph.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const table = $('#managerTable').DataTable({
+                ajax: {
+                    url: '/Admin/Manager/GetAllManagers',
+                    type: 'GET',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'name' },
+                    { data: 'email' },
+                    { data: 'branch' },
+                    { data: 'location' },
+                    {
+                        data: 'createdAt',
+                        render: function (data) {
+                            if (!data) return '';
+                            const date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: '2-digit'
+                            });
+                        }
+                    },
+                    {
+                        data: 'updatedAt',
+                        render: function (data) {
+                            if (!data || data.includes('0001')) return '';
+                            const date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: '2-digit'
+                            });
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return `
+                                    <button class="btn btn-warning btn-sm btn-edit" data-id="${data.id}">Edit</button>
+                                    <button class="btn btn-danger btn-sm btn-delete" data-id="${data.id}">Delete</button>
+                                `;
+                        },
+                        orderable: false
+                    }
+                ]
+            });
+
+            // CREATE
+            $('#createManagerForm').submit(function (e) {
+                e.preventDefault();
+                $.post('/Admin/Manager/Create', $(this).serialize(), function (res) {
+                    if (res.success) {
+                        toastr.success(res.message);
+                        $('#createManagerModal').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        toastr.error(res.message);
+                    }
+                });
+            });
+
+            // EDIT OPEN
+            $('#managerTable').on('click', '.btn-edit', function () {
+                const rowData = table.row($(this).parents('tr')).data();
+                $('#editId').val(rowData.id);
+                $('#editName').val(rowData.name);
+                $('#editEmail').val(rowData.email);
+                $('#editSiteId').val(rowData.siteId);
+                $('#editManagerModal').modal('show');
+            });
+
+            // EDIT SUBMIT
+            $('#editManagerForm').submit(function (e) {
+                e.preventDefault();
+                $.post('/Admin/Manager/Edit', $(this).serialize(), function (res) {
+                    if (res.success) {
+                        toastr.success(res.message);
+                        $('#editManagerModal').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        toastr.error(res.message);
+                    }
+                });
+            });
+
+            // DELETE
+            $('#managerTable').on('click', '.btn-delete', async function () {
+                const id = $(this).data('id');
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                });
+
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/Admin/Manager/Delete/${id}`,
+                        type: 'DELETE',
+                        success: function (res) {
+                            if (res.success) {
+                                toastr.success(res.message);
+                                table.ajax.reload();
+                            } else {
+                                toastr.error(res.message);
+                            }
+                        },
+                        error: function () {
+                            toastr.error('An error occurred while deleting.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

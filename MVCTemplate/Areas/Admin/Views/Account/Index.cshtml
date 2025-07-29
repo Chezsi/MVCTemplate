@@ -126,12 +126,15 @@
                         <div class="form-group mb-3">
                             <label>New Password</label>
                             <div class="input-group">
-                                <input type="password" name="NewPassword" id="editPassword" class="form-control" />
-                                <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                <input type="password" name="NewPassword" id="editPassword" class="form-control" disabled />
+                                <button type="button" class="btn btn-outline-secondary" id="toggleEnablePassword" title="Enable/Disable Password">
+                                    <i class="fa fa-lock"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword" title="Show/Hide Password" disabled>
                                     <i class="fa fa-eye"></i>
                                 </button>
                             </div>
-                            <small class="form-text text-muted">Leave blank to keep current password.</small>
+                            <small class="form-text text-muted">Click the lock to enable changing the password. Leave blank to keep current password.</small>
                         </div>
 
                         <div class="alert alert-danger d-none" id="editUserError"></div>

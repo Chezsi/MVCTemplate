@@ -44,6 +44,28 @@
     });
 });
 
+$(document).on('click', '#toggleEnablePassword', function () {
+    const passwordInput = $('#editPassword');
+    const visibilityBtn = $('#togglePassword');
+    const lockIcon = $(this).find('i');
+    const visibilityIcon = visibilityBtn.find('i');
+
+    const isDisabled = passwordInput.prop('disabled');
+
+    if (isDisabled) {
+        // Unlocking the field
+        passwordInput.prop('disabled', false);
+        visibilityBtn.prop('disabled', false);
+    } else {
+        // Locking again: reset everything
+        passwordInput.prop('disabled', true).val('').attr('type', 'password');
+        visibilityBtn.prop('disabled', true);
+        visibilityIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+
+    lockIcon.toggleClass('fa-lock fa-unlock');
+});
+
 $('#editUserForm').on('submit', function (e) {
     e.preventDefault();
 

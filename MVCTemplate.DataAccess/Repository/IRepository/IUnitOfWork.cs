@@ -9,5 +9,6 @@ public interface IUnitOfWork
     IPackageRepository Package { get; }
     IReportRepository Report { get; }
     IContractRepository Contract { get; }
+    IManagerRepository Manager { get; }
     void Save();
 }
