@@ -10,18 +10,19 @@
 </div>
 
 <div class="app-main__inner" style="opacity: 0;">
-    <div class="app-page-title">
-        <div class="page-title-wrapper">
-            <div class="page-title-heading">
-                <div class="page-title-icon">
-                    <i class="lnr-user icon-gradient bg-info"></i>
+    <div class="app-page-title bg-info text-secondary p-3 rounded">
+        <div class="page-title-wrapper d-flex justify-content-between align-items-center">
+            <div class="page-title-heading d-flex align-items-center">
+                <div class="page-title-icon me-2">
+                    <i class="fas fa-user fs-2"></i>
                 </div>
                 <div>
-                    <span class="text-primary fs-3 fw-bold">Manager Details</span>
+                    <span class="fs-3 fw-bold">Manager Details</span>
+                    <h5 class="mb-3 text-secondary">Manager: @Model.Name</h5>
                 </div>
             </div>
             <div class="page-title-actions">
-                <a href="/Admin/Manager" class="btn btn-secondary">Back to List</a>
+                <a href="/Admin/Manager" class="btn btn-light text-dark">Back to List</a>
             </div>
         </div>
     </div>
