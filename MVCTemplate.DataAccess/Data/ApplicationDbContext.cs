@@ -29,12 +29,16 @@ namespace MVCtemplate.DataAccess.Data
                 .HasForeignKey(c => c.PersonId)
                 .OnDelete(DeleteBehavior.Cascade);*/
 
-            builder.Entity<Person>()
+            /*builder.Entity<Person>()
                 .HasOne(p => p.Category)
                 .WithMany()
                 .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull);
-
+                .OnDelete(DeleteBehavior.SetNull);*/
+            builder.Entity<Manager>()
+                .HasOne(m => m.Site)
+                .WithMany(s => s.Managers) 
+                .HasForeignKey(m => m.SiteId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

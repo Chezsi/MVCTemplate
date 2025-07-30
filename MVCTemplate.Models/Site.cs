@@ -22,6 +22,7 @@ namespace MVCTemplate.Models
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
+        public ICollection<Manager> Managers { get; set; } = new List<Manager>(); // for one to many (optional)
         public Site()
         {
             CreatedAt = DateTime.Now;
