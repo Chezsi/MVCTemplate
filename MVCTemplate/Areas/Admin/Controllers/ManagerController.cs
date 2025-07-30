@@ -78,6 +78,29 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        public IActionResult CreateFromSite(ManagerVM vm)
+        {
+            if (string.IsNullOrWhiteSpace(vm.NewManager?.Name) || string.IsNullOrWhiteSpace(vm.NewManager?.Email))
+            {
+                return Json(new { success = false, message = "All fields are required." });
+            }
+
+            bool nameExists = _context.Managers.Any(m => m.Name.ToLower() == vm.NewManager.Name.Trim().ToLower());
+            if (nameExists)
+            {
+                return Json(new { success = false, message = "This manager name already exists." });
+            }
+
+            vm.NewManager.CreatedAt = DateTime.Now;
+            _context.Managers.Add(vm.NewManager);
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Manager added successfully." });
+        }
+
+
+
+        [HttpPost]
         public IActionResult Edit(ManagerVM vm)
         {
             if (!ModelState.IsValid)
