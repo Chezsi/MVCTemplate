@@ -169,7 +169,7 @@
                         <div class="form-group">
                             <label asp-for="Product.ManagerId">Manager<span class="text-danger">*</span></label>
                             <select asp-for="Product.ManagerId" asp-items="Model.Managers" class="form-control">
-                                <option value="">-- Select Manager --</option>
+                                <option value="" disabled selected>-- Select Manager --</option>
                             </select>
                             <span asp-validation-for="Product.ManagerId" class="text-danger"></span>
                         </div>
@@ -217,7 +217,7 @@
                         <div class="form-group">
                             <label asp-for="Product.ManagerId" class="control-label">Manager<span class="text-danger">*</span></label>
                             <select asp-for="Product.ManagerId" asp-items="Model.Managers" class="form-control" id="managerId">
-                                <option value="">-- Select Manager --</option>
+                                <option value="" disabled selected>-- Select Manager --</option>
                             </select>
                             <span asp-validation-for="Product.ManagerId" class="text-danger"></span>
                         </div>

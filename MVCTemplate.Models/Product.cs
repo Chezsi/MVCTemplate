@@ -23,7 +23,7 @@ namespace MVCTemplate.Models
         public int? ManagerId { get; set; } //Made it nullable in migration
 
         [ForeignKey("ManagerId")]
-        [ValidateNever]
+        [ValidateNever] // to prevent validstate false for update
         [BindNever]
         public Manager Manager { get; set; }
 
