@@ -1,0 +1,54 @@
+﻿@model MVCTemplate.ViewModels.ManagerDetailVM
+
+@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="lnr-user icon-gradient bg-info"></i>
+                </div>
+                <div>
+                    <span class="text-primary fs-3 fw-bold">Manager Details</span>
+                </div>
+            </div>
+            <div class="page-title-actions">
+                <a href="/Admin/Manager" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h4 class="mb-3 text-info">Manager: @Model.Name</h4>
+            <p><strong>Email:</strong> @Model.Email</p>
+            <p><strong>Branch:</strong> @Model.Branch</p>
+            <p><strong>Location:</strong> @Model.Location</p>
+            <p><strong>Created:</strong> @Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
+            <p><strong>Updated:</strong> @(Model.UpdatedAt?.ToString("MMMM dd, yyyy") == "January 01, 0001" ? "" : Model.UpdatedAt?.ToString("MMMM dd, yyyy"))</p>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="~/css/button-hover.css" />
+}
+
+@section Scripts {
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/fadeEffect.js"></script>
+    <script src="~/js/download-morph.js"></script>
+}

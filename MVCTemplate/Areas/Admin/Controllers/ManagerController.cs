@@ -32,6 +32,30 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return View(vm);
         }
 
+        [HttpGet]
+        public IActionResult View(int id)
+        {
+            var manager = _context.Managers
+                .Include(m => m.Site)
+                .FirstOrDefault(m => m.Id == id);
+
+            if (manager == null)
+                return NotFound();
+
+            var vm = new ManagerDetailVM
+            {
+                Name = manager.Name,
+                Email = manager.Email,
+                Branch = manager.Site?.Branch,
+                Location = manager.Site?.Location,
+                CreatedAt = manager.CreatedAt,
+                UpdatedAt = manager.UpdatedAt
+            };
+
+            return View(vm);
+        }
+
+
         [HttpPost]
         public IActionResult Create(ManagerVM vm)
         {
