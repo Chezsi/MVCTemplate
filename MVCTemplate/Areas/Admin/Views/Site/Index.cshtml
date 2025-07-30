@@ -175,6 +175,9 @@
                         data: null,
                         render: function (data, type, row) {
                             return `
+                    <a href="/Admin/Site/View/${row.id}" class="btn btn-info btn-sm">
+                        <i class=""></i> View
+                    </a>
                     <button class="btn btn-warning btn-sm btn-edit"
                         data-id="${row.id}"
                         data-branch="${row.branch}"
