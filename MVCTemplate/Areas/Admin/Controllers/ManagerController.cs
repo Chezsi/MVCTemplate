@@ -130,6 +130,36 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return Json(new { success = true, message = "Manager updated successfully." });
         }
 
+        [HttpPost]
+        public IActionResult EditFromSite(Manager manager)
+        {
+            if (string.IsNullOrWhiteSpace(manager.Name) || string.IsNullOrWhiteSpace(manager.Email))
+            {
+                return Json(new { success = false, message = "All fields are required." });
+            }
+
+            var existing = _context.Managers.FirstOrDefault(m => m.Id == manager.Id);
+            if (existing == null)
+            {
+                return Json(new { success = false, message = "Manager not found." });
+            }
+
+            bool nameExists = _context.Managers
+                .Any(m => m.Id != manager.Id && m.Name.ToLower() == manager.Name.Trim().ToLower());
+            if (nameExists)
+            {
+                return Json(new { success = false, message = "This manager name already exists." });
+            }
+
+            existing.Name = manager.Name.Trim();
+            existing.Email = manager.Email.Trim();
+            existing.UpdatedAt = DateTime.Now;
+
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Manager updated successfully." });
+        }
+
 
         [HttpDelete]
         public IActionResult Delete(int id)
