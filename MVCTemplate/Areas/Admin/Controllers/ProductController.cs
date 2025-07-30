@@ -143,8 +143,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             ExcelPackage.License.SetNonCommercialPersonal("My Name");
 
-            // Include ManagerName from navigation property (safe check for null Manager)
-            var dataToExport = _unitOfWork.Product.GetAll(includeProperties: "Manager").ToList();
+            // Include Manager and Site data
+            var dataToExport = _unitOfWork.Product.GetAll(includeProperties: "Manager.Site").ToList();
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Products");
@@ -159,23 +159,24 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 dt.ToString("MMMM dd, yyyy, hh:mm tt");
 
             worksheet.Cells[1, 1].Value = "Product Data";
-            worksheet.Cells[1, 1, 1, 5].Merge = true; // Adjusted for 5 columns
+            worksheet.Cells[1, 1, 1, 7].Merge = true; // updated to 7 columns
             worksheet.Cells[1, 1].Style.Font.Size = 14;
             worksheet.Cells[1, 1].Style.Font.Bold = true;
             worksheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
             var now = DateTime.Now;
             worksheet.Cells[2, 1].Value = $"Generated at: {FormatDateTimeWordMDY(now)}";
-            worksheet.Cells[2, 1, 2, 5].Merge = true; // Adjusted for 5 columns
+            worksheet.Cells[2, 1, 2, 7].Merge = true; // updated to 7 columns
             worksheet.Cells[2, 1].Style.Font.Italic = true;
             worksheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-            worksheet.Cells["A1:E2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells["A1:E2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
-            worksheet.Cells["A1:E2"].Style.Font.Color.SetColor(whiteFont);
-            worksheet.Cells["A1:E2"].Style.Border.BorderAround(borderStyle);
+            worksheet.Cells["A1:G2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells["A1:G2"].Style.Fill.BackgroundColor.SetColor(blueBackground);
+            worksheet.Cells["A1:G2"].Style.Font.Color.SetColor(whiteFont);
+            worksheet.Cells["A1:G2"].Style.Border.BorderAround(borderStyle);
 
-            string[] headers = { "ID", "Name", "Description", "Quantity", "Manager" };
+            // Updated headers
+            string[] headers = { "ID", "Name", "Description", "Quantity", "Manager", "Branch", "Location" };
             for (int i = 0; i < headers.Length; i++)
             {
                 var cell = worksheet.Cells[3, i + 1];
@@ -195,8 +196,10 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 worksheet.Cells[row, 3].Value = item.Description;
                 worksheet.Cells[row, 4].Value = item.Quantity;
                 worksheet.Cells[row, 5].Value = item.Manager?.Name ?? "";
+                worksheet.Cells[row, 6].Value = item.Manager?.Site?.Branch ?? "";
+                worksheet.Cells[row, 7].Value = item.Manager?.Site?.Location ?? "";
 
-                for (int col = 1; col <= 5; col++)
+                for (int col = 1; col <= 7; col++)
                 {
                     var cell = worksheet.Cells[row, col];
                     cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -204,10 +207,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     cell.Style.Fill.BackgroundColor.SetColor(fillColor);
                     cell.Style.Border.BorderAround(borderStyle);
                 }
+
                 row++;
             }
 
-            worksheet.Cells[3, 1, row - 1, 5].AutoFilter = true;
+            worksheet.Cells[3, 1, row - 1, 7].AutoFilter = true;
 
             worksheet.Column(1).Width = 10;
 
@@ -227,6 +231,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
             worksheet.Column(3).Width = GetMaxLength(3);
             worksheet.Column(4).Width = 10;
             worksheet.Column(5).Width = GetMaxLength(5);
+            worksheet.Column(6).Width = GetMaxLength(6); // Branch
+            worksheet.Column(7).Width = GetMaxLength(7); // Location
 
             var stream = new MemoryStream();
             await package.SaveAsAsync(stream);
