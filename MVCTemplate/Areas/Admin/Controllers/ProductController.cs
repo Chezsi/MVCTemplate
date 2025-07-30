@@ -444,24 +444,25 @@ namespace MVCTemplate.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAllProducts()
         {
-           /* if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
-            {
-                return Unauthorized();
-            }*/
+            /* if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+             {
+                 return Unauthorized();
+             }*/
 
-            var productList = _unitOfWork.Product.GetAll(includeProperties: "Manager")
+            var productList = _unitOfWork.Product
+            .GetAll(includeProperties: "Manager.Site")
             .Select(p => new {
                 p.Id,
                 p.Name,
                 p.Description,
                 p.Quantity,
                 p.ManagerId,
-                ManagerName = p.Manager != null ? p.Manager.Name : "Unassigned" // unassigned not showing 
+                ManagerName = p.Manager != null ? p.Manager.Name : "Unassigned",
+                ManagerBranch = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Branch : "No Branch"
             }).ToList();
 
             return Json(new { data = productList });
         }
-
 
         [HttpPost]
         public IActionResult GetProductsData()
