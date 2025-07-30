@@ -44,6 +44,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             var vm = new ManagerDetailVM
             {
+                ManagerId = manager.Id,
                 Name = manager.Name,
                 Email = manager.Email,
                 Branch = manager.Site?.Branch,
@@ -140,6 +141,26 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 }).ToList();
 
             return Json(new { data });
+        }
+
+        [HttpGet]
+        public IActionResult GetByManager(int id)
+        {
+            var products = _context.Products
+                .Include(p => p.Manager).ThenInclude(m => m.Site)
+                .Where(p => p.ManagerId == id)
+                .Select(p => new
+                {
+                    name = p.Name,
+                    description = p.Description,
+                    quantity = p.Quantity,
+                    branch = p.Manager.Site.Branch,
+                    createdAt = p.CreatedAt,
+                    updatedAt = p.UpdatedAt
+                })
+                .ToList();
+
+            return Json(new { data = products });
         }
 
     }

@@ -7,6 +7,7 @@ namespace MVCTemplate.ViewModels
 {
     public class ManagerDetailVM
     {
+        public int ManagerId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Branch { get; set; }
