@@ -10,10 +10,10 @@
 
 <div class="app-main__inner" style="opacity: 0;">
     <div class="app-page-title">
-        <div class="page-title-wrapper">
-            <div class="page-title-heading">
-                <div class="page-title-icon">
-                    <i class="lnr-map icon-gradient bg-plum-plate"></i>
+        <div class="page-title-wrapper d-flex justify-content-between align-items-center">
+            <div class="page-title-heading d-flex align-items-center mb-3 mt-3 mx-3">
+                <div class="page-title-icon me-3">
+                    <i class="lnr-map icon-gradient bg-plum-plate fs-2"></i>
                 </div>
                 <div>
                     <span class="text-primary">
@@ -25,16 +25,17 @@
                     </span>
                 </div>
             </div>
-            <div class="page-title-actions staggered">
-                <button class="btn btn-primary btn-shadow mx-2" data-bs-toggle="modal" data-bs-target="#createModal">+ Add Site</button>
+            <div class="page-title-actions staggered me-3">
+                <button type="button" class="btn btn-primary btn-shadow mx-2" data-bs-toggle="modal" data-bs-target="#createModal">
+                    + Add Site
+                </button>
             </div>
         </div>
     </div>
 
     <div class="main-card mb-3 card staggered">
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered" id="siteTable">
+                <table class="table table-hover table-bordered table-striped" id="siteTable">
                     <thead>
                         <tr>
                             <th>Branch</th>
@@ -48,7 +49,6 @@
                         
                     </tbody>
                 </table>
-            </div>
         </div>
     </div>
 </div>
