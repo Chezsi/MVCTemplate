@@ -10,5 +10,7 @@ namespace MVCTemplate.ViewModels
         public Product Product { get; set; } = new Product { Name = "" }; // to keep required in the model
 
         public IEnumerable<SelectListItem> Managers { get; set; } = new List<SelectListItem>();
+        public string ManagerName { get; set; } = "";
+        public string ManagerBranch { get; set; } = "";
     }
 }

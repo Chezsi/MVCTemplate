@@ -33,6 +33,35 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return View(vm);
         }
 
+        public IActionResult View(int id)
+        {
+            var site = _context.Sites
+                .Include(s => s.Managers)
+                .FirstOrDefault(s => s.Id == id);
+
+            if (site == null)
+                return NotFound();
+
+            var viewModel = new SiteDetailVM
+            {
+                Id = site.Id,
+                Branch = site.Branch,
+                Location = site.Location,
+                CreatedAt = site.CreatedAt,
+                UpdatedAt = site.UpdatedAt,
+                Managers = site.Managers.Select(m => new ManagerSiteViewVM
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Email = m.Email,
+                    CreatedAt = m.CreatedAt,
+                    UpdatedAt = m.UpdatedAt
+                }).ToList()
+            };
+
+            return View(viewModel);
+        }
+
         [HttpPost]
         public IActionResult Create(SiteVM vm)
         {
@@ -107,6 +136,23 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(new { data = sites });
         }
-        
+
+        [HttpGet]
+        public IActionResult GetManagersBySite(int id)
+        {
+            var managers = _context.Managers
+                .Where(m => m.SiteId == id)
+                .Select(m => new {
+                    m.Id,
+                    m.Name,
+                    m.Email,
+                    m.CreatedAt,
+                    m.UpdatedAt
+                })
+                .ToList();
+
+            return Json(new { data = managers });
+        }
+
     }
 }

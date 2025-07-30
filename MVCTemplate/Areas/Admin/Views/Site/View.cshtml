@@ -1,0 +1,174 @@
+﻿@model MVCTemplate.ViewModels.SiteDetailVM
+
+@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Logo Overlay -->
+<div id="logoOverlay">
+    <img src="~/LogosIcons/logo.png" alt="Logo" />
+</div>
+
+<!-- Page Wrapper -->
+<div class="app-main__inner" style="opacity: 0;">
+    <div class="card">
+        <!-- Header -->
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center rounded-top">
+            <div class="d-flex align-items-center mb-4 mt-4 mx-4">
+                <div class="me-3">
+                    <i class="lnr lnr-map fs-3"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold">Details</h4>
+                    <small>Site: @Model.Branch</small>
+                </div>
+            </div>
+            <div class="me-4">
+                <a href="/Admin/Site" class="btn btn-light text-dark">Back to List</a>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+            <!-- Site Info -->
+            <div class="mb-4">
+                <h5 class="text-black fw-bold">Information:</h5>
+                <hr />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Branch</label>
+                        <input type="text" class="form-control" value="@Model.Branch" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" value="@Model.Location" disabled />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Created</label>
+                        <input type="text" class="form-control" value="@Model.CreatedAt.ToString("MMMM dd, yyyy")" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Updated</label>
+                        <input type="text" class="form-control" value="@(Model.UpdatedAt.ToString("MMMM dd, yyyy") == "January 01, 0001" ? "" : Model.UpdatedAt.ToString("MMMM dd, yyyy"))" disabled />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Managers Table -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-black fw-bold">Managers Assigned:</h5>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addManagerModal">
+                    + Add Manager
+                </button>
+            </div>
+            <hr />
+
+            <div>
+                <table id="siteManagersTable" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Created At</th>
+                            <th>Updated At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var manager in Model.Managers)
+                        {
+                            <tr>
+                                <td>@manager.Name</td>
+                                <td>@manager.Email</td>
+                                <td>@manager.CreatedAt.ToString("MMMM dd, yyyy")</td>
+                                <td>@(manager.UpdatedAt?.ToString("MMMM dd, yyyy") == "January 01, 0001" ? "" : manager.UpdatedAt?.ToString("MMMM dd, yyyy"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Modal{
+    <div class="modal fade" id="addManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="addManagerForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Add Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="NewManager.SiteId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="NewManager.Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="NewManager.Email" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="editManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editManagerForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">Edit Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="Id" id="editManagerId" />
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="Name" id="editManagerName" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="Email" id="editManagerEmail" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/logoOverlay.css" />
+    <link rel="stylesheet" href="~/css/search-hover.css" />
+    <link rel="stylesheet" href="~/css/download-morph.css" />
+    <link rel="stylesheet" href="~/css/button-hover.css" />
+}
+
+@section Scripts {
+    <script src="~/js/validation.js"></script>
+    <script src="~/js/formSubmissionAjax.js"></script>
+    <script src="~/js/deleteGeneralSettings.js"></script>
+    <script src="~/js/fadeEffect.js"></script>
+    <script src="~/js/download-morph.js"></script>
+    <script src="~/js/SiteScripts/siteview-data-table.js"></script>
+    <script src="~/js/SiteScripts/site-crud.js"></script>
+}

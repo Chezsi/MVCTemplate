@@ -195,6 +195,7 @@
                         data: null,
                         render: function (data) {
                             return `
+                                    <a class="btn btn-info btn-sm" href="/Admin/Manager/View/${data.id}">View</a>
                                     <button class="btn btn-warning btn-sm btn-edit" data-id="${data.id}">Edit</button>
                                     <button class="btn btn-danger btn-sm btn-delete" data-id="${data.id}">Delete</button>
                                 `;

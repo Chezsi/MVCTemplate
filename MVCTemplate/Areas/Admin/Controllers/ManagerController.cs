@@ -32,6 +32,31 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return View(vm);
         }
 
+        [HttpGet]
+        public IActionResult View(int id)
+        {
+            var manager = _context.Managers
+                .Include(m => m.Site)
+                .FirstOrDefault(m => m.Id == id);
+
+            if (manager == null)
+                return NotFound();
+
+            var vm = new ManagerDetailVM
+            {
+                ManagerId = manager.Id,
+                Name = manager.Name,
+                Email = manager.Email,
+                Branch = manager.Site?.Branch,
+                Location = manager.Site?.Location,
+                CreatedAt = manager.CreatedAt,
+                UpdatedAt = manager.UpdatedAt
+            };
+
+            return View(vm);
+        }
+
+
         [HttpPost]
         public IActionResult Create(ManagerVM vm)
         {
@@ -51,6 +76,29 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             return Json(new { success = true, message = "Manager added successfully." });
         }
+
+        [HttpPost]
+        public IActionResult CreateFromSite(ManagerVM vm)
+        {
+            if (string.IsNullOrWhiteSpace(vm.NewManager?.Name) || string.IsNullOrWhiteSpace(vm.NewManager?.Email))
+            {
+                return Json(new { success = false, message = "All fields are required." });
+            }
+
+            bool nameExists = _context.Managers.Any(m => m.Name.ToLower() == vm.NewManager.Name.Trim().ToLower());
+            if (nameExists)
+            {
+                return Json(new { success = false, message = "This manager name already exists." });
+            }
+
+            vm.NewManager.CreatedAt = DateTime.Now;
+            _context.Managers.Add(vm.NewManager);
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Manager added successfully." });
+        }
+
+
 
         [HttpPost]
         public IActionResult Edit(ManagerVM vm)
@@ -76,6 +124,36 @@ namespace MVCTemplate.Areas.Admin.Controllers
             dbManager.Email = manager.Email;
             dbManager.SiteId = manager.SiteId;
             dbManager.GenerateUpdatedAt();
+
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Manager updated successfully." });
+        }
+
+        [HttpPost]
+        public IActionResult EditFromSite(Manager manager)
+        {
+            if (string.IsNullOrWhiteSpace(manager.Name) || string.IsNullOrWhiteSpace(manager.Email))
+            {
+                return Json(new { success = false, message = "All fields are required." });
+            }
+
+            var existing = _context.Managers.FirstOrDefault(m => m.Id == manager.Id);
+            if (existing == null)
+            {
+                return Json(new { success = false, message = "Manager not found." });
+            }
+
+            bool nameExists = _context.Managers
+                .Any(m => m.Id != manager.Id && m.Name.ToLower() == manager.Name.Trim().ToLower());
+            if (nameExists)
+            {
+                return Json(new { success = false, message = "This manager name already exists." });
+            }
+
+            existing.Name = manager.Name.Trim();
+            existing.Email = manager.Email.Trim();
+            existing.UpdatedAt = DateTime.Now;
 
             _context.SaveChanges();
 
@@ -116,6 +194,26 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 }).ToList();
 
             return Json(new { data });
+        }
+
+        [HttpGet]
+        public IActionResult GetByManager(int id)
+        {
+            var products = _context.Products
+                .Include(p => p.Manager).ThenInclude(m => m.Site)
+                .Where(p => p.ManagerId == id)
+                .Select(p => new
+                {
+                    name = p.Name,
+                    description = p.Description,
+                    quantity = p.Quantity,
+                    branch = p.Manager.Site.Branch,
+                    createdAt = p.CreatedAt,
+                    updatedAt = p.UpdatedAt
+                })
+                .ToList();
+
+            return Json(new { data = products });
         }
 
     }

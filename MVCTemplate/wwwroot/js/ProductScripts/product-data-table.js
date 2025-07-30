@@ -32,6 +32,7 @@ function loadDataTable() {
             { data: 'description', "autowidth": true },
             { data: 'quantity', "autowidth": true },
             { data: 'managerName', title: 'Manager', autowidth: true },
+            { data: 'managerBranch', title: 'Branch', "autowidth": true },
             {
                 data: 'id',
                 "render": function (data, type, full, meta) {

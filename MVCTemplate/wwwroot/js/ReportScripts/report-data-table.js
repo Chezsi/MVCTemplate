@@ -1,4 +1,5 @@
-﻿$(document).ready(function () {
+﻿
+$(document).ready(function () {
     loadDataTableReport();
 
     // Click to enlarge one image at a time
@@ -29,6 +30,7 @@
         $('#viewDescriptionModal').modal('show');
     });
 });
+
 function loadDataTableReport() {
     dataTable = $('#reportTable').DataTable({
         "ajax": {
@@ -77,12 +79,11 @@ function loadDataTableReport() {
                                 <i class="lnr-pencil"></i> Edit
                             </button>`;
 
-                    if (currentUserRole === 'Admin') {
                         buttons += `
                             <a href="javascript:void(0);" onClick="Delete('/Admin/Report/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
                                 <i class="lnr-trash"></i> Delete
                             </a>`;
-                    }
+
 
                     buttons += `</div>`;
                     return buttons;

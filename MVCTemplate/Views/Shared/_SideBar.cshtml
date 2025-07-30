@@ -49,7 +49,9 @@
                             <i class="metismenu-icon lnr-bookmark"></i>
                         </a>
                     </li>
-
+                    @* Only visible to Admin *@
+                    @if (User.IsInRole("Admin") || User.IsInRole("admin"))
+                    {
                     <li class="mainMenu">
                         <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="sideBarLink">
                             Category
@@ -57,41 +59,42 @@
                         </a>
                     </li>
 
-                    <li class="mainMenu">
-                        <a asp-area="Admin" asp-controller="Person" asp-action="Index" class="sideBarLink">
-                            Person
-                            <i class="metismenu-icon lnr-bookmark"></i>
-                        </a>
-                    </li>
+                        <li class="mainMenu">
+                            <a asp-area="Admin" asp-controller="Person" asp-action="Index" class="sideBarLink">
+                                Person
+                                <i class="metismenu-icon lnr-bookmark"></i>
+                            </a>
+                        </li>
 
-                    <li class="mainMenu">
-                        <a asp-area="Admin" asp-controller="Contract" asp-action="Index" class="sideBarLink">
-                            Contract
-                            <i class="metismenu-icon lnr-bookmark"></i>
-                        </a>
-                    </li>
+                        <li class="mainMenu">
+                            <a asp-area="Admin" asp-controller="Contract" asp-action="Index" class="sideBarLink">
+                                Contract
+                                <i class="metismenu-icon lnr-bookmark"></i>
+                            </a>
+                        </li>
 
-                    <li class="mainMenu">
-                        <a asp-area="Admin" asp-controller="Package" asp-action="Index" class="sideBarLink">
-                            Package
-                            <i class="metismenu-icon lnr-bookmark"></i>
-                        </a>
-                    </li>
-
+                        <li class="mainMenu">
+                            <a asp-area="Admin" asp-controller="Package" asp-action="Index" class="sideBarLink">
+                                Package
+                                <i class="metismenu-icon lnr-bookmark"></i>
+                            </a>
+                        </li>
+                    }
                     <li class="mainMenu">
                         <a asp-area="Admin" asp-controller="Report" asp-action="Index" class="sideBarLink">
                             Report
                             <i class="metismenu-icon lnr-bookmark"></i>
                         </a>
                     </li>
-
+                    @* Only visible to Admin *@
+                    @if (User.IsInRole("Admin") || User.IsInRole("admin"))
+                    {
                     <li class="mainMenu">
                         <a asp-area="Admin" asp-controller="Account" asp-action="Index" class="sideBarLink">
                             Accounts
                             <i class="metismenu-icon lnr-users"></i>
                         </a>
                     </li>
-
 
                     <li class="mainMenu">
                         <a href="#" class="sideBarLink" aria-expanded="false">
@@ -136,6 +139,7 @@
                             </li>*@
                         </ul>
                     </li>
+                    }
                 </ul>
             </div>
         </div>

@@ -1450,8 +1450,6 @@ namespace MVCTemplate.Controllers
             return BadRequest(new { success = false, message = "Validation failed", errors });
         }
 
-        // DELETE: /Report/Delete/{id}
-        [Authorize(Roles = $"{Roles.Admin}")]
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {

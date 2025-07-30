@@ -280,6 +280,7 @@
     <script src="~/js/download-morph.js"></script>
 
     <script>
-        const currentUserRole = '@userRole';
+        const currentUserRole = '@Html.Raw(Json.Serialize(userRole))';
+        console.log("🟡 User role injected by Razor:", currentUserRole);
     </script>
 }
