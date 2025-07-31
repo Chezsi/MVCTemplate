@@ -45,7 +45,32 @@ $(document).ready(function () {
         $('#editPassword').prop('disabled', true).val('').attr('type', 'password');
         $('#togglePassword').prop('disabled', true).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
         $('#toggleEnablePassword').find('i').removeClass('fa-unlock').addClass('fa-lock');
-        $('#editUserError, #editUserSuccess').addClass('d-none');
+    });
+
+    // Create user form submission
+    $('#createUserForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const form = $(this);
+        const formData = form.serialize();
+        const actionUrl = form.attr('action');
+
+        $.post(actionUrl, formData)
+            .done(function (res) {
+                if (res.success) {
+                    toastr.success(res.message, 'User Created');
+                    setTimeout(() => {
+                        $('#createUserModal').modal('hide');
+                        form[0].reset();
+                        userTable.ajax.reload(null, false);
+                    }, 100);
+                } else {
+                    toastr.error(res.errors.join(', '), 'Create Failed');
+                }
+            })
+            .fail(function () {
+                toastr.error('Something went wrong. Please try again.', 'Error');
+            });
     });
 });
 
@@ -70,8 +95,7 @@ $(document).on('click', '#toggleEnablePassword', function () {
     lockIcon.toggleClass('fa-lock fa-unlock');
 });
 
-// Handle form submission without page refresh
-// Handle form submission without page refresh
+// Edit user form submission
 $('#editUserForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -81,22 +105,17 @@ $('#editUserForm').on('submit', function (e) {
     $.post('/Admin/Account/Edit', formData)
         .done(function (res) {
             if (res.success) {
-                // Show success toast
                 toastr.success(res.message, 'User Updated');
-
-                // Hide modal and refresh table after a short delay
                 setTimeout(() => {
                     $('#editUserModal').modal('hide');
                     form[0].reset();
                     userTable.ajax.reload(null, false);
                 }, 100);
             } else {
-                // Show error toast with joined validation messages
                 toastr.error(res.errors.join(', '), 'Update Failed');
             }
         })
         .fail(function () {
-            // Show general error toast
             toastr.error('Something went wrong. Please try again.', 'Error');
         });
 });
