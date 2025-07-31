@@ -392,20 +392,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
-                // ✅ Email the assigned manager
+                // ✅ Email the assigned manager using helper method
                 var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
                 if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
                 {
-                    string subject = "New Product Assigned to You";
-                    string body = $@"
-                <p>Hi {manager.Name},</p>
-                <p>A new product has been assigned to you:</p>
-                <ul>
-                    <li><strong>Name:</strong> {product.Name}</li>
-                    <li><strong>Quantity:</strong> {product.Quantity}</li>
-                </ul>
-                <p>Please log in to the system to view more details.</p>";
-
+                    var (subject, body) = ComposeProductAssignmentEmail(manager, product);
                     await _emailService.SendEmailAsync(manager.Email, subject, body);
                 }
 
@@ -423,6 +414,21 @@ namespace MVCTemplate.Areas.Admin.Controllers
             {
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
+        }
+        private (string subject, string body) ComposeProductAssignmentEmail(Manager manager, Product product)
+        {
+            string subject = "New Product Assigned to You";
+
+            string body = $@"
+        <p>Hi {manager.Name},</p>
+        <p>A new product has been assigned to you:</p>
+        <ul>
+            <li><strong>Name:</strong> {product.Name}</li>
+            <li><strong>Quantity:</strong> {product.Quantity}</li>
+        </ul>
+        <p>Please log in to the system to view more details.</p>";
+
+            return (subject, body);
         }
 
 
