@@ -13,6 +13,7 @@ using Microsoft.Extensions.Caching.Memory;
 using MVCTemplate.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MVCTemplate.DataAccess.Service;
+using System.Drawing;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -430,15 +431,27 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         private byte[] GenerateProductImage(Manager manager, Product product)
         {
-            using var bmp = new System.Drawing.Bitmap(600, 300);
+            // A4 dimensions at 96 DPI
+            int width = 794;
+            int height = 1123;
+
+            using var bmp = new System.Drawing.Bitmap(width, height);
             using var gfx = System.Drawing.Graphics.FromImage(bmp);
             gfx.Clear(System.Drawing.Color.White);
 
-            using var font = new System.Drawing.Font("Arial", 14);
-            gfx.DrawString($"Hi {manager.Name},", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 30));
-            gfx.DrawString($"Product: {product.Name}", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 70));
-            gfx.DrawString($"Quantity: {product.Quantity}", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 110));
-            gfx.DrawString($"Check the system for more details.", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 160));
+            using var font = new System.Drawing.Font("Arial", 20);
+            float y = 50f;
+
+            gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(50, y));
+            y += 80;
+
+            gfx.DrawString($"Hi {manager.Name},", font, Brushes.Black, new PointF(50, y));
+            y += 50;
+            gfx.DrawString($"Product: {product.Name}", font, Brushes.Black, new PointF(50, y));
+            y += 50;
+            gfx.DrawString($"Quantity: {product.Quantity}", font, Brushes.Black, new PointF(50, y));
+            y += 50;
+            gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(50, y));
 
             using var ms = new MemoryStream();
             bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
