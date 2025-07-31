@@ -24,20 +24,32 @@
     });
 });
 
-$(document).on('click', '.delete-product-btn', function () {
+$(document).on('click', '.delete-product-btn', async function () {
     const id = $(this).data('id');
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    const url = `/Admin/Product/Delete?id=${id}`;
 
-    $.ajax({
-        url: `/Admin/Product/Delete?id=${id}`,
-        type: 'DELETE',
-        success: function (res) {
-            alert(res.message);
-            $('#managerProductsTable').DataTable().ajax.reload();
-        },
-        error: function (xhr) {
-            const msg = xhr.responseJSON?.message || 'Error deleting product';
-            alert(msg);
-        }
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
     });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await $.ajax({
+                url: url,
+                type: 'DELETE'
+            });
+
+            $('#managerProductsTable').DataTable().ajax.reload();
+            toastr.success(response.message);
+        } catch (error) {
+            toastr.error(error?.responseJSON?.message || 'Error deleting product.');
+        }
+    }
 });
+
