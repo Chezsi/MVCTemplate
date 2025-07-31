@@ -20,7 +20,7 @@ namespace MVCTemplate.ViewModels
         public List<ManagerSiteViewVM> Managers { get; set; } = new();
     }
 
-    public class ManagerSiteViewVM
+    public class ManagerSiteViewVM //for CRUD
     {
         public int Id { get; set; }
 

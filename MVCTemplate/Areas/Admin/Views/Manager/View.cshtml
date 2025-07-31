@@ -58,6 +58,9 @@
                 </div>
             </div>
                 <h5 class="text-black fw-bold">Products Managed:</h5>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                + Add Product
+            </button>
             <hr />
 
             <div>
@@ -81,6 +84,41 @@
     </div>
 </div>
 
+@section Modal{
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="addProductForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Add Product</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="Product.ManagerId" value="@Model.ManagerId" />
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="Product.Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="Product.Description" class="form-control"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="Product.Quantity" class="form-control" required min="1" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+}
+
 @section Styles {
     <link rel="stylesheet" href="~/css/logoOverlay.css" />
     <link rel="stylesheet" href="~/css/search-hover.css" />
@@ -95,4 +133,5 @@
     <script src="~/js/fadeEffect.js"></script>
     <script src="~/js/download-morph.js"></script>
     <script src="~/js/ManagerScripts/managerview-data-table.js"></script>
+    <script src="~/js/ManagerScripts/manager-crud.js"></script>
 }

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace MVCTemplate.ViewModels
 {
-    public class CreateManagerVM
+    public class CreateManagerVM // through Site/View
     {
         [Required]
         public string Name { get; set; }
