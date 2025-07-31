@@ -392,12 +392,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
-                // ✅ Email the assigned manager using helper method
                 var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
                 if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
                 {
-                    var (subject, body) = ComposeProductAssignmentEmail(manager, product);
-                    await _emailService.SendEmailAsync(manager.Email, subject, body);
+                    var (subject, body, imageBytes) = ComposeProductAssignmentEmail(manager, product);
+                    await _emailService.SendEmailWithImageAsync(manager.Email, subject, body, imageBytes, "product-details.png");
                 }
 
                 return Ok(new { message = "Added Successfully" });
@@ -415,22 +414,36 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
-        private (string subject, string body) ComposeProductAssignmentEmail(Manager manager, Product product)
+
+        private (string subject, string body, byte[] imageBytes) ComposeProductAssignmentEmail(Manager manager, Product product)
         {
             string subject = "New Product Assigned to You";
+            byte[] imageBytes = GenerateProductImage(manager, product);
 
             string body = $@"
         <p>Hi {manager.Name},</p>
-        <p>A new product has been assigned to you:</p>
-        <ul>
-            <li><strong>Name:</strong> {product.Name}</li>
-            <li><strong>Quantity:</strong> {product.Quantity}</li>
-        </ul>
-        <p>Please log in to the system to view more details.</p>";
+        <p>A new product has been assigned to you. See the attached image for details.</p>
+        <p style='font-size:10px;'>This is an auto-generated email.</p>";
 
-            return (subject, body);
+            return (subject, body, imageBytes);
         }
 
+        private byte[] GenerateProductImage(Manager manager, Product product)
+        {
+            using var bmp = new System.Drawing.Bitmap(600, 300);
+            using var gfx = System.Drawing.Graphics.FromImage(bmp);
+            gfx.Clear(System.Drawing.Color.White);
+
+            using var font = new System.Drawing.Font("Arial", 14);
+            gfx.DrawString($"Hi {manager.Name},", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 30));
+            gfx.DrawString($"Product: {product.Name}", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 70));
+            gfx.DrawString($"Quantity: {product.Quantity}", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 110));
+            gfx.DrawString($"Check the system for more details.", font, System.Drawing.Brushes.Black, new System.Drawing.PointF(20, 160));
+
+            using var ms = new MemoryStream();
+            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
 
         [HttpPut]
         public IActionResult Update(ProductVM vm)
