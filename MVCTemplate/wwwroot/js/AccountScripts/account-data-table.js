@@ -1,12 +1,13 @@
-﻿$(document).ready(function () {
-    $('#accountTable').DataTable({
+﻿let userTable; // Global reference
+
+$(document).ready(function () {
+    // Initialize and assign to global variable
+    userTable = $('#accountTable').DataTable({
         ajax: {
             url: '/Admin/Account/GetAllUsers',
             type: 'GET',
             datatype: 'json',
-            dataSrc: function (json) {
-                return json.data;
-            }
+            dataSrc: 'data'
         },
         columns: [
             { data: 'email', width: '40%' },
@@ -33,7 +34,7 @@
         width: '100%'
     });
 
-    // Handle click on edit button
+    // Populate edit modal fields
     $('#accountTable').on('click', '.edit-btn', function () {
         const email = $(this).data('email');
         const role = $(this).data('role');
@@ -41,9 +42,14 @@
         $('#editEmail').val(email);
         $('#editRole').val(role);
         $('#editOriginalEmail').val(email); // hidden input to track original
+        $('#editPassword').prop('disabled', true).val('').attr('type', 'password');
+        $('#togglePassword').prop('disabled', true).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
+        $('#toggleEnablePassword').find('i').removeClass('fa-unlock').addClass('fa-lock');
+        $('#editUserError, #editUserSuccess').addClass('d-none');
     });
 });
 
+// Toggle password field enable/disable
 $(document).on('click', '#toggleEnablePassword', function () {
     const passwordInput = $('#editPassword');
     const visibilityBtn = $('#togglePassword');
@@ -53,11 +59,9 @@ $(document).on('click', '#toggleEnablePassword', function () {
     const isDisabled = passwordInput.prop('disabled');
 
     if (isDisabled) {
-        // Unlocking the field
         passwordInput.prop('disabled', false);
         visibilityBtn.prop('disabled', false);
     } else {
-        // Locking again: reset everything
         passwordInput.prop('disabled', true).val('').attr('type', 'password');
         visibilityBtn.prop('disabled', true);
         visibilityIcon.removeClass('fa-eye-slash').addClass('fa-eye');
@@ -66,6 +70,7 @@ $(document).on('click', '#toggleEnablePassword', function () {
     lockIcon.toggleClass('fa-lock fa-unlock');
 });
 
+// Handle form submission without page refresh
 $('#editUserForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -77,7 +82,13 @@ $('#editUserForm').on('submit', function (e) {
             if (res.success) {
                 $('#editUserError').addClass('d-none');
                 $('#editUserSuccess').removeClass('d-none').text(res.message);
-                setTimeout(() => location.reload(), 1000);
+
+                // Hide modal and refresh table after a short delay
+                setTimeout(() => {
+                    $('#editUserModal').modal('hide');
+                    form[0].reset();
+                    userTable.ajax.reload(null, false);
+                }, 800);
             } else {
                 $('#editUserError').removeClass('d-none').text(res.errors.join(', '));
                 $('#editUserSuccess').addClass('d-none');
