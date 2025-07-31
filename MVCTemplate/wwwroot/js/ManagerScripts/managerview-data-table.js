@@ -31,12 +31,19 @@
                 data: 'id',
                 title: 'Action',
                 orderable: false,
-                render: function (id) {
+                render: function (id, type, row) {
                     return `
-                        <button class="btn btn-sm btn-danger delete-product-btn" data-id="${id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `;
+            <button class="btn btn-sm btn-warning btn-edit-product"
+                    data-id="${id}"
+                    data-name="${row.name}"
+                    data-description="${row.description}"
+                    data-quantity="${row.quantity}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-danger delete-product-btn" data-id="${id}">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
                 }
             }
         ]

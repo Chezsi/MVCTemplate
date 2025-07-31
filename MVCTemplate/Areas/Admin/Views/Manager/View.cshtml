@@ -120,6 +120,41 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editProductForm">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">Edit Product</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="Product.Id" id="editProductId" />
+                        <input type="hidden" name="Product.ManagerId" value="@Model.ManagerId" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="Product.Name" id="editProductName" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <input type="text" name="Product.Description" id="editProductDescription" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="Product.Quantity" id="editProductQuantity" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 }
 
 @section Styles {

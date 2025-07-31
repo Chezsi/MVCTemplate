@@ -53,3 +53,34 @@ $(document).on('click', '.delete-product-btn', async function () {
     }
 });
 
+$(document).on('click', '.btn-edit-product', function () {
+    const id = $(this).data('id');
+    const name = $(this).data('name');
+    const description = $(this).data('description');
+    const quantity = $(this).data('quantity');
+
+    $('#editProductId').val(id);
+    $('#editProductName').val(name);
+    $('#editProductDescription').val(description);
+    $('#editProductQuantity').val(quantity);
+    $('#editProductModal').modal('show');
+});
+
+$('#editProductForm').submit(function (e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: '/Admin/Product/Update',
+        type: 'PUT',
+        data: $(this).serialize(),
+        success: function (res) {
+            toastr.success(res.message);
+            $('#editProductModal').modal('hide');
+            $('#managerProductsTable').DataTable().ajax.reload();
+        },
+        error: function (xhr) {
+            const msg = xhr.responseJSON?.message || 'Failed to update product.';
+            toastr.error(msg);
+        }
+    });
+});
