@@ -1,12 +1,13 @@
-﻿$(document).ready(function () {
-    $('#accountTable').DataTable({
+﻿let userTable; // Global reference
+
+$(document).ready(function () {
+    // Initialize and assign to global variable
+    userTable = $('#accountTable').DataTable({
         ajax: {
             url: '/Admin/Account/GetAllUsers',
             type: 'GET',
             datatype: 'json',
-            dataSrc: function (json) {
-                return json.data;
-            }
+            dataSrc: 'data'
         },
         columns: [
             { data: 'email', width: '40%' },
@@ -33,7 +34,7 @@
         width: '100%'
     });
 
-    // Handle click on edit button
+    // Populate edit modal fields
     $('#accountTable').on('click', '.edit-btn', function () {
         const email = $(this).data('email');
         const role = $(this).data('role');
@@ -41,9 +42,39 @@
         $('#editEmail').val(email);
         $('#editRole').val(role);
         $('#editOriginalEmail').val(email); // hidden input to track original
+        $('#editPassword').prop('disabled', true).val('').attr('type', 'password');
+        $('#togglePassword').prop('disabled', true).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
+        $('#toggleEnablePassword').find('i').removeClass('fa-unlock').addClass('fa-lock');
+    });
+
+    // Create user form submission
+    $('#createUserForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const form = $(this);
+        const formData = form.serialize();
+        const actionUrl = form.attr('action');
+
+        $.post(actionUrl, formData)
+            .done(function (res) {
+                if (res.success) {
+                    toastr.success(res.message, 'User Created');
+                    setTimeout(() => {
+                        $('#createUserModal').modal('hide');
+                        form[0].reset();
+                        userTable.ajax.reload(null, false);
+                    }, 100);
+                } else {
+                    toastr.error(res.errors.join(', '), 'Create Failed');
+                }
+            })
+            .fail(function () {
+                toastr.error('Something went wrong. Please try again.', 'Error');
+            });
     });
 });
 
+// Toggle password field enable/disable
 $(document).on('click', '#toggleEnablePassword', function () {
     const passwordInput = $('#editPassword');
     const visibilityBtn = $('#togglePassword');
@@ -53,11 +84,9 @@ $(document).on('click', '#toggleEnablePassword', function () {
     const isDisabled = passwordInput.prop('disabled');
 
     if (isDisabled) {
-        // Unlocking the field
         passwordInput.prop('disabled', false);
         visibilityBtn.prop('disabled', false);
     } else {
-        // Locking again: reset everything
         passwordInput.prop('disabled', true).val('').attr('type', 'password');
         visibilityBtn.prop('disabled', true);
         visibilityIcon.removeClass('fa-eye-slash').addClass('fa-eye');
@@ -66,6 +95,7 @@ $(document).on('click', '#toggleEnablePassword', function () {
     lockIcon.toggleClass('fa-lock fa-unlock');
 });
 
+// Edit user form submission
 $('#editUserForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -75,16 +105,17 @@ $('#editUserForm').on('submit', function (e) {
     $.post('/Admin/Account/Edit', formData)
         .done(function (res) {
             if (res.success) {
-                $('#editUserError').addClass('d-none');
-                $('#editUserSuccess').removeClass('d-none').text(res.message);
-                setTimeout(() => location.reload(), 1000);
+                toastr.success(res.message, 'User Updated');
+                setTimeout(() => {
+                    $('#editUserModal').modal('hide');
+                    form[0].reset();
+                    userTable.ajax.reload(null, false);
+                }, 100);
             } else {
-                $('#editUserError').removeClass('d-none').text(res.errors.join(', '));
-                $('#editUserSuccess').addClass('d-none');
+                toastr.error(res.errors.join(', '), 'Update Failed');
             }
         })
         .fail(function () {
-            $('#editUserError').removeClass('d-none').text('Something went wrong.');
-            $('#editUserSuccess').addClass('d-none');
+            toastr.error('Something went wrong. Please try again.', 'Error');
         });
 });

@@ -12,6 +12,8 @@ using OfficeOpenXml;
 using Microsoft.Extensions.Caching.Memory;
 using MVCTemplate.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MVCTemplate.DataAccess.Service;
+using System.Drawing;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -22,12 +24,16 @@ namespace MVCTemplate.Areas.Admin.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _memoryCache;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
+        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache, IEmailService emailService, IWebHostEnvironment env)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _memoryCache = memoryCache;
+            _emailService = emailService;
+            _env = env;
         }
 
         #region EXPORT
@@ -281,8 +287,70 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return View(vm); // if you're using Index to directly pass the model
         }
 
+        /*[HttpPost]
+         public IActionResult Create(ProductVM vm)
+         {
+             try
+             {
+                 var product = vm.Product;
+                 bool hasRequiredFieldErrors = false;
+
+                 // Server-side validations
+                 if (string.IsNullOrWhiteSpace(product.Name))
+                 {
+                     ModelState.AddModelError("Product.Name", "Product Name is required.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (product.Quantity <= 0)
+                 {
+                     ModelState.AddModelError("Product.Quantity", "Quantity must be greater than zero.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (product.ManagerId == null || !_unitOfWork.Manager.Exists((int)product.ManagerId))
+                 {
+                     ModelState.AddModelError("Product.ManagerId", "Please select a valid manager.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
+                 {
+                     ModelState.AddModelError("Product.Name", "Product name already exists.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (hasRequiredFieldErrors || !ModelState.IsValid)
+                 {
+                     var errors = ModelState.ToDictionary(
+                         kvp => kvp.Key,
+                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                     );
+
+                     return BadRequest(new { message = "Validation failed", errors });
+                 }
+
+                 _unitOfWork.Product.Add(product);
+                 _unitOfWork.Save();
+
+                 return Ok(new { message = "Added Successfully" });
+             }
+             catch (DbUpdateException)
+             {
+                 return BadRequest(new { message = "Error occurred while saving to database" });
+             }
+             catch (InvalidOperationException)
+             {
+                 return BadRequest(new { message = "Invalid Operation" });
+             }
+             catch (Exception)
+             {
+                 return BadRequest(new { message = "An unexpected error occurred" });
+             }
+         }*/
+
         [HttpPost]
-        public IActionResult Create(ProductVM vm)
+        public async Task<IActionResult> Create(ProductVM vm)
         {
             try
             {
@@ -327,6 +395,13 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
+                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
+                if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
+                {
+                    var (subject, body, imageBytes) = ComposeProductAssignmentEmail(manager, product);
+                    await _emailService.SendEmailWithImageAsync(manager.Email, subject, body, imageBytes, "product-details.png");
+                }
+
                 return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
@@ -342,6 +417,76 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
+        private (string subject, string body, byte[] imageBytes) ComposeProductAssignmentEmail(Manager manager, Product product)
+        {
+            string subject = "New Product Assigned to You";
+            byte[] imageBytes = GenerateProductImage(manager, product);
+
+            string body = $@"
+        <p>Hi {manager.Name},</p>
+        <p>A new product has been assigned to you. See the attached image for details.</p>
+        <p style='font-size:10px;'>This is an auto-generated email.</p>";
+
+            return (subject, body, imageBytes);
+        }
+
+        private byte[] GenerateProductImage(Manager manager, Product product)
+        {
+            // A4 size at 96 DPI
+            int width = 794;
+            int height = 1123;
+
+            using var bmp = new System.Drawing.Bitmap(width, height);
+            using var gfx = System.Drawing.Graphics.FromImage(bmp);
+            gfx.Clear(System.Drawing.Color.White);
+
+            using var font = new System.Drawing.Font("Arial", 20);
+            float margin = 50f;
+            float y = margin;
+
+            // 1️⃣ Load and draw logo with preserved aspect ratio
+            string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "logo.png");
+            if (System.IO.File.Exists(logoPath))
+            {
+                using var logo = new Bitmap(logoPath);
+
+                int maxLogoWidth = 120;
+                int maxLogoHeight = 120;
+
+                float ratio = Math.Min((float)maxLogoWidth / logo.Width, (float)maxLogoHeight / logo.Height);
+                int scaledWidth = (int)(logo.Width * ratio);
+                int scaledHeight = (int)(logo.Height * ratio);
+
+                int logoX = width - scaledWidth - 40; // right margin
+                int logoY = 30; // top margin
+
+                gfx.DrawImage(logo, new Rectangle(logoX, logoY, scaledWidth, scaledHeight));
+            }
+
+            // 2️⃣ Title and Product Details
+            gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));
+            y += 80;
+
+            gfx.DrawString($"Hi {manager.Name},", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Location: {manager.Site?.Location ?? "Unknown"}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Product: {product.Name}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Quantity: {product.Quantity}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(margin, y));
+
+            using var ms = new MemoryStream();
+            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
+
 
         [HttpPut]
         public IActionResult Update(ProductVM vm)

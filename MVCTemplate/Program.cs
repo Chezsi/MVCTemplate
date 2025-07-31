@@ -4,6 +4,7 @@ using MVCtemplate.DataAccess.Data;
 using MVCTemplate.DataAccess.Data;
 using MVCTemplate.DataAccess.Repository;
 using MVCTemplate.DataAccess.Repository.IRepository;
+using MVCTemplate.DataAccess.Service;
 using MVCTemplate.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,8 +17,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IEmailService, MVCTemplate.DataAccess.Service.EmailService>();
 
 var app = builder.Build();
 
