@@ -25,13 +25,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _memoryCache;
         private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache, IEmailService emailService)
+        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache, IEmailService emailService, IWebHostEnvironment env)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _memoryCache = memoryCache;
             _emailService = emailService;
+            _env = env;
         }
 
         #region EXPORT
@@ -431,7 +433,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
         private byte[] GenerateProductImage(Manager manager, Product product)
         {
-            // A4 dimensions at 96 DPI
+            // A4 size at 96 DPI
             int width = 794;
             int height = 1123;
 
@@ -440,23 +442,51 @@ namespace MVCTemplate.Areas.Admin.Controllers
             gfx.Clear(System.Drawing.Color.White);
 
             using var font = new System.Drawing.Font("Arial", 20);
-            float y = 50f;
+            float margin = 50f;
+            float y = margin;
 
-            gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(50, y));
+            // 1️⃣ Load and draw logo with preserved aspect ratio
+            string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "logo.png");
+            if (System.IO.File.Exists(logoPath))
+            {
+                using var logo = new Bitmap(logoPath);
+
+                int maxLogoWidth = 120;
+                int maxLogoHeight = 120;
+
+                float ratio = Math.Min((float)maxLogoWidth / logo.Width, (float)maxLogoHeight / logo.Height);
+                int scaledWidth = (int)(logo.Width * ratio);
+                int scaledHeight = (int)(logo.Height * ratio);
+
+                int logoX = width - scaledWidth - 40; // right margin
+                int logoY = 30; // top margin
+
+                gfx.DrawImage(logo, new Rectangle(logoX, logoY, scaledWidth, scaledHeight));
+            }
+
+            // 2️⃣ Title and Product Details
+            gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));
             y += 80;
 
-            gfx.DrawString($"Hi {manager.Name},", font, Brushes.Black, new PointF(50, y));
+            gfx.DrawString($"Hi {manager.Name},", font, Brushes.Black, new PointF(margin, y));
             y += 50;
-            gfx.DrawString($"Product: {product.Name}", font, Brushes.Black, new PointF(50, y));
+
+            gfx.DrawString($"Location: {manager.Site?.Location ?? "Unknown"}", font, Brushes.Black, new PointF(margin, y));
             y += 50;
-            gfx.DrawString($"Quantity: {product.Quantity}", font, Brushes.Black, new PointF(50, y));
+
+            gfx.DrawString($"Product: {product.Name}", font, Brushes.Black, new PointF(margin, y));
             y += 50;
-            gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(50, y));
+
+            gfx.DrawString($"Quantity: {product.Quantity}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(margin, y));
 
             using var ms = new MemoryStream();
             bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
             return ms.ToArray();
         }
+
 
         [HttpPut]
         public IActionResult Update(ProductVM vm)
