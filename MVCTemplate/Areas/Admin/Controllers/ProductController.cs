@@ -12,6 +12,7 @@ using OfficeOpenXml;
 using Microsoft.Extensions.Caching.Memory;
 using MVCTemplate.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MVCTemplate.DataAccess.Service;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -22,12 +23,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _memoryCache;
+        private readonly IEmailService _emailService;
 
-        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
+        public ProductController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache, IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _memoryCache = memoryCache;
+            _emailService = emailService;
         }
 
         #region EXPORT
@@ -281,8 +284,70 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return View(vm); // if you're using Index to directly pass the model
         }
 
+        /*[HttpPost]
+         public IActionResult Create(ProductVM vm)
+         {
+             try
+             {
+                 var product = vm.Product;
+                 bool hasRequiredFieldErrors = false;
+
+                 // Server-side validations
+                 if (string.IsNullOrWhiteSpace(product.Name))
+                 {
+                     ModelState.AddModelError("Product.Name", "Product Name is required.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (product.Quantity <= 0)
+                 {
+                     ModelState.AddModelError("Product.Quantity", "Quantity must be greater than zero.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (product.ManagerId == null || !_unitOfWork.Manager.Exists((int)product.ManagerId))
+                 {
+                     ModelState.AddModelError("Product.ManagerId", "Please select a valid manager.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
+                 {
+                     ModelState.AddModelError("Product.Name", "Product name already exists.");
+                     hasRequiredFieldErrors = true;
+                 }
+
+                 if (hasRequiredFieldErrors || !ModelState.IsValid)
+                 {
+                     var errors = ModelState.ToDictionary(
+                         kvp => kvp.Key,
+                         kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                     );
+
+                     return BadRequest(new { message = "Validation failed", errors });
+                 }
+
+                 _unitOfWork.Product.Add(product);
+                 _unitOfWork.Save();
+
+                 return Ok(new { message = "Added Successfully" });
+             }
+             catch (DbUpdateException)
+             {
+                 return BadRequest(new { message = "Error occurred while saving to database" });
+             }
+             catch (InvalidOperationException)
+             {
+                 return BadRequest(new { message = "Invalid Operation" });
+             }
+             catch (Exception)
+             {
+                 return BadRequest(new { message = "An unexpected error occurred" });
+             }
+         }*/
+
         [HttpPost]
-        public IActionResult Create(ProductVM vm)
+        public async Task<IActionResult> Create(ProductVM vm)
         {
             try
             {
@@ -327,6 +392,23 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
+                // ✅ Email the assigned manager
+                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
+                if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
+                {
+                    string subject = "New Product Assigned to You";
+                    string body = $@"
+                <p>Hi {manager.Name},</p>
+                <p>A new product has been assigned to you:</p>
+                <ul>
+                    <li><strong>Name:</strong> {product.Name}</li>
+                    <li><strong>Quantity:</strong> {product.Quantity}</li>
+                </ul>
+                <p>Please log in to the system to view more details.</p>";
+
+                    await _emailService.SendEmailAsync(manager.Email, subject, body);
+                }
+
                 return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
@@ -342,6 +424,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
+
 
         [HttpPut]
         public IActionResult Update(ProductVM vm)

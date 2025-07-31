@@ -22,8 +22,4 @@
     <ProjectReference Include="..\MVCTemplate.Util\MVCTemplate.Util.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>
