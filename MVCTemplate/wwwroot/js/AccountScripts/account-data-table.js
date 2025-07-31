@@ -71,6 +71,7 @@ $(document).on('click', '#toggleEnablePassword', function () {
 });
 
 // Handle form submission without page refresh
+// Handle form submission without page refresh
 $('#editUserForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -80,22 +81,22 @@ $('#editUserForm').on('submit', function (e) {
     $.post('/Admin/Account/Edit', formData)
         .done(function (res) {
             if (res.success) {
-                $('#editUserError').addClass('d-none');
-                $('#editUserSuccess').removeClass('d-none').text(res.message);
+                // Show success toast
+                toastr.success(res.message, 'User Updated');
 
                 // Hide modal and refresh table after a short delay
                 setTimeout(() => {
                     $('#editUserModal').modal('hide');
                     form[0].reset();
                     userTable.ajax.reload(null, false);
-                }, 800);
+                }, 100);
             } else {
-                $('#editUserError').removeClass('d-none').text(res.errors.join(', '));
-                $('#editUserSuccess').addClass('d-none');
+                // Show error toast with joined validation messages
+                toastr.error(res.errors.join(', '), 'Update Failed');
             }
         })
         .fail(function () {
-            $('#editUserError').removeClass('d-none').text('Something went wrong.');
-            $('#editUserSuccess').addClass('d-none');
+            // Show general error toast
+            toastr.error('Something went wrong. Please try again.', 'Error');
         });
 });
