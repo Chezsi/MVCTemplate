@@ -23,3 +23,21 @@
         });
     });
 });
+
+$(document).on('click', '.delete-product-btn', function () {
+    const id = $(this).data('id');
+    if (!confirm("Are you sure you want to delete this product?")) return;
+
+    $.ajax({
+        url: `/Admin/Product/Delete?id=${id}`,
+        type: 'DELETE',
+        success: function (res) {
+            alert(res.message);
+            $('#managerProductsTable').DataTable().ajax.reload();
+        },
+        error: function (xhr) {
+            const msg = xhr.responseJSON?.message || 'Error deleting product';
+            alert(msg);
+        }
+    });
+});

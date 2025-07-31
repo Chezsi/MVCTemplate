@@ -16,25 +16,27 @@
             {
                 data: 'createdAt',
                 title: 'Created',
-                render: function (data) {
-                    if (!data) return '';
-                    return new Date(data).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: '2-digit'
-                    });
-                }
+                render: data => !data ? '' : new Date(data).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: '2-digit'
+                })
             },
             {
                 data: 'updatedAt',
                 title: 'Updated',
-                render: function (data) {
-                    if (!data || data.includes('0001')) return '';
-                    return new Date(data).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: '2-digit'
-                    });
+                render: data => !data || data.includes('0001') ? '' : new Date(data).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: '2-digit'
+                })
+            },
+            {
+                data: 'id',
+                title: 'Action',
+                orderable: false,
+                render: function (id) {
+                    return `
+                        <button class="btn btn-sm btn-danger delete-product-btn" data-id="${id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
                 }
             }
         ]

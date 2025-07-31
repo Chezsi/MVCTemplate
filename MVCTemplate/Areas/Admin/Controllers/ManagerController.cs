@@ -204,6 +204,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 .Where(p => p.ManagerId == id)
                 .Select(p => new
                 {
+                    id = p.Id,
                     name = p.Name,
                     description = p.Description,
                     quantity = p.Quantity,
