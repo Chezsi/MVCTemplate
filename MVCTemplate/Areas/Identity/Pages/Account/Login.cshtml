@@ -55,7 +55,69 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
-    <script>
+            <script>
+                // visible on hover x seconds
+                document.addEventListener("DOMContentLoaded", function () {
+                    const passwordInput = document.getElementById("passwordInput");
+                    const showPasswordBtn = document.getElementById("showPasswordBtn");
+                    const eyeIcon = document.getElementById("eyeIcon");
+                    let visibilityTimeout;
+
+                    showPasswordBtn.addEventListener("click", function () {
+                        const isPassword = passwordInput.type === "password";
+
+                        if (isPassword) {
+                            // Show the password
+                            passwordInput.type = "text";
+                            eyeIcon.classList.remove("fa-eye");
+                            eyeIcon.classList.add("fa-eye-slash");
+
+                            // Clear any previous timeout to avoid stacking
+                            clearTimeout(visibilityTimeout);
+
+                            // Hide it again after 5 seconds
+                            visibilityTimeout = setTimeout(function () {
+                                passwordInput.type = "password";
+                                eyeIcon.classList.remove("fa-eye-slash");
+                                eyeIcon.classList.add("fa-eye");
+                            }, 5000);
+                        } else {
+                            // If it's already visible, hide immediately
+                            passwordInput.type = "password";
+                            eyeIcon.classList.remove("fa-eye-slash");
+                            eyeIcon.classList.add("fa-eye");
+                            clearTimeout(visibilityTimeout);
+                        }
+                    });
+                });
+            </script>
+
+        @*<script> 
+            // visible on hover
+            document.addEventListener("DOMContentLoaded", function () {
+                const passwordInput = document.getElementById("passwordInput");
+                const showPasswordBtn = document.getElementById("showPasswordBtn");
+                const eyeIcon = document.getElementById("eyeIcon");
+
+                // Show password on hover
+                showPasswordBtn.addEventListener("mouseenter", function () {
+                    passwordInput.type = "text";
+                    eyeIcon.classList.remove("fa-eye");
+                    eyeIcon.classList.add("fa-eye-slash");
+                });
+
+                // Hide password when not hovering
+                showPasswordBtn.addEventListener("mouseleave", function () {
+                    passwordInput.type = "password";
+                    eyeIcon.classList.remove("fa-eye-slash");
+                    eyeIcon.classList.add("fa-eye");
+                });
+            });
+            </script>*
+
+
+    @*<script>
+        // visible on click
         document.addEventListener("DOMContentLoaded", function () {
             const passwordInput = document.getElementById("passwordInput");
             const showPasswordBtn = document.getElementById("showPasswordBtn");
@@ -71,5 +133,5 @@
                 eyeIcon.classList.toggle("fa-eye-slash");
             });
         });
-    </script>
+    </script>*@
 }
