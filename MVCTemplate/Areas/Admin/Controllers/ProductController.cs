@@ -445,8 +445,17 @@ namespace MVCTemplate.Areas.Admin.Controllers
             float margin = 50f;
             float y = margin;
 
-            // 1️⃣ Load and draw logo with preserved aspect ratio
-            string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "logo.png");
+            string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "header.png");
+            if (System.IO.File.Exists(logoPath))
+            {
+                using var logo = new Bitmap(logoPath);
+
+                // Stretch to full width of the image canvas
+                int stretchedHeight = 120; // You can adjust this as needed
+                gfx.DrawImage(logo, new Rectangle(0, 0, width, stretchedHeight));
+                y = stretchedHeight + 20; // move content below the header
+            }
+            /*string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "logo.png");
             if (System.IO.File.Exists(logoPath))
             {
                 using var logo = new Bitmap(logoPath);
@@ -462,7 +471,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 int logoY = 30; // top margin
 
                 gfx.DrawImage(logo, new Rectangle(logoX, logoY, scaledWidth, scaledHeight));
-            }
+            }*/
 
             // 2️⃣ Title and Product Details
             gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));

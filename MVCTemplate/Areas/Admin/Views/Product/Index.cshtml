@@ -199,7 +199,7 @@
 
                         <div class="form-group">
                             <label asp-for="Product.Name" class="control-label">Product Name<span class="text-danger">*</span></label>
-                            <input asp-for="Product.Name" class="form-control" id="name" />
+                            <input asp-for="Product.Name" class="form-control" id="name" required/>
                             <span asp-validation-for="Product.Name" class="text-danger"></span>
                         </div>
 
@@ -247,7 +247,7 @@
 @section Scripts {
     <script>
         const currentUserRole = @Html.Raw(Json.Serialize(userRole));
-        //console.log("🟡 User role injected by Razor:", currentUserRole);
+        console.log("🟡 User role injected by Razor:", currentUserRole);
     </script>
 
     <script src="~/js/validation.js"></script>
