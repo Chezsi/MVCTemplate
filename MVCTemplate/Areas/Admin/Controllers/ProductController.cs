@@ -352,88 +352,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
              }
          }*/
 
-        /*[HttpPost]
-        public async Task<IActionResult> Create(ProductVM vm)
-        {
-            try
-            {
-                var product = vm.Product;
-                bool hasRequiredFieldErrors = false;
-
-                // Server-side validations
-                if (string.IsNullOrWhiteSpace(product.Name))
-                {
-                    ModelState.AddModelError("Product.Name", "Product Name is required.");
-                    hasRequiredFieldErrors = true;
-                }
-
-                if (product.Quantity <= 0)
-                {
-                    ModelState.AddModelError("Product.Quantity", "Quantity must be greater than zero.");
-                    hasRequiredFieldErrors = true;
-                }
-
-                if (product.ManagerId == null || !_unitOfWork.Manager.Exists((int)product.ManagerId))
-                {
-                    ModelState.AddModelError("Product.ManagerId", "Please select a valid manager.");
-                    hasRequiredFieldErrors = true;
-                }
-
-                if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
-                {
-                    ModelState.AddModelError("Product.Name", "Product name already exists.");
-                    hasRequiredFieldErrors = true;
-                }
-
-                if (hasRequiredFieldErrors || !ModelState.IsValid)
-                {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
-                    );
-
-                    return BadRequest(new { message = "Validation failed", errors });
-                }
-
-                _unitOfWork.Product.Add(product);
-                _unitOfWork.Save();
-
-                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
-                if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
-                {
-                    var (subject, body, imageBytes) = ComposeProductAssignmentEmail(manager, product);
-                    await _emailService.SendEmailWithImageAsync(manager.Email, subject, body, imageBytes, "product-details.png");
-                }
-
-                return Ok(new { message = "Added Successfully" });
-            }
-            catch (DbUpdateException)
-            {
-                return BadRequest(new { message = "Error occurred while saving to database" });
-            }
-            catch (InvalidOperationException)
-            {
-                return BadRequest(new { message = "Invalid Operation" });
-            }
-            catch (Exception)
-            {
-                return BadRequest(new { message = "An unexpected error occurred" });
-            }
-        }
-
-        private (string subject, string body, byte[] imageBytes) ComposeProductAssignmentEmail(Manager manager, Product product)
-        {
-            string subject = "New Product Assigned to You";
-            byte[] imageBytes = GenerateProductImage(manager, product);
-
-            string body = $@"
-        <p>Hi {manager.Name},</p>
-        <p>A new product has been assigned to you. See the attached image for details.</p>
-        <p style='font-size:10px;'>This is an auto-generated email.</p>";
-
-            return (subject, body, imageBytes);
-        }*/
-
         private byte[] GenerateProductImage(Manager manager, Product product)
         {
             // A4 size at 96 DPI
@@ -448,18 +366,17 @@ namespace MVCTemplate.Areas.Admin.Controllers
             float margin = 50f;
             float y = margin;
 
+            // Draw header logo
             string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "header.png");
             if (System.IO.File.Exists(logoPath))
             {
                 using var logo = new Bitmap(logoPath);
-
-                // Stretch to full width of the image canvas
-                int stretchedHeight = 120; // You can adjust this as needed
+                int stretchedHeight = 120;
                 gfx.DrawImage(logo, new Rectangle(0, 0, width, stretchedHeight));
-                y = stretchedHeight + 20; // move content below the header
+                y = stretchedHeight + 20;
             }
 
-            // 2️⃣ Title and Product Details
+            // Title and product details
             gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));
             y += 80;
 
@@ -477,13 +394,17 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(margin, y));
 
-            // Footer social icons
+            // Footer: social media icons + URLs
             string[] iconFiles = { "fb.png", "ig.png", "twitter.png" };
-            int iconSize = 60; // square size: 60x60 px
+            string[] iconLabels = { "facebook.com", "instagram.com", "x.com" };
+            int iconSize = 60;
             int iconSpacing = 40;
             int totalWidth = iconFiles.Length * iconSize + (iconFiles.Length - 1) * iconSpacing;
             int startX = (width - totalWidth) / 2;
-            int footerY = height - iconSize - 40; // 40 px from bottom
+            int footerY = height - iconSize - 100;
+
+            using var labelFont = new Font("Arial", 12, FontStyle.Regular);
+            using var labelBrush = new SolidBrush(Color.Gray);
 
             for (int i = 0; i < iconFiles.Length; i++)
             {
@@ -491,12 +412,20 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 if (System.IO.File.Exists(path))
                 {
                     using var icon = new Bitmap(path);
-                    // Draw image resized to square size
-                    gfx.DrawImage(icon, new Rectangle(startX + i * (iconSize + iconSpacing), footerY, iconSize, iconSize));
+                    int x = startX + i * (iconSize + iconSpacing);
+
+                    // Draw icon
+                    gfx.DrawImage(icon, new Rectangle(x, footerY, iconSize, iconSize));
+
+                    // Draw label centered under icon
+                    string label = iconLabels[i];
+                    SizeF labelSize = gfx.MeasureString(label, labelFont);
+                    float labelX = x + (iconSize - labelSize.Width) / 2;
+                    gfx.DrawString(label, labelFont, labelBrush, new PointF(labelX, footerY + iconSize + 5));
                 }
             }
 
-
+            // Save image to memory stream
             using var ms = new MemoryStream();
             bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
             return ms.ToArray();
@@ -600,7 +529,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     <p><strong>Product:</strong> {product.Name}</p>
                     <p><strong>Quantity:</strong> {product.Quantity}</p>
 
-                    <p style='margin-top: 30px;'>Please log in to the system for more details.</p>
+                    <div style='margin-top: 30px;'>
+                        <p>Please log in to the system for more details.</p>
+                        <p>
+                            <a href='http://cstm.flyingv.com.ph:7163/Account/Login?ReturnUrl=%2FHome%2FDashboard' target='_blank' style='color: #1a73e8; text-decoration: none; font-weight: bold;'>
+                                Go to Login Page
+                            </a>
+                        </p>
+                    </div>
+
                 </div>
 
                 <!-- Footer social icons -->
