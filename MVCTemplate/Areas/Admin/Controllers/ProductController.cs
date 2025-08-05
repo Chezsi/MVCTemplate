@@ -680,7 +680,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 p.Quantity,
                 p.ManagerId,
                 ManagerName = p.Manager != null ? p.Manager.Name : "Unassigned",
-                ManagerBranch = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Branch : "No Branch"
+                ManagerBranch = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Branch : "No Branch",
+                ManagerLocation = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Location : "No Location"
             }).ToList();
 
             return Json(new { data = productList });

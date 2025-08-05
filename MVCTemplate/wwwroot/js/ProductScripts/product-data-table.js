@@ -1,4 +1,4 @@
-
+﻿
 // Custom filter to handle min/max quantity filtering
 $.fn.dataTable.ext.search.push(
     function (settings, data, dataIndex) {
@@ -26,6 +26,7 @@ $(document).ready(function () {
 
 function loadDataTable() {
     dataTable = $('#productTable').DataTable({
+        scrollX: true,
         "ajax": { url: '/Admin/Product/GetAllProducts' },
         "columns": [
             { data: 'name', "autowidth": true },
@@ -33,6 +34,7 @@ function loadDataTable() {
             { data: 'quantity', "autowidth": true },
             { data: 'managerName', title: 'Manager', autowidth: true },
             { data: 'managerBranch', title: 'Branch', "autowidth": true },
+            { data: 'managerLocation', title: 'Location', "autowidth": true },
             {
                 data: 'id',
                 "render": function (data, type, full, meta) {
@@ -49,7 +51,7 @@ function loadDataTable() {
                                 data-bs-target="#updateModal">
                                 <i class="lnr-pencil"></i> Edit
                             </button>
-                            `;
+                    `;
 
                     if ((currentUserRole || "").toLowerCase() === 'admin') {
                         buttons += `
@@ -57,7 +59,6 @@ function loadDataTable() {
                                 <i class="lnr-trash"></i> Delete
                             </a>`;
                     }
-
 
                     buttons += `</div>`;
                     return buttons;
@@ -67,7 +68,6 @@ function loadDataTable() {
         ]
     });
 }
-
 
 $('#nameSearch').on('keyup change', function () {
     dataTable.column(0).search(this.value).draw(); // 0 is the index for the "Name" column
