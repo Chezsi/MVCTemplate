@@ -14,6 +14,9 @@ using MVCTemplate.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MVCTemplate.DataAccess.Service;
 using System.Drawing;
+using System.Net.Mail;
+using System.Net.Mime;
+using System.Net;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -349,7 +352,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
              }
          }*/
 
-        [HttpPost]
+        /*[HttpPost]
         public async Task<IActionResult> Create(ProductVM vm)
         {
             try
@@ -429,7 +432,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
         <p style='font-size:10px;'>This is an auto-generated email.</p>";
 
             return (subject, body, imageBytes);
-        }
+        }*/
 
         private byte[] GenerateProductImage(Manager manager, Product product)
         {
@@ -455,23 +458,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 gfx.DrawImage(logo, new Rectangle(0, 0, width, stretchedHeight));
                 y = stretchedHeight + 20; // move content below the header
             }
-            /*string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "logo.png");
-            if (System.IO.File.Exists(logoPath))
-            {
-                using var logo = new Bitmap(logoPath);
-
-                int maxLogoWidth = 120;
-                int maxLogoHeight = 120;
-
-                float ratio = Math.Min((float)maxLogoWidth / logo.Width, (float)maxLogoHeight / logo.Height);
-                int scaledWidth = (int)(logo.Width * ratio);
-                int scaledHeight = (int)(logo.Height * ratio);
-
-                int logoX = width - scaledWidth - 40; // right margin
-                int logoY = 30; // top margin
-
-                gfx.DrawImage(logo, new Rectangle(logoX, logoY, scaledWidth, scaledHeight));
-            }*/
 
             // 2️⃣ Title and Product Details
             gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));
@@ -516,6 +502,106 @@ namespace MVCTemplate.Areas.Admin.Controllers
             return ms.ToArray();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Create(ProductVM vm)
+        {
+            try
+            {
+                var product = vm.Product;
+                bool hasRequiredFieldErrors = false;
+
+                // Server-side validations
+                if (string.IsNullOrWhiteSpace(product.Name))
+                {
+                    ModelState.AddModelError("Product.Name", "Product Name is required.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (product.Quantity <= 0)
+                {
+                    ModelState.AddModelError("Product.Quantity", "Quantity must be greater than zero.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (product.ManagerId == null || !_unitOfWork.Manager.Exists((int)product.ManagerId))
+                {
+                    ModelState.AddModelError("Product.ManagerId", "Please select a valid manager.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (_unitOfWork.Product.CheckIfUnique(product.Name) != null)
+                {
+                    ModelState.AddModelError("Product.Name", "Product name already exists.");
+                    hasRequiredFieldErrors = true;
+                }
+
+                if (hasRequiredFieldErrors || !ModelState.IsValid)
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors?.Select(e => e.ErrorMessage).ToArray() ?? []
+                    );
+
+                    return BadRequest(new { message = "Validation failed", errors });
+                }
+
+                _unitOfWork.Product.Add(product);
+                _unitOfWork.Save();
+
+                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
+                if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
+                {
+                    var (subject, body, imageBytes) = ComposeProductAssignmentEmail(manager, product);
+                    await _emailService.SendEmailWithImageAndEmbeddedIconsAsync(
+                        manager.Email,
+                        subject,
+                        body,
+                        imageBytes,
+                        "product-details.png"
+                    );
+                }
+
+                return Ok(new { message = "Added Successfully" });
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest(new { message = "Error occurred while saving to database" });
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest(new { message = "Invalid Operation" });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { message = "An unexpected error occurred" });
+            }
+        }
+
+        private (string subject, string body, byte[] imageBytes) ComposeProductAssignmentEmail(Manager manager, Product product)
+        {
+            string subject = "New Product Assigned to You";
+            byte[] imageBytes = GenerateProductImage(manager, product);
+
+            string body = $@"
+            <p>Hi {manager.Name},</p>
+            <p>A new product has been assigned to you. See the attached image for details.</p>
+
+            <p>
+                <a href='https://www.facebook.com/' target='_blank'>
+                    <img src='cid:fb-icon' width='30' height='30' style='margin-right:10px;' />
+                </a>
+                <a href='https://www.instagram.com/' target='_blank'>
+                    <img src='cid:ig-icon' width='30' height='30' style='margin-right:10px;' />
+                </a>
+                <a href='https://x.com/' target='_blank'>
+                    <img src='cid:twitter-icon' width='30' height='30' />
+                </a>
+            </p>
+
+            <p style='font-size:10px;'>This is an auto-generated email.</p>";
+
+            return (subject, body, imageBytes);
+        }
 
         [HttpPut]
         public IActionResult Update(ProductVM vm)
