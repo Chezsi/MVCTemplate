@@ -491,6 +491,26 @@ namespace MVCTemplate.Areas.Admin.Controllers
 
             gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(margin, y));
 
+            // Footer social icons
+            string[] iconFiles = { "fb.png", "ig.png", "twitter.png" };
+            int iconSize = 60; // square size: 60x60 px
+            int iconSpacing = 40;
+            int totalWidth = iconFiles.Length * iconSize + (iconFiles.Length - 1) * iconSpacing;
+            int startX = (width - totalWidth) / 2;
+            int footerY = height - iconSize - 40; // 40 px from bottom
+
+            for (int i = 0; i < iconFiles.Length; i++)
+            {
+                string path = Path.Combine(_env.WebRootPath, "LogosIcons", iconFiles[i]);
+                if (System.IO.File.Exists(path))
+                {
+                    using var icon = new Bitmap(path);
+                    // Draw image resized to square size
+                    gfx.DrawImage(icon, new Rectangle(startX + i * (iconSize + iconSpacing), footerY, iconSize, iconSize));
+                }
+            }
+
+
             using var ms = new MemoryStream();
             bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
             return ms.ToArray();
