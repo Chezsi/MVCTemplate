@@ -14,6 +14,9 @@ using MVCTemplate.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MVCTemplate.DataAccess.Service;
 using System.Drawing;
+using System.Net.Mail;
+using System.Net.Mime;
+using System.Net;
 
 namespace MVCTemplate.Areas.Admin.Controllers
 {
@@ -349,6 +352,85 @@ namespace MVCTemplate.Areas.Admin.Controllers
              }
          }*/
 
+        private byte[] GenerateProductImage(Manager manager, Product product)
+        {
+            // A4 size at 96 DPI
+            int width = 794;
+            int height = 1123;
+
+            using var bmp = new System.Drawing.Bitmap(width, height);
+            using var gfx = System.Drawing.Graphics.FromImage(bmp);
+            gfx.Clear(System.Drawing.Color.White);
+
+            using var font = new System.Drawing.Font("Arial", 20);
+            float margin = 50f;
+            float y = margin;
+
+            // Draw header logo
+            string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "header.png");
+            if (System.IO.File.Exists(logoPath))
+            {
+                using var logo = new Bitmap(logoPath);
+                int stretchedHeight = 120;
+                gfx.DrawImage(logo, new Rectangle(0, 0, width, stretchedHeight));
+                y = stretchedHeight + 20;
+            }
+
+            // Title and product details
+            gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));
+            y += 80;
+
+            gfx.DrawString($"Hi {manager.Name},", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Location: {manager.Site?.Location ?? "Unknown"}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Product: {product.Name}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Quantity: {product.Quantity}", font, Brushes.Black, new PointF(margin, y));
+            y += 50;
+
+            gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(margin, y));
+
+            // Footer: social media icons + URLs
+            string[] iconFiles = { "fb.png", "ig.png", "twitter.png" };
+            string[] iconLabels = { "facebook.com", "instagram.com", "x.com" };
+            int iconSize = 60;
+            int iconSpacing = 40;
+            int totalWidth = iconFiles.Length * iconSize + (iconFiles.Length - 1) * iconSpacing;
+            int startX = (width - totalWidth) / 2;
+            int footerY = height - iconSize - 100;
+
+            using var labelFont = new Font("Arial", 12, FontStyle.Regular);
+            using var labelBrush = new SolidBrush(Color.Gray);
+
+            for (int i = 0; i < iconFiles.Length; i++)
+            {
+                string path = Path.Combine(_env.WebRootPath, "LogosIcons", iconFiles[i]);
+                if (System.IO.File.Exists(path))
+                {
+                    using var icon = new Bitmap(path);
+                    int x = startX + i * (iconSize + iconSpacing);
+
+                    // Draw icon
+                    gfx.DrawImage(icon, new Rectangle(x, footerY, iconSize, iconSize));
+
+                    // Draw label centered under icon
+                    string label = iconLabels[i];
+                    SizeF labelSize = gfx.MeasureString(label, labelFont);
+                    float labelX = x + (iconSize - labelSize.Width) / 2;
+                    gfx.DrawString(label, labelFont, labelBrush, new PointF(labelX, footerY + iconSize + 5));
+                }
+            }
+
+            // Save image to memory stream
+            using var ms = new MemoryStream();
+            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create(ProductVM vm)
         {
@@ -395,11 +477,17 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
-                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
+                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId, includeProperties: "Site");
                 if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
                 {
                     var (subject, body, imageBytes) = ComposeProductAssignmentEmail(manager, product);
-                    await _emailService.SendEmailWithImageAsync(manager.Email, subject, body, imageBytes, "product-details.png");
+                    await _emailService.SendEmailWithImageAndEmbeddedIconsAsync(
+                        manager.Email,
+                        subject,
+                        body,
+                        imageBytes,
+                        "product-details.png"
+                    );
                 }
 
                 return Ok(new { message = "Added Successfully" });
@@ -424,78 +512,52 @@ namespace MVCTemplate.Areas.Admin.Controllers
             byte[] imageBytes = GenerateProductImage(manager, product);
 
             string body = $@"
-        <p>Hi {manager.Name},</p>
-        <p>A new product has been assigned to you. See the attached image for details.</p>
-        <p style='font-size:10px;'>This is an auto-generated email.</p>";
+            <div style='font-family: Arial, sans-serif; padding: 20px;'>
+                <!-- Header image -->
+                <div style='text-align: center; margin-bottom: 30px;'>
+                    <img src='cid:header-img' style='width: 100%; max-width: 794px;' />
+                </div>
+
+                <!-- Main Content (centered block with left-aligned text) -->
+                <div style='margin: 0 auto; max-width: 500px; text-align: left;'>
+                    <h2 style='text-align: center; color: #333;'>Product Assignment</h2>
+
+                    <p>Hi {manager.Name},</p>
+                    <p>A new product has been assigned to you. Please see the attached image for full details.</p>
+
+                    <p><strong>Location:</strong> {manager.Site?.Location ?? "Unknown"}</p>
+                    <p><strong>Product:</strong> {product.Name}</p>
+                    <p><strong>Quantity:</strong> {product.Quantity}</p>
+
+                    <div style='margin-top: 30px;'>
+                        <p>Please log in to the system for more details.</p>
+                        <p>
+                            <a href='http://cstm.flyingv.com.ph:7163/Account/Login?ReturnUrl=%2FHome%2FDashboard' target='_blank' style='color: #1a73e8; text-decoration: none; font-weight: bold;'>
+                                Go to Login Page
+                            </a>
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Footer social icons -->
+                <div style='margin-top: 50px; text-align: center;'>
+                    <a href='https://www.facebook.com/' target='_blank'>
+                        <img src='cid:fb-icon' width='30' height='30' style='margin: 0 10px;' />
+                    </a>
+                    <a href='https://www.instagram.com/' target='_blank'>
+                        <img src='cid:ig-icon' width='30' height='30' style='margin: 0 10px;' />
+                    </a>
+                    <a href='https://x.com/' target='_blank'>
+                        <img src='cid:twitter-icon' width='30' height='30' style='margin: 0 10px;' />
+                    </a>
+                </div>
+
+                <p style='font-size:10px; margin-top: 40px; text-align: center;'>This is an auto-generated email.</p>
+            </div>";
 
             return (subject, body, imageBytes);
         }
-
-        private byte[] GenerateProductImage(Manager manager, Product product)
-        {
-            // A4 size at 96 DPI
-            int width = 794;
-            int height = 1123;
-
-            using var bmp = new System.Drawing.Bitmap(width, height);
-            using var gfx = System.Drawing.Graphics.FromImage(bmp);
-            gfx.Clear(System.Drawing.Color.White);
-
-            using var font = new System.Drawing.Font("Arial", 20);
-            float margin = 50f;
-            float y = margin;
-
-            string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "header.png");
-            if (System.IO.File.Exists(logoPath))
-            {
-                using var logo = new Bitmap(logoPath);
-
-                // Stretch to full width of the image canvas
-                int stretchedHeight = 120; // You can adjust this as needed
-                gfx.DrawImage(logo, new Rectangle(0, 0, width, stretchedHeight));
-                y = stretchedHeight + 20; // move content below the header
-            }
-            /*string logoPath = Path.Combine(_env.WebRootPath, "LogosIcons", "logo.png");
-            if (System.IO.File.Exists(logoPath))
-            {
-                using var logo = new Bitmap(logoPath);
-
-                int maxLogoWidth = 120;
-                int maxLogoHeight = 120;
-
-                float ratio = Math.Min((float)maxLogoWidth / logo.Width, (float)maxLogoHeight / logo.Height);
-                int scaledWidth = (int)(logo.Width * ratio);
-                int scaledHeight = (int)(logo.Height * ratio);
-
-                int logoX = width - scaledWidth - 40; // right margin
-                int logoY = 30; // top margin
-
-                gfx.DrawImage(logo, new Rectangle(logoX, logoY, scaledWidth, scaledHeight));
-            }*/
-
-            // 2️⃣ Title and Product Details
-            gfx.DrawString("Product Assignment", new Font("Arial", 24, FontStyle.Bold), Brushes.Black, new PointF(margin, y));
-            y += 80;
-
-            gfx.DrawString($"Hi {manager.Name},", font, Brushes.Black, new PointF(margin, y));
-            y += 50;
-
-            gfx.DrawString($"Location: {manager.Site?.Location ?? "Unknown"}", font, Brushes.Black, new PointF(margin, y));
-            y += 50;
-
-            gfx.DrawString($"Product: {product.Name}", font, Brushes.Black, new PointF(margin, y));
-            y += 50;
-
-            gfx.DrawString($"Quantity: {product.Quantity}", font, Brushes.Black, new PointF(margin, y));
-            y += 50;
-
-            gfx.DrawString($"Please log in to the system for more details.", font, Brushes.Black, new PointF(margin, y));
-
-            using var ms = new MemoryStream();
-            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            return ms.ToArray();
-        }
-
 
         [HttpPut]
         public IActionResult Update(ProductVM vm)
@@ -618,7 +680,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 p.Quantity,
                 p.ManagerId,
                 ManagerName = p.Manager != null ? p.Manager.Name : "Unassigned",
-                ManagerBranch = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Branch : "No Branch"
+                ManagerBranch = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Branch : "No Branch",
+                ManagerLocation = p.Manager != null && p.Manager.Site != null ? p.Manager.Site.Location : "No Location"
             }).ToList();
 
             return Json(new { data = productList });
