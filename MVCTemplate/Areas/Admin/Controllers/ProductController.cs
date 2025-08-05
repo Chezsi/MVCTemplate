@@ -477,7 +477,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 _unitOfWork.Product.Add(product);
                 _unitOfWork.Save();
 
-                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId);
+                var manager = _unitOfWork.Manager.Get(m => m.Id == product.ManagerId, includeProperties: "Site");
                 if (manager != null && !string.IsNullOrWhiteSpace(manager.Email))
                 {
                     var (subject, body, imageBytes) = ComposeProductAssignmentEmail(manager, product);
