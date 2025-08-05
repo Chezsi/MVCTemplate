@@ -79,21 +79,19 @@ namespace MVCTemplate.DataAccess.Service
 
             mail.To.Add(to);
 
-            // Setup HTML view for CID image embedding
             var htmlView = AlternateView.CreateAlternateViewFromString(htmlBody, null, MediaTypeNames.Text.Html);
 
-            // Embed icons from wwwroot/LogosIcons
+            // Embed all required CIDs
+            EmbedIcon(htmlView, "header-img", "LogosIcons/header.png");
             EmbedIcon(htmlView, "fb-icon", "LogosIcons/fb.png");
             EmbedIcon(htmlView, "ig-icon", "LogosIcons/ig.png");
             EmbedIcon(htmlView, "twitter-icon", "LogosIcons/twitter.png");
 
             mail.AlternateViews.Add(htmlView);
 
-            // Attach product image
             if (imageBytes != null && imageBytes.Length > 0)
             {
-                var imageStream = new MemoryStream(imageBytes);
-                var attachment = new Attachment(imageStream, fileName, "image/png");
+                var attachment = new Attachment(new MemoryStream(imageBytes), fileName, MediaTypeNames.Image.Png);
                 mail.Attachments.Add(attachment);
             }
 

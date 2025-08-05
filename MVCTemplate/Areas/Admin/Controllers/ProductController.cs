@@ -583,22 +583,41 @@ namespace MVCTemplate.Areas.Admin.Controllers
             byte[] imageBytes = GenerateProductImage(manager, product);
 
             string body = $@"
-            <p>Hi {manager.Name},</p>
-            <p>A new product has been assigned to you. See the attached image for details.</p>
+            <div style='font-family: Arial, sans-serif; padding: 20px;'>
+                <!-- Header image -->
+                <div style='text-align: center; margin-bottom: 30px;'>
+                    <img src='cid:header-img' style='width: 100%; max-width: 794px;' />
+                </div>
 
-            <p>
-                <a href='https://www.facebook.com/' target='_blank'>
-                    <img src='cid:fb-icon' width='30' height='30' style='margin-right:10px;' />
-                </a>
-                <a href='https://www.instagram.com/' target='_blank'>
-                    <img src='cid:ig-icon' width='30' height='30' style='margin-right:10px;' />
-                </a>
-                <a href='https://x.com/' target='_blank'>
-                    <img src='cid:twitter-icon' width='30' height='30' />
-                </a>
-            </p>
+                <!-- Main Content (centered block with left-aligned text) -->
+                <div style='margin: 0 auto; max-width: 500px; text-align: left;'>
+                    <h2 style='text-align: center; color: #333;'>Product Assignment</h2>
 
-            <p style='font-size:10px;'>This is an auto-generated email.</p>";
+                    <p>Hi {manager.Name},</p>
+                    <p>A new product has been assigned to you. Please see the attached image for full details.</p>
+
+                    <p><strong>Location:</strong> {manager.Site?.Location ?? "Unknown"}</p>
+                    <p><strong>Product:</strong> {product.Name}</p>
+                    <p><strong>Quantity:</strong> {product.Quantity}</p>
+
+                    <p style='margin-top: 30px;'>Please log in to the system for more details.</p>
+                </div>
+
+                <!-- Footer social icons -->
+                <div style='margin-top: 50px; text-align: center;'>
+                    <a href='https://www.facebook.com/' target='_blank'>
+                        <img src='cid:fb-icon' width='30' height='30' style='margin: 0 10px;' />
+                    </a>
+                    <a href='https://www.instagram.com/' target='_blank'>
+                        <img src='cid:ig-icon' width='30' height='30' style='margin: 0 10px;' />
+                    </a>
+                    <a href='https://x.com/' target='_blank'>
+                        <img src='cid:twitter-icon' width='30' height='30' style='margin: 0 10px;' />
+                    </a>
+                </div>
+
+                <p style='font-size:10px; margin-top: 40px; text-align: center;'>This is an auto-generated email.</p>
+            </div>";
 
             return (subject, body, imageBytes);
         }
