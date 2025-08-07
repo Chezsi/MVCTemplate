@@ -302,8 +302,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 obj.GenerateUpdatedAt();
 
                 // Validate name uniqueness
-                Package? existing = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
-                if (existing != null)
+                Package? nameConflict = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
+                if (nameConflict != null)
                 {
                     ModelState.AddModelError("Name", "Package Name Already exists");
 
@@ -314,14 +314,18 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
 
-                // Get the existing package from the DB for file cleanup or preservation
+                // Get the existing package from the DB (EF will track this)
                 var existingPackage = _unitOfWork.Package.Get(u => u.Id == obj.Id);
+                if (existingPackage == null)
+                {
+                    return BadRequest(new { message = "Package not found." });
+                }
 
                 // Handle file upload
                 if (obj.UploadedFile != null && obj.UploadedFile.Length > 0)
                 {
-                    // ✅ DELETE OLD FILE IF EXISTS
-                    if (!string.IsNullOrWhiteSpace(existingPackage?.FilePath))
+                    // Delete old file if exists
+                    if (!string.IsNullOrWhiteSpace(existingPackage.FilePath))
                     {
                         var oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, existingPackage.FilePath.TrimStart('/'));
                         if (System.IO.File.Exists(oldFilePath))
@@ -330,11 +334,11 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         }
                     }
 
-                    // ✅ SAVE NEW FILE
+                    // Save new file
                     var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "packages");
-                    Directory.CreateDirectory(uploadsFolder); // Ensure folder exists
+                    Directory.CreateDirectory(uploadsFolder);
 
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(obj.UploadedFile.FileName);
+                    var uniqueFileName = Guid.NewGuid() + Path.GetExtension(obj.UploadedFile.FileName);
                     var newFilePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var stream = new FileStream(newFilePath, FileMode.Create))
@@ -342,18 +346,19 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         await obj.UploadedFile.CopyToAsync(stream);
                     }
 
-                    obj.FilePath = Path.Combine("/Uploads/packages/", uniqueFileName).Replace("\\", "/");
-                }
-                else
-                {
-                    // ❗ No new file — keep the existing one
-                    obj.FilePath = existingPackage?.FilePath;
+                    existingPackage.FilePath = Path.Combine("uploads", "packages", uniqueFileName);
                 }
 
-                // ✅ Save if model is valid
+                // Update other fields from the form
+                existingPackage.Name = obj.Name;
+                existingPackage.Description = obj.Description;
+                existingPackage.Priority = obj.Priority;
+                existingPackage.UpdatedAt = obj.UpdatedAt;
+
+                // Save if valid
                 if (ModelState.IsValid)
                 {
-                    _unitOfWork.Package.Update(obj);
+                    _unitOfWork.Package.Update(existingPackage);
                     _unitOfWork.Save();
                     return Ok(new { message = "Updated Successfully" });
                 }
