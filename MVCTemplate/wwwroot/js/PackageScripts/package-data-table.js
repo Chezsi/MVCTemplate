@@ -71,7 +71,7 @@ function loadDataTable() {
                     </a>`;
                     }
 
-                    if (currentUserRole === 'Admin') {
+                    if (currentUserRole?.toLowerCase() === 'admin') {
                         buttons += `
                     <a onClick="Delete('/Admin/Package/Delete/${data}')" class="btn-shadow btn btn-danger mx-3">
                         <i class="lnr-trash"></i> Delete

@@ -266,7 +266,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
-                <form asp-action="Update" asp-controller="Package" method="post" enctype="multipart/form-data" id="updateForm">
+                <form asp-action="Update" asp-controller="Package" method="put" enctype="multipart/form-data" id="updateForm">
                     <div class="modal-body">
                         <input type="hidden" asp-for="Id" id="id" />
                         <div class="form-group">

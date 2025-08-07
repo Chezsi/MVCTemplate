@@ -271,7 +271,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         await package.UploadedFile.CopyToAsync(fileStream);
                     }
 
-                    package.FilePath = Path.Combine("uploads", uniqueFileName);
+                    package.FilePath = Path.Combine("uploads", "packages", uniqueFileName);
                 }
 
                 package.GenerateUpdatedAt();
@@ -314,30 +314,43 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
                 }
 
+                // Get the existing package from the DB for file cleanup or preservation
+                var existingPackage = _unitOfWork.Package.Get(u => u.Id == obj.Id);
+
                 // Handle file upload
                 if (obj.UploadedFile != null && obj.UploadedFile.Length > 0)
                 {
+                    // ✅ DELETE OLD FILE IF EXISTS
+                    if (!string.IsNullOrWhiteSpace(existingPackage?.FilePath))
+                    {
+                        var oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, existingPackage.FilePath.TrimStart('/'));
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+
+                    // ✅ SAVE NEW FILE
                     var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "packages");
                     Directory.CreateDirectory(uploadsFolder); // Ensure folder exists
 
                     var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(obj.UploadedFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    var newFilePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    using (var stream = new FileStream(newFilePath, FileMode.Create))
                     {
                         await obj.UploadedFile.CopyToAsync(stream);
                     }
 
-                    // Save the relative path (used in views, etc.)
                     obj.FilePath = Path.Combine("/Uploads/packages/", uniqueFileName).Replace("\\", "/");
                 }
                 else
                 {
-                    // Preserve existing FilePath if no file is uploaded
-                    var existingPackage = _unitOfWork.Package.Get(u => u.Id == obj.Id);
+                    // ❗ No new file — keep the existing one
                     obj.FilePath = existingPackage?.FilePath;
                 }
 
+                // ✅ Save if model is valid
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Package.Update(obj);
@@ -364,7 +377,6 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = "An unexpected error occurred" });
             }
         }
-
 
         [Authorize(Roles = $"{Roles.Admin},admin")]
         [HttpDelete]
