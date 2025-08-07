@@ -15,5 +15,6 @@ namespace MVCTemplate.DataAccess.Repository.IRepository
         Package? ContinueIfNoChangeOnUpdate(string name, int countryId);
 
         Package GetFirstOrDefault(Expression<Func<Package, bool>> predicate);
+        Package? GetById(int id);
     }
 }

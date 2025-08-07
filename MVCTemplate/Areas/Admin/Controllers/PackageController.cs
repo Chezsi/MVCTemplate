@@ -1,4 +1,4 @@
-using ExcelDataReader;
+﻿using ExcelDataReader;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +17,7 @@ using System.IO;
 using ClosedXML.Excel;
 using OfficeOpenXml.Style;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Hosting;
 //using System.IO.Packaging;
 
 namespace MVCTemplate.Areas.Admin.Controllers
@@ -30,12 +31,14 @@ namespace MVCTemplate.Areas.Admin.Controllers
         private readonly ApplicationDbContext _context;
         private IUnitOfWork _unitOfWork;
         private readonly IMemoryCache _memoryCache;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public PackageController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache)
+        public PackageController(IUnitOfWork unitOfWork, ApplicationDbContext context, IMemoryCache memoryCache, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _memoryCache = memoryCache;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult ShowPackagesData()
@@ -196,7 +199,9 @@ namespace MVCTemplate.Areas.Admin.Controllers
         {
             return View();
         }
-        public IActionResult Create(Package package)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Package package)
         {
             try
             {
@@ -220,33 +225,59 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     hasRequiredFieldErrors = true;
                 }
 
-                Models.Package? packageCheck = _unitOfWork.Package.CheckIfUnique(package.Name);
-                if (packageCheck != null)
+                var existing = _unitOfWork.Package.CheckIfUnique(package.Name);
+                if (existing != null)
                 {
                     ModelState.AddModelError("Name", "Package already exists.");
                     hasRequiredFieldErrors = true;
                 }
 
-                if (hasRequiredFieldErrors)
+                // Check PDF file extension if uploaded
+                if (package.UploadedFile != null && package.UploadedFile.Length > 0)
+                {
+                    var extension = Path.GetExtension(package.UploadedFile.FileName);
+                    if (extension?.ToLower() != ".pdf")
+                    {
+                        ModelState.AddModelError("UploadedFile", "Only PDF files are allowed.");
+                        hasRequiredFieldErrors = true;
+                    }
+                }
+
+                if (hasRequiredFieldErrors || !ModelState.IsValid)
                 {
                     var errors = ModelState.ToDictionary(
                         kvp => kvp.Key,
                         kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
                     );
-                    return BadRequest(new { message = "Please Fill Required Fields", errors });
+
+                    return BadRequest(new
+                    {
+                        message = hasRequiredFieldErrors ? "Please Fill Required Fields" : "Something went wrong",
+                        errors
+                    });
                 }
 
-                if (!ModelState.IsValid)
+                // Save PDF if uploaded
+                if (package.UploadedFile != null && package.UploadedFile.Length > 0)
                 {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? []
-                    );
-                    return BadRequest(new { errors, message = "Something went wrong" });
+                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "packages");
+                    Directory.CreateDirectory(uploadsFolder);
+
+                    var uniqueFileName = Guid.NewGuid() + ".pdf";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await package.UploadedFile.CopyToAsync(fileStream);
+                    }
+
+                    package.FilePath = Path.Combine("uploads", uniqueFileName);
                 }
 
+                package.GenerateUpdatedAt();
                 _unitOfWork.Package.Add(package);
                 _unitOfWork.Save();
+
                 return Ok(new { message = "Added Successfully" });
             }
             catch (DbUpdateException)
@@ -264,15 +295,15 @@ namespace MVCTemplate.Areas.Admin.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Package obj)
+        public async Task<IActionResult> Update(Package obj)
         {
             try
             {
                 obj.GenerateUpdatedAt();
 
-                // Check for name uniqueness
-                Package? package = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
-                if (package != null)
+                // Validate name uniqueness
+                Package? existing = _unitOfWork.Package.ContinueIfNoChangeOnUpdate(obj.Name, obj.Id);
+                if (existing != null)
                 {
                     ModelState.AddModelError("Name", "Package Name Already exists");
 
@@ -281,6 +312,30 @@ namespace MVCTemplate.Areas.Admin.Controllers
                         kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>());
 
                     return BadRequest(new { errors = validationErrors, message = "Invalid Update" });
+                }
+
+                // Handle file upload
+                if (obj.UploadedFile != null && obj.UploadedFile.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "packages");
+                    Directory.CreateDirectory(uploadsFolder); // Ensure folder exists
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(obj.UploadedFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await obj.UploadedFile.CopyToAsync(stream);
+                    }
+
+                    // Save the relative path (used in views, etc.)
+                    obj.FilePath = Path.Combine("/Uploads/packages/", uniqueFileName).Replace("\\", "/");
+                }
+                else
+                {
+                    // Preserve existing FilePath if no file is uploaded
+                    var existingPackage = _unitOfWork.Package.Get(u => u.Id == obj.Id);
+                    obj.FilePath = existingPackage?.FilePath;
                 }
 
                 if (ModelState.IsValid)
@@ -310,7 +365,8 @@ namespace MVCTemplate.Areas.Admin.Controllers
             }
         }
 
-        [Authorize(Roles = $"{Roles.Admin}")]
+
+        [Authorize(Roles = $"{Roles.Admin},admin")]
         [HttpDelete]
         public IActionResult Delete(int id)
         {
@@ -327,8 +383,19 @@ namespace MVCTemplate.Areas.Admin.Controllers
                     return BadRequest(new { message = "Package Id not found" });
                 }
 
+                // ✅ Delete the associated file if it exists
+                if (!string.IsNullOrEmpty(package.FilePath))
+                {
+                    string filePath = Path.Combine(_webHostEnvironment.WebRootPath, package.FilePath);
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
                 _unitOfWork.Package.Remove(package);
                 _unitOfWork.Save();
+
                 return Ok(new { message = "Package deleted successfully" });
             }
             catch (DbUpdateException)
@@ -340,6 +407,7 @@ namespace MVCTemplate.Areas.Admin.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
         #endregion
         #region EXPORT
         [HttpPost]
@@ -585,10 +653,10 @@ namespace MVCTemplate.Areas.Admin.Controllers
         public IActionResult GetAllPackages()
         {
 
-            if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
-            {
-                return Unauthorized(); // to prevent the raw json from being seen 
-            }
+            //if (!Request.Headers["X-Requested-With"].Equals("XMLHttpRequest"))
+            //{
+            //    return Unauthorized(); // to prevent the raw json from being seen 
+            //}
 
             List<Package>? packageList = _unitOfWork.Package.GetAll().ToList();
             return Json(new { data = packageList });

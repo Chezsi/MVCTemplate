@@ -35,6 +35,11 @@ namespace MVCTemplate.DataAccess.Repository
             throw new NotImplementedException();
         }
 
+        public Package? GetById(int id)
+        {
+            return _db.Packages.FirstOrDefault(p => p.Id == id);
+        }
+
         public void Update(Package package)
         {
             var entry = _db.Packages.Attach(package);

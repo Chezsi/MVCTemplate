@@ -158,6 +158,7 @@
                             <th>Priority</th>
                             <th>Date Created</th>
                             <th>Date Updated</th>
+                            <th>File Path</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -183,7 +184,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
-                <form asp-action="Create" asp-controller="Package" method="post" id="createForm">
+                <form asp-action="Create" asp-controller="Package" method="post" enctype="multipart/form-data" id="createForm">
                     <div class="modal-body">
                         <div class="form-group">
                             <label asp-for="Name" class="control-label">Package Name<span class="text-danger">*</span></label>
@@ -206,6 +207,13 @@
                             </select>
                             <span asp-validation-for="Priority" class="text-danger"></span>
                         </div>
+
+                        <div class="form-group">
+                            <label asp-for="UploadedFile" class="control-label">Upload File (optional)</label>
+                            <input asp-for="UploadedFile" type="file" class="form-control" />
+                            <span asp-validation-for="UploadedFile" class="text-danger"></span>
+                        </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button id="createAddFormSubmitBtn" class="ladda-button me-2 btn-shadow btn btn-primary" data-style="expand-left">
@@ -258,7 +266,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
-                <form asp-action="Update" asp-controller="Package" method="put" id="updateForm">
+                <form asp-action="Update" asp-controller="Package" method="post" enctype="multipart/form-data" id="updateForm">
                     <div class="modal-body">
                         <input type="hidden" asp-for="Id" id="id" />
                         <div class="form-group">
@@ -282,6 +290,14 @@
                             </select>
                             <span asp-validation-for="Priority" class="text-danger"></span>
                         </div>
+
+                        <div class="form-group">
+                            <label asp-for="UploadedFile" class="control-label">Upload New File (optional)</label>
+                            <input asp-for="UploadedFile" type="file" class="form-control" />
+                            <span asp-validation-for="UploadedFile" class="text-danger"></span>
+                        </div>
+
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-shadow btn btn-secondary" data-bs-dismiss="modal">Close</button>
