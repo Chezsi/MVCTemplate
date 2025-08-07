@@ -33,7 +33,7 @@
   <ItemGroup>
     <Folder Include="Areas\User\" />
     <Folder Include="Middleware\" />
-    <Folder Include="wwwroot\Uploads\" />
+    <Folder Include="wwwroot\Uploads\packages\" />
   </ItemGroup>
 
 </Project>
