@@ -556,22 +556,23 @@ namespace MVCTemplate.Controllers
             using var wb = new XLWorkbook();
 
             // ----------------------------
-            // 1) Monthly sheet (Sheet 1)
+            // 1) Monthly sheet
             // ----------------------------
             var wsMonthly = wb.Worksheets.Add("Monthly");
 
             wsMonthly.Cell(1, 1).Value = "FY";
             wsMonthly.Cell(1, 2).Value = "VOLT";
             wsMonthly.Cell(1, 3).Value = "THUN";
-            wsMonthly.Cell(1, 4).Value = "BIO";
-            wsMonthly.Cell(1, 5).Value = "KERO";
-            wsMonthly.Cell(1, 6).Value = "FORECAST 2025";
-            wsMonthly.Cell(1, 7).Value = "LY 2024";
-            wsMonthly.Cell(1, 8).Value = "OPLAN";
-            wsMonthly.Cell(1, 9).Value = "vs. LY";
-            wsMonthly.Cell(1, 10).Value = "% vs LY";
-            wsMonthly.Cell(1, 11).Value = "vs. OPLAN";
-            wsMonthly.Cell(1, 12).Value = "% vs OPLAN";
+            wsMonthly.Cell(1, 4).Value = "GAS";   // ✅ New column (Volt + Thun)
+            wsMonthly.Cell(1, 5).Value = "BIO";
+            wsMonthly.Cell(1, 6).Value = "KERO";
+            wsMonthly.Cell(1, 7).Value = "FORECAST 2025";
+            wsMonthly.Cell(1, 8).Value = "LY 2024";
+            wsMonthly.Cell(1, 9).Value = "OPLAN";
+            wsMonthly.Cell(1, 10).Value = "vs. LY";
+            wsMonthly.Cell(1, 11).Value = "% vs LY";
+            wsMonthly.Cell(1, 12).Value = "vs. OPLAN";
+            wsMonthly.Cell(1, 13).Value = "% vs OPLAN";
 
             for (int i = 0; i < data.Count; i++)
             {
@@ -581,19 +582,23 @@ namespace MVCTemplate.Controllers
                 wsMonthly.Cell(r, 1).Value = d.Month;
                 wsMonthly.Cell(r, 2).Value = d.Volt;
                 wsMonthly.Cell(r, 3).Value = d.Thun;
-                wsMonthly.Cell(r, 4).Value = d.Bio;
-                wsMonthly.Cell(r, 5).Value = d.Kero;
 
-                // ✅ Forecast2025 as formula (instead of static C# sum)
-                wsMonthly.Cell(r, 6).FormulaA1 = $"=B{r}+C{r}+D{r}+E{r}";
+                // ✅ GAS = Volt + Thun
+                wsMonthly.Cell(r, 4).FormulaA1 = $"=B{r}+C{r}";
 
-                wsMonthly.Cell(r, 7).Value = d.LY2024;
-                wsMonthly.Cell(r, 8).Value = d.Oplan;
+                wsMonthly.Cell(r, 5).Value = d.Bio;
+                wsMonthly.Cell(r, 6).Value = d.Kero;
 
-                wsMonthly.Cell(r, 9).FormulaA1 = $"=F{r}-G{r}";
-                wsMonthly.Cell(r, 10).FormulaA1 = $"=IF(G{r}=0,0,I{r}/G{r})";
-                wsMonthly.Cell(r, 11).FormulaA1 = $"=F{r}-H{r}";
-                wsMonthly.Cell(r, 12).FormulaA1 = $"=IF(H{r}=0,0,K{r}/H{r})";
+                // Forecast now includes Gas
+                wsMonthly.Cell(r, 7).FormulaA1 = $"=B{r}+C{r}+D{r}+E{r}+F{r}";
+
+                wsMonthly.Cell(r, 8).Value = d.LY2024;
+                wsMonthly.Cell(r, 9).Value = d.Oplan;
+
+                wsMonthly.Cell(r, 10).FormulaA1 = $"=G{r}-H{r}";
+                wsMonthly.Cell(r, 11).FormulaA1 = $"=IF(H{r}=0,0,J{r}/H{r})";
+                wsMonthly.Cell(r, 12).FormulaA1 = $"=G{r}-I{r}";
+                wsMonthly.Cell(r, 13).FormulaA1 = $"=IF(I{r}=0,0,L{r}/I{r})";
             }
 
             int totalsRow = 14;
@@ -605,44 +610,17 @@ namespace MVCTemplate.Controllers
             wsMonthly.Cell(totalsRow, 6).FormulaA1 = "=SUM(F2:F13)";
             wsMonthly.Cell(totalsRow, 7).FormulaA1 = "=SUM(G2:G13)";
             wsMonthly.Cell(totalsRow, 8).FormulaA1 = "=SUM(H2:H13)";
-            wsMonthly.Cell(totalsRow, 9).FormulaA1 = "=F14-G14";
-            wsMonthly.Cell(totalsRow, 10).FormulaA1 = "=IF(G14=0,0,I14/G14)";
-            wsMonthly.Cell(totalsRow, 11).FormulaA1 = "=F14-H14";
-            wsMonthly.Cell(totalsRow, 12).FormulaA1 = "=IF(H14=0,0,K14/H14)";
+            wsMonthly.Cell(totalsRow, 9).FormulaA1 = "=SUM(I2:I13)";
+            wsMonthly.Cell(totalsRow, 10).FormulaA1 = "=G14-H14";
+            wsMonthly.Cell(totalsRow, 11).FormulaA1 = "=IF(H14=0,0,J14/H14)";
+            wsMonthly.Cell(totalsRow, 12).FormulaA1 = "=G14-I14";
+            wsMonthly.Cell(totalsRow, 13).FormulaA1 = "=IF(I14=0,0,L14/I14)";
 
-            int avg1HRow = 15;
-            wsMonthly.Cell(avg1HRow, 1).Value = "1H AVG";
-            wsMonthly.Cell(avg1HRow, 2).FormulaA1 = "=AVERAGE(B2:B7)";
-            wsMonthly.Cell(avg1HRow, 3).FormulaA1 = "=AVERAGE(C2:C7)";
-            wsMonthly.Cell(avg1HRow, 4).FormulaA1 = "=AVERAGE(D2:D7)";
-            wsMonthly.Cell(avg1HRow, 5).FormulaA1 = "=AVERAGE(E2:E7)";
-            wsMonthly.Cell(avg1HRow, 6).FormulaA1 = "=AVERAGE(F2:F7)";
-            wsMonthly.Cell(avg1HRow, 7).FormulaA1 = "=AVERAGE(G2:G7)";
-            wsMonthly.Cell(avg1HRow, 8).FormulaA1 = "=AVERAGE(H2:H7)";
-            wsMonthly.Cell(avg1HRow, 9).FormulaA1 = "=F15-G15";
-            wsMonthly.Cell(avg1HRow, 10).FormulaA1 = "=IF(G15=0,0,I15/G15)";
-            wsMonthly.Cell(avg1HRow, 11).FormulaA1 = "=F15-H15";
-            wsMonthly.Cell(avg1HRow, 12).FormulaA1 = "=IF(H15=0,0,K15/H15)";
-
-            int avg2HRow = 16;
-            wsMonthly.Cell(avg2HRow, 1).Value = "2H AVG";
-            wsMonthly.Cell(avg2HRow, 2).FormulaA1 = "=AVERAGE(B8:B13)";
-            wsMonthly.Cell(avg2HRow, 3).FormulaA1 = "=AVERAGE(C8:C13)";
-            wsMonthly.Cell(avg2HRow, 4).FormulaA1 = "=AVERAGE(D8:D13)";
-            wsMonthly.Cell(avg2HRow, 5).FormulaA1 = "=AVERAGE(E8:E13)";
-            wsMonthly.Cell(avg2HRow, 6).FormulaA1 = "=AVERAGE(F8:F13)";
-            wsMonthly.Cell(avg2HRow, 7).FormulaA1 = "=AVERAGE(G8:G13)";
-            wsMonthly.Cell(avg2HRow, 8).FormulaA1 = "=AVERAGE(H8:H13)";
-            wsMonthly.Cell(avg2HRow, 9).FormulaA1 = "=F16-G16";
-            wsMonthly.Cell(avg2HRow, 10).FormulaA1 = "=IF(G16=0,0,I16/G16)";
-            wsMonthly.Cell(avg2HRow, 11).FormulaA1 = "=F16-H16";
-            wsMonthly.Cell(avg2HRow, 12).FormulaA1 = "=IF(H16=0,0,K16/H16)";
-
-            wsMonthly.Range("J2:J16").Style.NumberFormat.Format = "0%";
-            wsMonthly.Range("L2:L16").Style.NumberFormat.Format = "0%";
+            wsMonthly.Range("K2:K16").Style.NumberFormat.Format = "0%";
+            wsMonthly.Range("M2:M16").Style.NumberFormat.Format = "0%";
 
             // ----------------------------
-            // 2) Summary sheet (Sheet 2)
+            // 2) Summary sheet
             // ----------------------------
             var wsSummary = wb.Worksheets.Add("Summary");
 
@@ -658,16 +636,18 @@ namespace MVCTemplate.Controllers
             wsSummary.Cell(2, 9).Value = "ATTAIN.";
             wsSummary.Cell(2, 10).Value = "% vs OPLAN";
 
+            // Map products to Monthly sheet columns
             var productCol = new Dictionary<string, string>
             {
                 ["Volt"] = "B",
                 ["Thun"] = "C",
-                ["Bio"] = "D",
-                ["Kero"] = "E"
+                ["Gas"] = "D",  // ✅ new derived column
+                ["Bio"] = "E",
+                ["Kero"] = "F"
             };
 
             int summaryStartRow = 3;
-            var products = new[] { "Volt", "Thun", "Bio", "Kero" };
+            var products = new[] { "Volt", "Thun", "Gas", "Bio", "Kero" };
 
             for (int i = 0; i < products.Length; i++)
             {
@@ -681,22 +661,22 @@ namespace MVCTemplate.Controllers
                 wsSummary.Cell(r, 4).FormulaA1 = $"=B{r}+C{r}";
 
                 wsSummary.Cell(r, 5).FormulaA1 =
-                    $"=IF(SUM(Monthly!F2:F7)=0,0,SUM(Monthly!G2:G7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!F2:F7)))" +
-                    $" + IF(SUM(Monthly!F8:F13)=0,0,SUM(Monthly!G8:G13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!F8:F13)))";
+                    $"=IF(SUM(Monthly!G2:G7)=0,0,SUM(Monthly!H2:H7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!G2:G7)))" +
+                    $" + IF(SUM(Monthly!G8:G13)=0,0,SUM(Monthly!H8:H13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!G8:G13)))";
 
                 wsSummary.Cell(r, 6).FormulaA1 = $"=D{r}-E{r}";
                 wsSummary.Cell(r, 7).FormulaA1 = $"=IF(E{r}=0,0,F{r}/E{r})";
 
                 wsSummary.Cell(r, 8).FormulaA1 =
-                    $"=IF(SUM(Monthly!F2:F7)=0,0,SUM(Monthly!H2:H7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!F2:F7)))" +
-                    $" + IF(SUM(Monthly!F8:F13)=0,0,SUM(Monthly!H8:H13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!F8:F13)))";
+                    $"=IF(SUM(Monthly!G2:G7)=0,0,SUM(Monthly!I2:I7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!G2:G7)))" +
+                    $" + IF(SUM(Monthly!G8:G13)=0,0,SUM(Monthly!I8:I13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!G8:G13)))";
 
                 wsSummary.Cell(r, 9).FormulaA1 = $"=D{r}-H{r}";
                 wsSummary.Cell(r, 10).FormulaA1 = $"=IF(H{r}=0,0,I{r}/H{r})";
             }
 
-            wsSummary.Range("G3:G6").Style.NumberFormat.Format = "0%";
-            wsSummary.Range("J3:J6").Style.NumberFormat.Format = "0%";
+            wsSummary.Range("G3:G7").Style.NumberFormat.Format = "0%";
+            wsSummary.Range("J3:J7").Style.NumberFormat.Format = "0%";
 
             // ----------------------------
             // Return file
