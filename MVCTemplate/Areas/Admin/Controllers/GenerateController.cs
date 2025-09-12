@@ -28,6 +28,7 @@ using NPOI.SS.Util;
 using NPOI.OpenXml4Net.OPC;
 using NPOI.XSSF.UserModel.Helpers;
 using System.Drawing.Imaging; // for import excel
+using ClosedXML.Excel;
 
 namespace MVCTemplate.Controllers
 {
@@ -533,6 +534,158 @@ namespace MVCTemplate.Controllers
                     .Padding(4)
                     .AlignMiddle()
                     .AlignLeft();
+        }
+
+        public IActionResult ExportToExcelSimulated()
+        {
+            var months = new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+            var rnd = new Random();
+
+            // Simulated monthly dataset
+            var data = months.Select(m => new
+            {
+                Month = m,
+                Volt = rnd.Next(5, 10),
+                Thun = rnd.Next(5, 10),
+                Bio = rnd.Next(4, 8),
+                Kero = rnd.Next(3, 7),
+                LY2024 = rnd.Next(20, 30),
+                Oplan = 25
+            }).ToList();
+
+            using var wb = new XLWorkbook();
+
+            // ----------------------------
+            // 1) Monthly sheet
+            // ----------------------------
+            var wsMonthly = wb.Worksheets.Add("Monthly");
+
+            wsMonthly.Cell(1, 1).Value = "FY";
+            wsMonthly.Cell(1, 2).Value = "VOLT";
+            wsMonthly.Cell(1, 3).Value = "THUN";
+            wsMonthly.Cell(1, 4).Value = "GAS";   // ✅ New column (Volt + Thun)
+            wsMonthly.Cell(1, 5).Value = "BIO";
+            wsMonthly.Cell(1, 6).Value = "KERO";
+            wsMonthly.Cell(1, 7).Value = "FORECAST 2025";
+            wsMonthly.Cell(1, 8).Value = "LY 2024";
+            wsMonthly.Cell(1, 9).Value = "OPLAN";
+            wsMonthly.Cell(1, 10).Value = "vs. LY";
+            wsMonthly.Cell(1, 11).Value = "% vs LY";
+            wsMonthly.Cell(1, 12).Value = "vs. OPLAN";
+            wsMonthly.Cell(1, 13).Value = "% vs OPLAN";
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                int r = 2 + i;
+                var d = data[i];
+
+                wsMonthly.Cell(r, 1).Value = d.Month;
+                wsMonthly.Cell(r, 2).Value = d.Volt;
+                wsMonthly.Cell(r, 3).Value = d.Thun;
+
+                // ✅ GAS = Volt + Thun
+                wsMonthly.Cell(r, 4).FormulaA1 = $"=B{r}+C{r}";
+
+                wsMonthly.Cell(r, 5).Value = d.Bio;
+                wsMonthly.Cell(r, 6).Value = d.Kero;
+
+                // Forecast now includes Gas
+                wsMonthly.Cell(r, 7).FormulaA1 = $"=B{r}+C{r}+D{r}+E{r}+F{r}";
+
+                wsMonthly.Cell(r, 8).Value = d.LY2024;
+                wsMonthly.Cell(r, 9).Value = d.Oplan;
+
+                wsMonthly.Cell(r, 10).FormulaA1 = $"=G{r}-H{r}";
+                wsMonthly.Cell(r, 11).FormulaA1 = $"=IF(H{r}=0,0,J{r}/H{r})";
+                wsMonthly.Cell(r, 12).FormulaA1 = $"=G{r}-I{r}";
+                wsMonthly.Cell(r, 13).FormulaA1 = $"=IF(I{r}=0,0,L{r}/I{r})";
+            }
+
+            int totalsRow = 14;
+            wsMonthly.Cell(totalsRow, 1).Value = "TOTAL";
+            wsMonthly.Cell(totalsRow, 2).FormulaA1 = "=SUM(B2:B13)";
+            wsMonthly.Cell(totalsRow, 3).FormulaA1 = "=SUM(C2:C13)";
+            wsMonthly.Cell(totalsRow, 4).FormulaA1 = "=SUM(D2:D13)";
+            wsMonthly.Cell(totalsRow, 5).FormulaA1 = "=SUM(E2:E13)";
+            wsMonthly.Cell(totalsRow, 6).FormulaA1 = "=SUM(F2:F13)";
+            wsMonthly.Cell(totalsRow, 7).FormulaA1 = "=SUM(G2:G13)";
+            wsMonthly.Cell(totalsRow, 8).FormulaA1 = "=SUM(H2:H13)";
+            wsMonthly.Cell(totalsRow, 9).FormulaA1 = "=SUM(I2:I13)";
+            wsMonthly.Cell(totalsRow, 10).FormulaA1 = "=G14-H14";
+            wsMonthly.Cell(totalsRow, 11).FormulaA1 = "=IF(H14=0,0,J14/H14)";
+            wsMonthly.Cell(totalsRow, 12).FormulaA1 = "=G14-I14";
+            wsMonthly.Cell(totalsRow, 13).FormulaA1 = "=IF(I14=0,0,L14/I14)";
+
+            wsMonthly.Range("K2:K16").Style.NumberFormat.Format = "0%";
+            wsMonthly.Range("M2:M16").Style.NumberFormat.Format = "0%";
+
+            // ----------------------------
+            // 2) Summary sheet
+            // ----------------------------
+            var wsSummary = wb.Worksheets.Add("Summary");
+
+            wsSummary.Cell(1, 1).Value = "ALCALA";
+            wsSummary.Cell(2, 1).Value = "PRODUCT";
+            wsSummary.Cell(2, 2).Value = "1H 2025";
+            wsSummary.Cell(2, 3).Value = "2H 2025";
+            wsSummary.Cell(2, 4).Value = "TOTAL 2025";
+            wsSummary.Cell(2, 5).Value = "LY 2024 VOLUME";
+            wsSummary.Cell(2, 6).Value = "INC/DEC";
+            wsSummary.Cell(2, 7).Value = "% vs LY";
+            wsSummary.Cell(2, 8).Value = "2025 OPLAN";
+            wsSummary.Cell(2, 9).Value = "ATTAIN.";
+            wsSummary.Cell(2, 10).Value = "% vs OPLAN";
+
+            // Map products to Monthly sheet columns
+            var productCol = new Dictionary<string, string>
+            {
+                ["Volt"] = "B",
+                ["Thun"] = "C",
+                ["Gas"] = "D",  // ✅ new derived column
+                ["Bio"] = "E",
+                ["Kero"] = "F"
+            };
+
+            int summaryStartRow = 3;
+            var products = new[] { "Volt", "Thun", "Gas", "Bio", "Kero" };
+
+            for (int i = 0; i < products.Length; i++)
+            {
+                string p = products[i];
+                string col = productCol[p];
+                int r = summaryStartRow + i;
+
+                wsSummary.Cell(r, 1).Value = p;
+                wsSummary.Cell(r, 2).FormulaA1 = $"=SUM(Monthly!{col}2:Monthly!{col}7)";
+                wsSummary.Cell(r, 3).FormulaA1 = $"=SUM(Monthly!{col}8:Monthly!{col}13)";
+                wsSummary.Cell(r, 4).FormulaA1 = $"=B{r}+C{r}";
+
+                wsSummary.Cell(r, 5).FormulaA1 =
+                    $"=IF(SUM(Monthly!G2:G7)=0,0,SUM(Monthly!H2:H7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!G2:G7)))" +
+                    $" + IF(SUM(Monthly!G8:G13)=0,0,SUM(Monthly!H8:H13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!G8:G13)))";
+
+                wsSummary.Cell(r, 6).FormulaA1 = $"=D{r}-E{r}";
+                wsSummary.Cell(r, 7).FormulaA1 = $"=IF(E{r}=0,0,F{r}/E{r})";
+
+                wsSummary.Cell(r, 8).FormulaA1 =
+                    $"=IF(SUM(Monthly!G2:G7)=0,0,SUM(Monthly!I2:I7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!G2:G7)))" +
+                    $" + IF(SUM(Monthly!G8:G13)=0,0,SUM(Monthly!I8:I13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!G8:G13)))";
+
+                wsSummary.Cell(r, 9).FormulaA1 = $"=D{r}-H{r}";
+                wsSummary.Cell(r, 10).FormulaA1 = $"=IF(H{r}=0,0,I{r}/H{r})";
+            }
+
+            wsSummary.Range("G3:G7").Style.NumberFormat.Format = "0%";
+            wsSummary.Range("J3:J7").Style.NumberFormat.Format = "0%";
+
+            // ----------------------------
+            // Return file
+            // ----------------------------
+            using var stream = new MemoryStream();
+            wb.SaveAs(stream);
+            return File(stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Alcala_Report.xlsx");
         }
 
     }
