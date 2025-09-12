@@ -538,10 +538,10 @@ namespace MVCTemplate.Controllers
 
         public IActionResult ExportToExcelSimulated()
         {
-            // Simulated monthly data (VOLT, THUN, BIO, KERO, LY, OPLAN)
             var months = new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
             var rnd = new Random();
 
+            // ✅ Simulated dataset
             var data = months.Select(m => new
             {
                 Month = m,
@@ -549,11 +549,10 @@ namespace MVCTemplate.Controllers
                 Thun = rnd.Next(5, 10),
                 Bio = rnd.Next(4, 8),
                 Kero = rnd.Next(3, 7),
-                LY2024 = rnd.Next(8, 14),
-                Oplan = 10 // fixed target for demo
+                LY2024 = rnd.Next(20, 30),  // LY = actual previous year numbers
+                Oplan = 25                  // Fixed demo OPLAN
             }).ToList();
 
-            // Add Forecast = sum of VOLT+THUN+BIO+KERO
             var forecast = data.Select(d => new
             {
                 d.Month,
@@ -566,15 +565,13 @@ namespace MVCTemplate.Controllers
                 d.Oplan
             }).ToList();
 
-            // Define 1H and 2H once, reuse everywhere
             var firstHalf = forecast.Take(6).ToList();
             var secondHalf = forecast.Skip(6).ToList();
 
-            // Create workbook
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("Report");
 
-            // =============== First Table (Summary) ===============
+            // ================= SUMMARY =================
             ws.Cell(1, 1).Value = "ALCALA";
             ws.Cell(2, 1).Value = "PRODUCT";
             ws.Cell(2, 2).Value = "1H 2025";
@@ -582,13 +579,14 @@ namespace MVCTemplate.Controllers
             ws.Cell(2, 4).Value = "TOTAL 2025";
             ws.Cell(2, 5).Value = "LY 2024 VOLUME";
             ws.Cell(2, 6).Value = "INC/DEC";
-            ws.Cell(2, 7).Value = "%";
+            ws.Cell(2, 7).Value = "% vs LY";
             ws.Cell(2, 8).Value = "2025 OPLAN";
             ws.Cell(2, 9).Value = "ATTAIN.";
-            ws.Cell(2, 10).Value = "%";
+            ws.Cell(2, 10).Value = "% vs OPLAN";
 
             string[] products = { "Thun", "Volt", "Bio", "Kero" };
             int row = 3;
+
             foreach (var p in products)
             {
                 Func<dynamic, int> selector = p switch
@@ -603,8 +601,11 @@ namespace MVCTemplate.Controllers
                 var firstHalfSum = firstHalf.Sum(selector);
                 var secondHalfSum = secondHalf.Sum(selector);
                 var total = firstHalfSum + secondHalfSum;
-                var ly = forecast.Sum(x => x.LY2024) / 4;  // demo
-                var oplan = forecast.Sum(x => x.Oplan) / 4;
+
+                // ✅ Compare total Forecast vs total LY for this product
+                var ly = forecast.Sum(selector);   // sum LY values for same product
+                var oplan = forecast.Sum(x => x.Oplan);  // Oplan sum (can also scale by product if needed)
+
                 var incDec = total - ly;
                 double perc = ly > 0 ? (double)incDec / ly : 0;
                 var attain = total - oplan;
@@ -623,22 +624,21 @@ namespace MVCTemplate.Controllers
                 row++;
             }
 
-            // =============== Second Table (Monthly Breakdown) ===============
+            // ================= MONTHLY BREAKDOWN =================
             int startRow = row + 2;
             ws.Cell(startRow, 1).Value = "FY";
             ws.Cell(startRow, 2).Value = "VOLT";
             ws.Cell(startRow, 3).Value = "THUN";
             ws.Cell(startRow, 4).Value = "BIO";
             ws.Cell(startRow, 5).Value = "KERO";
-            ws.Cell(startRow, 6).Value = "FORECASTS 2025";
+            ws.Cell(startRow, 6).Value = "FORECAST 2025";
             ws.Cell(startRow, 7).Value = "LY 2024";
             ws.Cell(startRow, 8).Value = "OPLAN";
             ws.Cell(startRow, 9).Value = "vs. LY";
-            ws.Cell(startRow, 10).Value = "%";
+            ws.Cell(startRow, 10).Value = "% vs LY";
             ws.Cell(startRow, 11).Value = "vs. OPLAN";
-            ws.Cell(startRow, 12).Value = "%";
+            ws.Cell(startRow, 12).Value = "% vs OPLAN";
 
-            // Monthly breakdown rows
             row = startRow + 1;
             foreach (var d in forecast)
             {
@@ -662,7 +662,7 @@ namespace MVCTemplate.Controllers
                 row++;
             }
 
-            // Totals row
+            // ✅ Totals row
             int totalVolt = forecast.Sum(x => x.Volt);
             int totalThun = forecast.Sum(x => x.Thun);
             int totalBio = forecast.Sum(x => x.Bio);
@@ -683,59 +683,20 @@ namespace MVCTemplate.Controllers
             ws.Cell(row, 10).Value = totalLY > 0 ? (double)(totalForecast - totalLY) / totalLY : 0;
             ws.Cell(row, 11).Value = totalForecast - totalOplan;
             ws.Cell(row, 12).Value = totalOplan > 0 ? (double)totalForecast / totalOplan : 0;
-            row++;
 
-            // 1H Average row
-            ws.Cell(row, 1).Value = "1H AVG";
-            ws.Cell(row, 2).Value = firstHalf.Average(x => x.Volt);
-            ws.Cell(row, 3).Value = firstHalf.Average(x => x.Thun);
-            ws.Cell(row, 4).Value = firstHalf.Average(x => x.Bio);
-            ws.Cell(row, 5).Value = firstHalf.Average(x => x.Kero);
-            ws.Cell(row, 6).Value = firstHalf.Average(x => x.Forecast2025);
-            ws.Cell(row, 7).Value = firstHalf.Average(x => x.LY2024);
-            ws.Cell(row, 8).Value = firstHalf.Average(x => x.Oplan);
-            ws.Cell(row, 9).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 7).Value.GetNumber();
-            ws.Cell(row, 10).Value = ws.Cell(row, 7).Value.GetNumber() > 0
-                ? ws.Cell(row, 9).Value.GetNumber() / ws.Cell(row, 7).Value.GetNumber()
-                : 0;
-            ws.Cell(row, 11).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 8).Value.GetNumber();
-            ws.Cell(row, 12).Value = ws.Cell(row, 8).Value.GetNumber() > 0
-                ? ws.Cell(row, 6).Value.GetNumber() / ws.Cell(row, 8).Value.GetNumber()
-                : 0;
-            row++;
-
-            // 2H Average row
-            ws.Cell(row, 1).Value = "2H AVG";
-            ws.Cell(row, 2).Value = secondHalf.Average(x => x.Volt);
-            ws.Cell(row, 3).Value = secondHalf.Average(x => x.Thun);
-            ws.Cell(row, 4).Value = secondHalf.Average(x => x.Bio);
-            ws.Cell(row, 5).Value = secondHalf.Average(x => x.Kero);
-            ws.Cell(row, 6).Value = secondHalf.Average(x => x.Forecast2025);
-            ws.Cell(row, 7).Value = secondHalf.Average(x => x.LY2024);
-            ws.Cell(row, 8).Value = secondHalf.Average(x => x.Oplan);
-            ws.Cell(row, 9).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 7).Value.GetNumber();
-            ws.Cell(row, 10).Value = ws.Cell(row, 7).Value.GetNumber() > 0
-                ? ws.Cell(row, 9).Value.GetNumber() / ws.Cell(row, 7).Value.GetNumber()
-                : 0;
-            ws.Cell(row, 11).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 8).Value.GetNumber();
-            ws.Cell(row, 12).Value = ws.Cell(row, 8).Value.GetNumber() > 0
-                ? ws.Cell(row, 6).Value.GetNumber() / ws.Cell(row, 8).Value.GetNumber()
-                : 0;
-            row++;
-
-            // Format percentages nicely
-            ws.Range(3, 7, row, 7).Style.NumberFormat.Format = "0%";
+            // ✅ Format percentages
+            //ws.Range(3, 7, row, 7).Style.NumberFormat.Format = "0%";
             ws.Range(3, 10, row, 10).Style.NumberFormat.Format = "0%";
             ws.Range(3, 12, row, 12).Style.NumberFormat.Format = "0%";
 
-            // Auto-fit columns
             ws.Columns().AdjustToContents();
 
-            // Return file
             using var stream = new MemoryStream();
             wb.SaveAs(stream);
-            var content = stream.ToArray();
-            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Alcala_Report.xlsx");
+            return File(stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Alcala_Report.xlsx");
         }
+
     }
 }
