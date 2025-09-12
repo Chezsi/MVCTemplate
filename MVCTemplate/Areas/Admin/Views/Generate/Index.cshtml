@@ -51,6 +51,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Chart container -->
+    <div class="card mt-4 p-3">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="d-inline-block dropdown ms-2">
+        <a asp-controller="Generate" asp-action="ExportToExcelSimulated" class="btn btn-primary" id="button-export-sim">
+            <i class="fa-solid fa-table" style="color: #ffffff; margin-right: 6px;"></i>
+            Export Simulated Report
+        </a>
+    </div>
 </div>
 
 @section Styles {
@@ -60,10 +72,86 @@
 }
 
 @section Scripts {
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/GenerateScripts/generate-graph-pdf.js"></script>
     <script src="~/js/GenerateScripts/generate-export.js"></script>
     <script src="~/js/fadeEffect.js"></script>
     <script src="~/js/download-morph.js"></script>
 
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Labels (months)
+        const labels = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+        // Simulated data
+        const forecast2025 = [150, 95, 120, 130, 135, 148, 115, 118, 125, 128, 115, 145];
+        const lastYear2024 = [210, 170, 150, 145, 150, 140, 135, 140, 142, 138, 140, 142];
+        const oplan = [150, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145];
+
+        // 2-period moving average for forecast
+        const movingAverage = forecast2025.map((v, i, arr) => {
+            if (i === 0) return null;
+            return (arr[i] + arr[i - 1]) / 2;
+        });
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'FORECASTS 2025',
+                        data: forecast2025,
+                        backgroundColor: 'rgba(0, 150, 150, 0.8)',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'LY 2024',
+                        data: lastYear2024,
+                        backgroundColor: 'rgba(255, 255, 150, 0.8)',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'OPLAN',
+                        data: oplan,
+                        backgroundColor: 'rgba(255, 150, 150, 0.8)',
+                        borderRadius: 4
+                    },
+                    {
+                        label: '2 per. Mov. Avg. (FORECASTS 2025)',
+                        data: movingAverage,
+                        type: 'line',
+                        borderColor: 'blue',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'blue',
+                        borderDash: [2, 2],
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Volume, in k'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    </script>
 }

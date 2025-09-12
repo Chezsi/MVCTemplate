@@ -28,6 +28,7 @@ using NPOI.SS.Util;
 using NPOI.OpenXml4Net.OPC;
 using NPOI.XSSF.UserModel.Helpers;
 using System.Drawing.Imaging; // for import excel
+using ClosedXML.Excel;
 
 namespace MVCTemplate.Controllers
 {
@@ -535,5 +536,141 @@ namespace MVCTemplate.Controllers
                     .AlignLeft();
         }
 
+
+        public IActionResult ExportToExcelSimulated()
+        {
+            // Simulated monthly data (VOLT, THUN, BIO, KERO, LY, OPLAN)
+            var months = new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+            var rnd = new Random();
+
+            var data = months.Select(m => new
+            {
+                Month = m,
+                Volt = rnd.Next(5, 10),
+                Thun = rnd.Next(5, 10),
+                Bio = rnd.Next(4, 8),
+                Kero = rnd.Next(3, 7),
+                LY2024 = rnd.Next(8, 14),
+                Oplan = 10 // fixed target for demo
+            }).ToList();
+
+            // Add Forecast = sum of VOLT+THUN+BIO+KERO
+            var forecast = data.Select(d => new
+            {
+                d.Month,
+                d.Volt,
+                d.Thun,
+                d.Bio,
+                d.Kero,
+                Forecast2025 = d.Volt + d.Thun + d.Bio + d.Kero,
+                d.LY2024,
+                d.Oplan
+            }).ToList();
+
+            // Create workbook
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Report");
+
+            // =============== First Table (Summary) ===============
+            ws.Cell(1, 1).Value = "ALCALA";
+            ws.Cell(2, 1).Value = "PRODUCT";
+            ws.Cell(2, 2).Value = "1H 2025";
+            ws.Cell(2, 3).Value = "2H 2025";
+            ws.Cell(2, 4).Value = "TOTAL 2025";
+            ws.Cell(2, 5).Value = "LY 2024 VOLUME";
+            ws.Cell(2, 6).Value = "INC/DEC";
+            ws.Cell(2, 7).Value = "%";
+            ws.Cell(2, 8).Value = "2025 OPLAN";
+            ws.Cell(2, 9).Value = "ATTAIN.";
+            ws.Cell(2, 10).Value = "%";
+
+            string[] products = { "Thun", "Volt", "Bio", "Kero" };
+            int row = 3;
+            foreach (var p in products)
+            {
+                Func<dynamic, int> selector = p switch
+                {
+                    "Thun" => x => x.Thun,
+                    "Volt" => x => x.Volt,
+                    "Bio" => x => x.Bio,
+                    "Kero" => x => x.Kero,
+                    _ => x => 0
+                };
+
+                var firstHalf = forecast.Take(6).Sum(selector);
+                var secondHalf = forecast.Skip(6).Sum(selector);
+                var total = firstHalf + secondHalf;
+                var ly = forecast.Sum(x => x.LY2024) / 4;  // demo
+                var oplan = forecast.Sum(x => x.Oplan) / 4;
+                var incDec = total - ly;
+                double perc = ly > 0 ? (double)incDec / ly : 0;
+                var attain = total - oplan;
+                double perc2 = oplan > 0 ? (double)total / oplan : 0;
+
+                ws.Cell(row, 1).Value = p.ToUpper();
+                ws.Cell(row, 2).Value = firstHalf;
+                ws.Cell(row, 3).Value = secondHalf;
+                ws.Cell(row, 4).Value = total;
+                ws.Cell(row, 5).Value = ly;
+                ws.Cell(row, 6).Value = incDec;
+                ws.Cell(row, 7).Value = perc;
+                ws.Cell(row, 8).Value = oplan;
+                ws.Cell(row, 9).Value = attain;
+                ws.Cell(row, 10).Value = perc2;
+                row++;
+            }
+
+            // =============== Second Table (Monthly Breakdown) ===============
+            int startRow = row + 2;
+            ws.Cell(startRow, 1).Value = "FY";
+            ws.Cell(startRow, 2).Value = "VOLT";
+            ws.Cell(startRow, 3).Value = "THUN";
+            ws.Cell(startRow, 4).Value = "BIO";
+            ws.Cell(startRow, 5).Value = "KERO";
+            ws.Cell(startRow, 6).Value = "FORECASTS 2025";
+            ws.Cell(startRow, 7).Value = "LY 2024";
+            ws.Cell(startRow, 8).Value = "OPLAN";
+            ws.Cell(startRow, 9).Value = "vs. LY";
+            ws.Cell(startRow, 10).Value = "%";
+            ws.Cell(startRow, 11).Value = "vs. OPLAN";
+            ws.Cell(startRow, 12).Value = "%";
+
+            row = startRow + 1;
+            foreach (var d in forecast)
+            {
+                int vsLy = d.Forecast2025 - d.LY2024;
+                double vsLyPerc = d.LY2024 > 0 ? (double)vsLy / d.LY2024 : 0;
+                int vsOplan = d.Forecast2025 - d.Oplan;
+                double vsOplanPerc = d.Oplan > 0 ? (double)d.Forecast2025 / d.Oplan : 0;
+
+                ws.Cell(row, 1).Value = d.Month;
+                ws.Cell(row, 2).Value = d.Volt;
+                ws.Cell(row, 3).Value = d.Thun;
+                ws.Cell(row, 4).Value = d.Bio;
+                ws.Cell(row, 5).Value = d.Kero;
+                ws.Cell(row, 6).Value = d.Forecast2025;
+                ws.Cell(row, 7).Value = d.LY2024;
+                ws.Cell(row, 8).Value = d.Oplan;
+                ws.Cell(row, 9).Value = vsLy;
+                ws.Cell(row, 10).Value = vsLyPerc;
+                ws.Cell(row, 11).Value = vsOplan;
+                ws.Cell(row, 12).Value = vsOplanPerc;
+                row++;
+            }
+
+            // Format percentages nicely
+            ws.Range(3, 7, row, 7).Style.NumberFormat.Format = "0%";
+            ws.Range(3, 10, row, 10).Style.NumberFormat.Format = "0%";
+            ws.Range(3, 12, row, 12).Style.NumberFormat.Format = "0%";
+
+            // Auto-fit columns
+            ws.Columns().AdjustToContents();
+
+            // Return file
+            using var stream = new MemoryStream();
+            wb.SaveAs(stream);
+            var content = stream.ToArray();
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Alcala_Report.xlsx");
+        }
     }
 }
