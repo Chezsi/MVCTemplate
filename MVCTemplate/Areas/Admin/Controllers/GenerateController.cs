@@ -536,7 +536,6 @@ namespace MVCTemplate.Controllers
                     .AlignLeft();
         }
 
-
         public IActionResult ExportToExcelSimulated()
         {
             // Simulated monthly data (VOLT, THUN, BIO, KERO, LY, OPLAN)
@@ -566,6 +565,10 @@ namespace MVCTemplate.Controllers
                 d.LY2024,
                 d.Oplan
             }).ToList();
+
+            // Define 1H and 2H once, reuse everywhere
+            var firstHalf = forecast.Take(6).ToList();
+            var secondHalf = forecast.Skip(6).ToList();
 
             // Create workbook
             using var wb = new XLWorkbook();
@@ -597,9 +600,9 @@ namespace MVCTemplate.Controllers
                     _ => x => 0
                 };
 
-                var firstHalf = forecast.Take(6).Sum(selector);
-                var secondHalf = forecast.Skip(6).Sum(selector);
-                var total = firstHalf + secondHalf;
+                var firstHalfSum = firstHalf.Sum(selector);
+                var secondHalfSum = secondHalf.Sum(selector);
+                var total = firstHalfSum + secondHalfSum;
                 var ly = forecast.Sum(x => x.LY2024) / 4;  // demo
                 var oplan = forecast.Sum(x => x.Oplan) / 4;
                 var incDec = total - ly;
@@ -608,8 +611,8 @@ namespace MVCTemplate.Controllers
                 double perc2 = oplan > 0 ? (double)total / oplan : 0;
 
                 ws.Cell(row, 1).Value = p.ToUpper();
-                ws.Cell(row, 2).Value = firstHalf;
-                ws.Cell(row, 3).Value = secondHalf;
+                ws.Cell(row, 2).Value = firstHalfSum;
+                ws.Cell(row, 3).Value = secondHalfSum;
                 ws.Cell(row, 4).Value = total;
                 ws.Cell(row, 5).Value = ly;
                 ws.Cell(row, 6).Value = incDec;
@@ -635,6 +638,7 @@ namespace MVCTemplate.Controllers
             ws.Cell(startRow, 11).Value = "vs. OPLAN";
             ws.Cell(startRow, 12).Value = "%";
 
+            // Monthly breakdown rows
             row = startRow + 1;
             foreach (var d in forecast)
             {
@@ -657,6 +661,67 @@ namespace MVCTemplate.Controllers
                 ws.Cell(row, 12).Value = vsOplanPerc;
                 row++;
             }
+
+            // Totals row
+            int totalVolt = forecast.Sum(x => x.Volt);
+            int totalThun = forecast.Sum(x => x.Thun);
+            int totalBio = forecast.Sum(x => x.Bio);
+            int totalKero = forecast.Sum(x => x.Kero);
+            int totalForecast = forecast.Sum(x => x.Forecast2025);
+            int totalLY = forecast.Sum(x => x.LY2024);
+            int totalOplan = forecast.Sum(x => x.Oplan);
+
+            ws.Cell(row, 1).Value = "TOTAL";
+            ws.Cell(row, 2).Value = totalVolt;
+            ws.Cell(row, 3).Value = totalThun;
+            ws.Cell(row, 4).Value = totalBio;
+            ws.Cell(row, 5).Value = totalKero;
+            ws.Cell(row, 6).Value = totalForecast;
+            ws.Cell(row, 7).Value = totalLY;
+            ws.Cell(row, 8).Value = totalOplan;
+            ws.Cell(row, 9).Value = totalForecast - totalLY;
+            ws.Cell(row, 10).Value = totalLY > 0 ? (double)(totalForecast - totalLY) / totalLY : 0;
+            ws.Cell(row, 11).Value = totalForecast - totalOplan;
+            ws.Cell(row, 12).Value = totalOplan > 0 ? (double)totalForecast / totalOplan : 0;
+            row++;
+
+            // 1H Average row
+            ws.Cell(row, 1).Value = "1H AVG";
+            ws.Cell(row, 2).Value = firstHalf.Average(x => x.Volt);
+            ws.Cell(row, 3).Value = firstHalf.Average(x => x.Thun);
+            ws.Cell(row, 4).Value = firstHalf.Average(x => x.Bio);
+            ws.Cell(row, 5).Value = firstHalf.Average(x => x.Kero);
+            ws.Cell(row, 6).Value = firstHalf.Average(x => x.Forecast2025);
+            ws.Cell(row, 7).Value = firstHalf.Average(x => x.LY2024);
+            ws.Cell(row, 8).Value = firstHalf.Average(x => x.Oplan);
+            ws.Cell(row, 9).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 7).Value.GetNumber();
+            ws.Cell(row, 10).Value = ws.Cell(row, 7).Value.GetNumber() > 0
+                ? ws.Cell(row, 9).Value.GetNumber() / ws.Cell(row, 7).Value.GetNumber()
+                : 0;
+            ws.Cell(row, 11).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 8).Value.GetNumber();
+            ws.Cell(row, 12).Value = ws.Cell(row, 8).Value.GetNumber() > 0
+                ? ws.Cell(row, 6).Value.GetNumber() / ws.Cell(row, 8).Value.GetNumber()
+                : 0;
+            row++;
+
+            // 2H Average row
+            ws.Cell(row, 1).Value = "2H AVG";
+            ws.Cell(row, 2).Value = secondHalf.Average(x => x.Volt);
+            ws.Cell(row, 3).Value = secondHalf.Average(x => x.Thun);
+            ws.Cell(row, 4).Value = secondHalf.Average(x => x.Bio);
+            ws.Cell(row, 5).Value = secondHalf.Average(x => x.Kero);
+            ws.Cell(row, 6).Value = secondHalf.Average(x => x.Forecast2025);
+            ws.Cell(row, 7).Value = secondHalf.Average(x => x.LY2024);
+            ws.Cell(row, 8).Value = secondHalf.Average(x => x.Oplan);
+            ws.Cell(row, 9).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 7).Value.GetNumber();
+            ws.Cell(row, 10).Value = ws.Cell(row, 7).Value.GetNumber() > 0
+                ? ws.Cell(row, 9).Value.GetNumber() / ws.Cell(row, 7).Value.GetNumber()
+                : 0;
+            ws.Cell(row, 11).Value = ws.Cell(row, 6).Value.GetNumber() - ws.Cell(row, 8).Value.GetNumber();
+            ws.Cell(row, 12).Value = ws.Cell(row, 8).Value.GetNumber() > 0
+                ? ws.Cell(row, 6).Value.GetNumber() / ws.Cell(row, 8).Value.GetNumber()
+                : 0;
+            row++;
 
             // Format percentages nicely
             ws.Range(3, 7, row, 7).Style.NumberFormat.Format = "0%";
