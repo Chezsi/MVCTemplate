@@ -683,6 +683,53 @@ namespace MVCTemplate.Controllers
             ws.Cell(row, 10).Value = totalLY > 0 ? (double)(totalForecast - totalLY) / totalLY : 0;
             ws.Cell(row, 11).Value = totalForecast - totalOplan;
             ws.Cell(row, 12).Value = totalOplan > 0 ? (double)totalForecast / totalOplan : 0;
+            row++;
+
+            // 1H Average row
+            ws.Cell(row, 1).Value = "1H AVG";
+            ws.Cell(row, 2).Value = firstHalf.Average(x => x.Volt);
+            ws.Cell(row, 3).Value = firstHalf.Average(x => x.Thun);
+            ws.Cell(row, 4).Value = firstHalf.Average(x => x.Bio);
+            ws.Cell(row, 5).Value = firstHalf.Average(x => x.Kero);
+            ws.Cell(row, 6).Value = firstHalf.Average(x => x.Forecast2025);
+            ws.Cell(row, 7).Value = firstHalf.Average(x => x.LY2024);
+            ws.Cell(row, 8).Value = firstHalf.Average(x => x.Oplan);
+
+            double vsLy1H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 7).GetDouble();
+            ws.Cell(row, 9).Value = vsLy1H;
+            ws.Cell(row, 10).Value = ws.Cell(row, 7).GetDouble() > 0
+                ? vsLy1H / ws.Cell(row, 7).GetDouble()
+                : 0;
+
+            double vsOplan1H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 8).GetDouble();
+            ws.Cell(row, 11).Value = vsOplan1H;
+            ws.Cell(row, 12).Value = ws.Cell(row, 8).GetDouble() > 0
+                ? ws.Cell(row, 6).GetDouble() / ws.Cell(row, 8).GetDouble()
+                : 0;
+            row++;
+
+            // 2H Average row
+            ws.Cell(row, 1).Value = "2H AVG";
+            ws.Cell(row, 2).Value = secondHalf.Average(x => x.Volt);
+            ws.Cell(row, 3).Value = secondHalf.Average(x => x.Thun);
+            ws.Cell(row, 4).Value = secondHalf.Average(x => x.Bio);
+            ws.Cell(row, 5).Value = secondHalf.Average(x => x.Kero);
+            ws.Cell(row, 6).Value = secondHalf.Average(x => x.Forecast2025);
+            ws.Cell(row, 7).Value = secondHalf.Average(x => x.LY2024);
+            ws.Cell(row, 8).Value = secondHalf.Average(x => x.Oplan);
+
+            double vsLy2H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 7).GetDouble();
+            ws.Cell(row, 9).Value = vsLy2H;
+            ws.Cell(row, 10).Value = ws.Cell(row, 7).GetDouble() > 0
+                ? vsLy2H / ws.Cell(row, 7).GetDouble()
+                : 0;
+
+            double vsOplan2H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 8).GetDouble();
+            ws.Cell(row, 11).Value = vsOplan2H;
+            ws.Cell(row, 12).Value = ws.Cell(row, 8).GetDouble() > 0
+                ? ws.Cell(row, 6).GetDouble() / ws.Cell(row, 8).GetDouble()
+                : 0;
+            row++;
 
             // ✅ Format percentages
             //ws.Range(3, 7, row, 7).Style.NumberFormat.Format = "0%";
