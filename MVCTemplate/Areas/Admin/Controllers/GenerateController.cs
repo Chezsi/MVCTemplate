@@ -541,7 +541,7 @@ namespace MVCTemplate.Controllers
             var months = new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
             var rnd = new Random();
 
-            // ✅ Simulated dataset
+            // Simulated monthly dataset
             var data = months.Select(m => new
             {
                 Month = m,
@@ -549,8 +549,8 @@ namespace MVCTemplate.Controllers
                 Thun = rnd.Next(5, 10),
                 Bio = rnd.Next(4, 8),
                 Kero = rnd.Next(3, 7),
-                LY2024 = rnd.Next(20, 30),  // LY = actual previous year numbers
-                Oplan = 25                  // Fixed demo OPLAN
+                LY2024 = rnd.Next(20, 30),
+                Oplan = 25
             }).ToList();
 
             var forecast = data.Select(d => new
@@ -565,179 +565,149 @@ namespace MVCTemplate.Controllers
                 d.Oplan
             }).ToList();
 
-            var firstHalf = forecast.Take(6).ToList();
-            var secondHalf = forecast.Skip(6).ToList();
-
             using var wb = new XLWorkbook();
-            var ws = wb.Worksheets.Add("Report");
 
-            // ================= SUMMARY =================
-            ws.Cell(1, 1).Value = "ALCALA";
-            ws.Cell(2, 1).Value = "PRODUCT";
-            ws.Cell(2, 2).Value = "1H 2025";
-            ws.Cell(2, 3).Value = "2H 2025";
-            ws.Cell(2, 4).Value = "TOTAL 2025";
-            ws.Cell(2, 5).Value = "LY 2024 VOLUME";
-            ws.Cell(2, 6).Value = "INC/DEC";
-            ws.Cell(2, 7).Value = "% vs LY";
-            ws.Cell(2, 8).Value = "2025 OPLAN";
-            ws.Cell(2, 9).Value = "ATTAIN.";
-            ws.Cell(2, 10).Value = "% vs OPLAN";
+            // ----------------------------
+            // 1) Monthly sheet (Sheet 1)
+            // ----------------------------
+            var wsMonthly = wb.Worksheets.Add("Monthly");
 
-            string[] products = { "Thun", "Volt", "Bio", "Kero" };
-            int row = 3;
+            wsMonthly.Cell(1, 1).Value = "FY";
+            wsMonthly.Cell(1, 2).Value = "VOLT";
+            wsMonthly.Cell(1, 3).Value = "THUN";
+            wsMonthly.Cell(1, 4).Value = "BIO";
+            wsMonthly.Cell(1, 5).Value = "KERO";
+            wsMonthly.Cell(1, 6).Value = "FORECAST 2025";
+            wsMonthly.Cell(1, 7).Value = "LY 2024";
+            wsMonthly.Cell(1, 8).Value = "OPLAN";
+            wsMonthly.Cell(1, 9).Value = "vs. LY";
+            wsMonthly.Cell(1, 10).Value = "% vs LY";
+            wsMonthly.Cell(1, 11).Value = "vs. OPLAN";
+            wsMonthly.Cell(1, 12).Value = "% vs OPLAN";
 
-            foreach (var p in products)
+            for (int i = 0; i < forecast.Count; i++)
             {
-                Func<dynamic, int> selector = p switch
-                {
-                    "Thun" => x => x.Thun,
-                    "Volt" => x => x.Volt,
-                    "Bio" => x => x.Bio,
-                    "Kero" => x => x.Kero,
-                    _ => x => 0
-                };
-
-                var firstHalfSum = firstHalf.Sum(selector);
-                var secondHalfSum = secondHalf.Sum(selector);
-                var total = firstHalfSum + secondHalfSum;
-
-                // ✅ Compare total Forecast vs total LY for this product
-                var ly = forecast.Sum(selector);   // sum LY values for same product
-                var oplan = forecast.Sum(x => x.Oplan);  // Oplan sum (can also scale by product if needed)
-
-                var incDec = total - ly;
-                double perc = ly > 0 ? (double)incDec / ly : 0;
-                var attain = total - oplan;
-                double perc2 = oplan > 0 ? (double)total / oplan : 0;
-
-                ws.Cell(row, 1).Value = p.ToUpper();
-                ws.Cell(row, 2).Value = firstHalfSum;
-                ws.Cell(row, 3).Value = secondHalfSum;
-                ws.Cell(row, 4).Value = total;
-                ws.Cell(row, 5).Value = ly;
-                ws.Cell(row, 6).Value = incDec;
-                ws.Cell(row, 7).Value = perc;
-                ws.Cell(row, 8).Value = oplan;
-                ws.Cell(row, 9).Value = attain;
-                ws.Cell(row, 10).Value = perc2;
-                row++;
+                int r = 2 + i;
+                var f = forecast[i];
+                wsMonthly.Cell(r, 1).Value = f.Month;
+                wsMonthly.Cell(r, 2).Value = f.Volt;
+                wsMonthly.Cell(r, 3).Value = f.Thun;
+                wsMonthly.Cell(r, 4).Value = f.Bio;
+                wsMonthly.Cell(r, 5).Value = f.Kero;
+                wsMonthly.Cell(r, 6).Value = f.Forecast2025;
+                wsMonthly.Cell(r, 7).Value = f.LY2024;
+                wsMonthly.Cell(r, 8).Value = f.Oplan;
+                wsMonthly.Cell(r, 9).FormulaA1 = $"=F{r}-G{r}";
+                wsMonthly.Cell(r, 10).FormulaA1 = $"=IF(G{r}=0,0,I{r}/G{r})";
+                wsMonthly.Cell(r, 11).FormulaA1 = $"=F{r}-H{r}";
+                wsMonthly.Cell(r, 12).FormulaA1 = $"=IF(H{r}=0,0,K{r}/H{r})";
             }
 
-            // ================= MONTHLY BREAKDOWN =================
-            int startRow = row + 2;
-            ws.Cell(startRow, 1).Value = "FY";
-            ws.Cell(startRow, 2).Value = "VOLT";
-            ws.Cell(startRow, 3).Value = "THUN";
-            ws.Cell(startRow, 4).Value = "BIO";
-            ws.Cell(startRow, 5).Value = "KERO";
-            ws.Cell(startRow, 6).Value = "FORECAST 2025";
-            ws.Cell(startRow, 7).Value = "LY 2024";
-            ws.Cell(startRow, 8).Value = "OPLAN";
-            ws.Cell(startRow, 9).Value = "vs. LY";
-            ws.Cell(startRow, 10).Value = "% vs LY";
-            ws.Cell(startRow, 11).Value = "vs. OPLAN";
-            ws.Cell(startRow, 12).Value = "% vs OPLAN";
+            int totalsRow = 14;
+            wsMonthly.Cell(totalsRow, 1).Value = "TOTAL";
+            wsMonthly.Cell(totalsRow, 2).FormulaA1 = "=SUM(B2:B13)";
+            wsMonthly.Cell(totalsRow, 3).FormulaA1 = "=SUM(C2:C13)";
+            wsMonthly.Cell(totalsRow, 4).FormulaA1 = "=SUM(D2:D13)";
+            wsMonthly.Cell(totalsRow, 5).FormulaA1 = "=SUM(E2:E13)";
+            wsMonthly.Cell(totalsRow, 6).FormulaA1 = "=SUM(F2:F13)";
+            wsMonthly.Cell(totalsRow, 7).FormulaA1 = "=SUM(G2:G13)";
+            wsMonthly.Cell(totalsRow, 8).FormulaA1 = "=SUM(H2:H13)";
+            wsMonthly.Cell(totalsRow, 9).FormulaA1 = "=F14-G14";
+            wsMonthly.Cell(totalsRow, 10).FormulaA1 = "=IF(G14=0,0,I14/G14)";
+            wsMonthly.Cell(totalsRow, 11).FormulaA1 = "=F14-H14";
+            wsMonthly.Cell(totalsRow, 12).FormulaA1 = "=IF(H14=0,0,K14/H14)";
 
-            row = startRow + 1;
-            foreach (var d in forecast)
+            int avg1HRow = 15;
+            wsMonthly.Cell(avg1HRow, 1).Value = "1H AVG";
+            wsMonthly.Cell(avg1HRow, 2).FormulaA1 = "=AVERAGE(B2:B7)";
+            wsMonthly.Cell(avg1HRow, 3).FormulaA1 = "=AVERAGE(C2:C7)";
+            wsMonthly.Cell(avg1HRow, 4).FormulaA1 = "=AVERAGE(D2:D7)";
+            wsMonthly.Cell(avg1HRow, 5).FormulaA1 = "=AVERAGE(E2:E7)";
+            wsMonthly.Cell(avg1HRow, 6).FormulaA1 = "=AVERAGE(F2:F7)";
+            wsMonthly.Cell(avg1HRow, 7).FormulaA1 = "=AVERAGE(G2:G7)";
+            wsMonthly.Cell(avg1HRow, 8).FormulaA1 = "=AVERAGE(H2:H7)";
+            wsMonthly.Cell(avg1HRow, 9).FormulaA1 = "=F15-G15";
+            wsMonthly.Cell(avg1HRow, 10).FormulaA1 = "=IF(G15=0,0,I15/G15)";
+            wsMonthly.Cell(avg1HRow, 11).FormulaA1 = "=F15-H15";
+            wsMonthly.Cell(avg1HRow, 12).FormulaA1 = "=IF(H15=0,0,K15/H15)";
+
+            int avg2HRow = 16;
+            wsMonthly.Cell(avg2HRow, 1).Value = "2H AVG";
+            wsMonthly.Cell(avg2HRow, 2).FormulaA1 = "=AVERAGE(B8:B13)";
+            wsMonthly.Cell(avg2HRow, 3).FormulaA1 = "=AVERAGE(C8:C13)";
+            wsMonthly.Cell(avg2HRow, 4).FormulaA1 = "=AVERAGE(D8:D13)";
+            wsMonthly.Cell(avg2HRow, 5).FormulaA1 = "=AVERAGE(E8:E13)";
+            wsMonthly.Cell(avg2HRow, 6).FormulaA1 = "=AVERAGE(F8:F13)";
+            wsMonthly.Cell(avg2HRow, 7).FormulaA1 = "=AVERAGE(G8:G13)";
+            wsMonthly.Cell(avg2HRow, 8).FormulaA1 = "=AVERAGE(H8:H13)";
+            wsMonthly.Cell(avg2HRow, 9).FormulaA1 = "=F16-G16";
+            wsMonthly.Cell(avg2HRow, 10).FormulaA1 = "=IF(G16=0,0,I16/G16)";
+            wsMonthly.Cell(avg2HRow, 11).FormulaA1 = "=F16-H16";
+            wsMonthly.Cell(avg2HRow, 12).FormulaA1 = "=IF(H16=0,0,K16/H16)";
+
+            wsMonthly.Range("J2:J16").Style.NumberFormat.Format = "0%";
+            wsMonthly.Range("L2:L16").Style.NumberFormat.Format = "0%";
+
+            // ----------------------------
+            // 2) Summary sheet (Sheet 2)
+            // ----------------------------
+            var wsSummary = wb.Worksheets.Add("Summary");
+
+            wsSummary.Cell(1, 1).Value = "ALCALA";
+            wsSummary.Cell(2, 1).Value = "PRODUCT";
+            wsSummary.Cell(2, 2).Value = "1H 2025";
+            wsSummary.Cell(2, 3).Value = "2H 2025";
+            wsSummary.Cell(2, 4).Value = "TOTAL 2025";
+            wsSummary.Cell(2, 5).Value = "LY 2024 VOLUME";
+            wsSummary.Cell(2, 6).Value = "INC/DEC";
+            wsSummary.Cell(2, 7).Value = "% vs LY";
+            wsSummary.Cell(2, 8).Value = "2025 OPLAN";
+            wsSummary.Cell(2, 9).Value = "ATTAIN.";
+            wsSummary.Cell(2, 10).Value = "% vs OPLAN";
+
+            var productCol = new Dictionary<string, string>
             {
-                int vsLy = d.Forecast2025 - d.LY2024;
-                double vsLyPerc = d.LY2024 > 0 ? (double)vsLy / d.LY2024 : 0;
-                int vsOplan = d.Forecast2025 - d.Oplan;
-                double vsOplanPerc = d.Oplan > 0 ? (double)d.Forecast2025 / d.Oplan : 0;
+                ["Volt"] = "B",
+                ["Thun"] = "C",
+                ["Bio"] = "D",
+                ["Kero"] = "E"
+            };
 
-                ws.Cell(row, 1).Value = d.Month;
-                ws.Cell(row, 2).Value = d.Volt;
-                ws.Cell(row, 3).Value = d.Thun;
-                ws.Cell(row, 4).Value = d.Bio;
-                ws.Cell(row, 5).Value = d.Kero;
-                ws.Cell(row, 6).Value = d.Forecast2025;
-                ws.Cell(row, 7).Value = d.LY2024;
-                ws.Cell(row, 8).Value = d.Oplan;
-                ws.Cell(row, 9).Value = vsLy;
-                ws.Cell(row, 10).Value = vsLyPerc;
-                ws.Cell(row, 11).Value = vsOplan;
-                ws.Cell(row, 12).Value = vsOplanPerc;
-                row++;
+            int summaryStartRow = 3;
+            var products = new[] { "Volt", "Thun", "Bio", "Kero" };
+
+            for (int i = 0; i < products.Length; i++)
+            {
+                string p = products[i];
+                string col = productCol[p];
+                int r = summaryStartRow + i;
+
+                wsSummary.Cell(r, 1).Value = p;
+                wsSummary.Cell(r, 2).FormulaA1 = $"=SUM(Monthly!{col}2:Monthly!{col}7)";
+                wsSummary.Cell(r, 3).FormulaA1 = $"=SUM(Monthly!{col}8:Monthly!{col}13)";
+                wsSummary.Cell(r, 4).FormulaA1 = $"=B{r}+C{r}";
+
+                wsSummary.Cell(r, 5).FormulaA1 =
+                    $"=IF(SUM(Monthly!F2:F7)=0,0,SUM(Monthly!G2:G7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!F2:F7)))" +
+                    $" + IF(SUM(Monthly!F8:F13)=0,0,SUM(Monthly!G8:G13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!F8:F13)))";
+
+                wsSummary.Cell(r, 6).FormulaA1 = $"=D{r}-E{r}";
+                wsSummary.Cell(r, 7).FormulaA1 = $"=IF(E{r}=0,0,F{r}/E{r})";
+
+                wsSummary.Cell(r, 8).FormulaA1 =
+                    $"=IF(SUM(Monthly!F2:F7)=0,0,SUM(Monthly!H2:H7)*(SUM(Monthly!{col}2:Monthly!{col}7)/SUM(Monthly!F2:F7)))" +
+                    $" + IF(SUM(Monthly!F8:F13)=0,0,SUM(Monthly!H8:H13)*(SUM(Monthly!{col}8:Monthly!{col}13)/SUM(Monthly!F8:F13)))";
+
+                wsSummary.Cell(r, 9).FormulaA1 = $"=D{r}-H{r}";
+                wsSummary.Cell(r, 10).FormulaA1 = $"=IF(H{r}=0,0,I{r}/H{r})";
             }
 
-            // ✅ Totals row
-            int totalVolt = forecast.Sum(x => x.Volt);
-            int totalThun = forecast.Sum(x => x.Thun);
-            int totalBio = forecast.Sum(x => x.Bio);
-            int totalKero = forecast.Sum(x => x.Kero);
-            int totalForecast = forecast.Sum(x => x.Forecast2025);
-            int totalLY = forecast.Sum(x => x.LY2024);
-            int totalOplan = forecast.Sum(x => x.Oplan);
+            wsSummary.Range("G3:G6").Style.NumberFormat.Format = "0%";
+            wsSummary.Range("J3:J6").Style.NumberFormat.Format = "0%";
 
-            ws.Cell(row, 1).Value = "TOTAL";
-            ws.Cell(row, 2).Value = totalVolt;
-            ws.Cell(row, 3).Value = totalThun;
-            ws.Cell(row, 4).Value = totalBio;
-            ws.Cell(row, 5).Value = totalKero;
-            ws.Cell(row, 6).Value = totalForecast;
-            ws.Cell(row, 7).Value = totalLY;
-            ws.Cell(row, 8).Value = totalOplan;
-            ws.Cell(row, 9).Value = totalForecast - totalLY;
-            ws.Cell(row, 10).Value = totalLY > 0 ? (double)(totalForecast - totalLY) / totalLY : 0;
-            ws.Cell(row, 11).Value = totalForecast - totalOplan;
-            ws.Cell(row, 12).Value = totalOplan > 0 ? (double)totalForecast / totalOplan : 0;
-            row++;
-
-            // 1H Average row
-            ws.Cell(row, 1).Value = "1H AVG";
-            ws.Cell(row, 2).Value = firstHalf.Average(x => x.Volt);
-            ws.Cell(row, 3).Value = firstHalf.Average(x => x.Thun);
-            ws.Cell(row, 4).Value = firstHalf.Average(x => x.Bio);
-            ws.Cell(row, 5).Value = firstHalf.Average(x => x.Kero);
-            ws.Cell(row, 6).Value = firstHalf.Average(x => x.Forecast2025);
-            ws.Cell(row, 7).Value = firstHalf.Average(x => x.LY2024);
-            ws.Cell(row, 8).Value = firstHalf.Average(x => x.Oplan);
-
-            double vsLy1H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 7).GetDouble();
-            ws.Cell(row, 9).Value = vsLy1H;
-            ws.Cell(row, 10).Value = ws.Cell(row, 7).GetDouble() > 0
-                ? vsLy1H / ws.Cell(row, 7).GetDouble()
-                : 0;
-
-            double vsOplan1H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 8).GetDouble();
-            ws.Cell(row, 11).Value = vsOplan1H;
-            ws.Cell(row, 12).Value = ws.Cell(row, 8).GetDouble() > 0
-                ? ws.Cell(row, 6).GetDouble() / ws.Cell(row, 8).GetDouble()
-                : 0;
-            row++;
-
-            // 2H Average row
-            ws.Cell(row, 1).Value = "2H AVG";
-            ws.Cell(row, 2).Value = secondHalf.Average(x => x.Volt);
-            ws.Cell(row, 3).Value = secondHalf.Average(x => x.Thun);
-            ws.Cell(row, 4).Value = secondHalf.Average(x => x.Bio);
-            ws.Cell(row, 5).Value = secondHalf.Average(x => x.Kero);
-            ws.Cell(row, 6).Value = secondHalf.Average(x => x.Forecast2025);
-            ws.Cell(row, 7).Value = secondHalf.Average(x => x.LY2024);
-            ws.Cell(row, 8).Value = secondHalf.Average(x => x.Oplan);
-
-            double vsLy2H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 7).GetDouble();
-            ws.Cell(row, 9).Value = vsLy2H;
-            ws.Cell(row, 10).Value = ws.Cell(row, 7).GetDouble() > 0
-                ? vsLy2H / ws.Cell(row, 7).GetDouble()
-                : 0;
-
-            double vsOplan2H = ws.Cell(row, 6).GetDouble() - ws.Cell(row, 8).GetDouble();
-            ws.Cell(row, 11).Value = vsOplan2H;
-            ws.Cell(row, 12).Value = ws.Cell(row, 8).GetDouble() > 0
-                ? ws.Cell(row, 6).GetDouble() / ws.Cell(row, 8).GetDouble()
-                : 0;
-            row++;
-
-            // ✅ Format percentages
-            //ws.Range(3, 7, row, 7).Style.NumberFormat.Format = "0%";
-            ws.Range(3, 10, row, 10).Style.NumberFormat.Format = "0%";
-            ws.Range(3, 12, row, 12).Style.NumberFormat.Format = "0%";
-
-            ws.Columns().AdjustToContents();
-
+            // ----------------------------
+            // Return file
+            // ----------------------------
             using var stream = new MemoryStream();
             wb.SaveAs(stream);
             return File(stream.ToArray(),
