@@ -553,18 +553,6 @@ namespace MVCTemplate.Controllers
                 Oplan = 25
             }).ToList();
 
-            var forecast = data.Select(d => new
-            {
-                d.Month,
-                d.Volt,
-                d.Thun,
-                d.Bio,
-                d.Kero,
-                Forecast2025 = d.Volt + d.Thun + d.Bio + d.Kero,
-                d.LY2024,
-                d.Oplan
-            }).ToList();
-
             using var wb = new XLWorkbook();
 
             // ----------------------------
@@ -585,18 +573,23 @@ namespace MVCTemplate.Controllers
             wsMonthly.Cell(1, 11).Value = "vs. OPLAN";
             wsMonthly.Cell(1, 12).Value = "% vs OPLAN";
 
-            for (int i = 0; i < forecast.Count; i++)
+            for (int i = 0; i < data.Count; i++)
             {
                 int r = 2 + i;
-                var f = forecast[i];
-                wsMonthly.Cell(r, 1).Value = f.Month;
-                wsMonthly.Cell(r, 2).Value = f.Volt;
-                wsMonthly.Cell(r, 3).Value = f.Thun;
-                wsMonthly.Cell(r, 4).Value = f.Bio;
-                wsMonthly.Cell(r, 5).Value = f.Kero;
-                wsMonthly.Cell(r, 6).Value = f.Forecast2025;
-                wsMonthly.Cell(r, 7).Value = f.LY2024;
-                wsMonthly.Cell(r, 8).Value = f.Oplan;
+                var d = data[i];
+
+                wsMonthly.Cell(r, 1).Value = d.Month;
+                wsMonthly.Cell(r, 2).Value = d.Volt;
+                wsMonthly.Cell(r, 3).Value = d.Thun;
+                wsMonthly.Cell(r, 4).Value = d.Bio;
+                wsMonthly.Cell(r, 5).Value = d.Kero;
+
+                // ✅ Forecast2025 as formula (instead of static C# sum)
+                wsMonthly.Cell(r, 6).FormulaA1 = $"=B{r}+C{r}+D{r}+E{r}";
+
+                wsMonthly.Cell(r, 7).Value = d.LY2024;
+                wsMonthly.Cell(r, 8).Value = d.Oplan;
+
                 wsMonthly.Cell(r, 9).FormulaA1 = $"=F{r}-G{r}";
                 wsMonthly.Cell(r, 10).FormulaA1 = $"=IF(G{r}=0,0,I{r}/G{r})";
                 wsMonthly.Cell(r, 11).FormulaA1 = $"=F{r}-H{r}";
