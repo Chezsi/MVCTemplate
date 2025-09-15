@@ -19,9 +19,11 @@ namespace MVCtemplate.DataAccess.Data
         public DbSet<Manager> Managers { get; set; }
         public DbSet<Site> Sites { get; set; }
 
+        public DbSet<Checklist> Checklists { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
+          base.OnModelCreating(builder);
 
             /*builder.Entity<Contract>()
                 .HasOne(c => c.Person)
@@ -34,11 +36,11 @@ namespace MVCtemplate.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.SetNull);*/
-            builder.Entity<Manager>()
+            /*builder.Entity<Manager>()
                 .HasOne(m => m.Site)
                 .WithMany(s => s.Managers) 
                 .HasForeignKey(m => m.SiteId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);*/
         }
     }
 }
